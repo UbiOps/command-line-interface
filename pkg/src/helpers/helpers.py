@@ -45,9 +45,6 @@ def update_model_file(client, project, model, version, model_file):
     """
 
     if model_file:
-        if model_file.endswith('.py'):
-            model_file = "".join(model_file.split('.py')[:-1])
-
         env_vars = client.model_version_environment_variables_list(project_name=project, model_name=model,
                                                                    version=version)
 
@@ -65,7 +62,8 @@ def update_model_file(client, project, model, version, model_file):
                     # inherited
                     client.model_version_environment_variables_create(project_name=project, model_name=model,
                                                                       version=version, data=new_env_var)
-        elif str(model_file).strip() != ML_MODEL_FILE_NAME_VALUE:
+        elif str(model_file).strip() != ML_MODEL_FILE_NAME_VALUE \
+                and str(model_file).strip() != "%s.py" % ML_MODEL_FILE_NAME_VALUE:
             client.model_version_environment_variables_create(project_name=project, model_name=model,
                                                               version=version, data=new_env_var)
 

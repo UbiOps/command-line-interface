@@ -44,7 +44,7 @@ stored in `pipeline.yaml`.
 
 Create a new pipeline.
 
-
+
 Define the pipeline parameters using a yaml file.
 For example:
 ```

@@ -183,7 +183,8 @@ def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", model_name
             root_subdir = os.path.join('', *r.split(package_path)[1:])
             package_subdir = os.path.join('model_package', root_subdir)
             for filename in files:
-                zf.write(os.path.join(r, filename), os.path.join(package_subdir, filename))
+                if os.path.join(r, filename) != output_path:
+                    zf.write(os.path.join(r, filename), os.path.join(package_subdir, filename))
     return output_path
 
 

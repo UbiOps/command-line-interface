@@ -11,8 +11,8 @@ from pkg.src.helpers.options import *
 from pkg.constants import STATUS_INITIALISED, STRUCTURED_TYPE, DEFAULT_IGNORE_FILE
 
 
-LIST_ITEMS = ['id', 'name', 'input_type', 'output_type', 'creation_date']
-REQUEST_LIST_ITEMS = ['id', 'status', 'time_created', 'time_last_updated', 'pipeline']
+LIST_ITEMS = ['id', 'name', 'input_type', 'output_type', 'last_updated']
+REQUEST_LIST_ITEMS = ['id', 'status', 'success', 'time_created']
 
 
 @click.group("models")
@@ -84,6 +84,9 @@ def models_create(model_name, yaml_file, format_):
         data_type: string
     output_type: plain
     ```
+
+    The model name can either be passed as argument or specified inside the yaml file. If it is both passed as argument
+    and specified inside the yaml file, the value passed as argument is used.
 
     Possible input/output types: [structured, plain]. Possible data_types: [blob, int,
     string, double, bool, array_string, array_int, array_double].
@@ -238,8 +241,8 @@ def models_download(model_name, version_name, output_path, quiet):
 
 
 @commands.command("deploy")
-@MODEL_NAME_ARGUMENT
-@VERSION_NAME_OPTION
+@MODEL_NAME_OVERRULE
+@VERSION_NAME_OPTIONAL
 @PACKAGE_DIR
 @MODEL_FILE
 @IGNORE_FILE
@@ -267,12 +270,23 @@ def models_deploy(model_name, version_name, directory, output_path, yaml_file, o
     directory, the zip will be saved in `[model_name]_[model_version]_[datetime.now()].zip`. Use
     the <assume_yes> option to overwrite without confirmation if file specified in <output_path> already exists.
 
-    You may want to change some deployment options, like, programming <language> and <memory_allocation>.
-    You can do this by either providing the options in a yaml file and passing the file path as <yaml_file>,
-    or passing the options as command options. If both a <yaml_file> is set and options are given, the
-    options defined by <yaml_file> will be overwritten by the specified command options.
+    \b
+    It is possible to define the parameters using a yaml file.
+    For example:
+    ```
+    version_name: my-model-version
+    model_name: my-model-name
+    language: python3.6
+    memory_allocation: 256
+    minimum_instances: 0
+    maximum_instances: 1
+    maximum_idle_time: 300
+    ```
+
+    Those parameters can also be provided as command options. If both a <yaml_file> is set and
+    options are given, the options defined by <yaml_file> will be overwritten by the specified command options.
+    The model name can either be passed as command argument or specified inside the yaml file using <model_name>.
     """
-    project_name = get_current_project(error=True)
 
     if output_path is None:
         store_zip = False
@@ -280,9 +294,17 @@ def models_deploy(model_name, version_name, directory, output_path, yaml_file, o
     else:
         store_zip = True
 
+    project_name = get_current_project(error=True)
     client = init_client()
-
     yaml_content = read_yaml(yaml_file, required_fields=[]) if yaml_file else None
+
+    assert 'model_name' in yaml_content or model_name, 'Please, specify the model name in either the yaml ' \
+                                                       'file or as a command argument.'
+    assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either the yaml ' \
+                                                           'file or as a command option.'
+    model_name = set_dict_default(model_name, yaml_content, 'model_name')
+    version_name = set_dict_default(version_name, yaml_content, 'version_name')
+
     existing_version = None
     if overwrite:
         try:
@@ -331,8 +353,9 @@ def models_deploy(model_name, version_name, directory, output_path, yaml_file, o
 @MODEL_NAME_ARGUMENT
 @VERSION_NAME_OPTION
 @REQUEST_DATA
+@REQUEST_TIMEOUT
 @REQUESTS_FORMATS
-def models_request(model_name, version_name, data, format_):
+def models_request(model_name, version_name, data, timeout, format_):
     """Create a model request and retrieve the result.
 
     For structured input, specify the data as JSON formatted string. For example:
@@ -351,9 +374,7 @@ def models_request(model_name, version_name, data, format_):
             raise Exception("Failed to parse data. JSON format expected.")
 
     response = client.model_requests_create(project_name=project_name, model_name=model_name,
-                                            version=version_name, data=data)
-    if hasattr(response, 'time_created'):
-        response.time_created = str(response.time_created)
+                                            version=version_name, data=data, timeout=timeout)
 
     if format_ == 'reference':
         click.echo(format_requests_reference([response]))

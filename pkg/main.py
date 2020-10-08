@@ -12,6 +12,7 @@ import pkg.src.logs as logs
 import pkg.src.config as config
 import pkg.src.auth as auth
 import pkg.src.environment_variables as env_vars
+import pkg.src.scheduled_requests as schedules
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -36,6 +37,7 @@ cli.add_command(pipelines.commands)
 cli.add_command(blobs.commands)
 cli.add_command(env_vars.commands)
 cli.add_command(logs.commands)
+cli.add_command(schedules.commands)
 
 
 def print_error(msg, status=None):

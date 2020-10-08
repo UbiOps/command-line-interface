@@ -6,7 +6,7 @@
 
 List environment variables.
 
-
+
 - When model_name and version_name are provided: the environment variables will be listed on model version level.
 - When a model name is provided, but not a version name: the environment variables will be listed on model level.
 - When no model_name nor a version name is provided: the environment variables will be listed on project level.
@@ -30,7 +30,7 @@ List environment variables.
 
 Create an environment variable.
 
-
+
 - When model_name and version_name are provided: the environment variable will be created on model version level.
 - When a model name is provided, but not a version name: the environment variable will be created on model level.
 - When no model_name nor a version name is provided: the environment variable will be created on project level.
@@ -61,7 +61,7 @@ Create an environment variable.
 
 Get an environment variable.
 
-
+
 - When model_name and version_name are provided: the environment variable will be collected on model version level.
 - When a model name is provided, but not a version name: the environment variable will be collected on model level.
 - When no model_name nor a version name is provided: the environment variable will be collected on project level.
@@ -86,7 +86,7 @@ Get an environment variable.
 
 Update an environment variable.
 
-
+
 - When model_name and version_name are provided: the environment variable will be updated on model version level.
 - When a model name is provided, but not a version name: the environment variable will be updated on model level.
 - When no model_name nor a version name is provided: the environment variable will be updated on project level.
@@ -120,7 +120,7 @@ Update an environment variable.
 
 Delete an environment variable.
 
-
+
 - When model_name and version_name are provided: the environment variable will be deleted on model version level.
 - When a model name is provided, but not a version name: the environment variable will be deleted on model level.
 - When no model_name nor a version name is provided: the environment variable will be deleted on project level.

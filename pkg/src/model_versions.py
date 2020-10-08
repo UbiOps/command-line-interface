@@ -104,6 +104,7 @@ def versions_create(model_name, version_name, yaml_file, format_, **kwargs):
 
     Those parameters can also be provided as command options. If both a <yaml_file> is set and
     options are given, the options defined by <yaml_file> will be overwritten by the specified command options.
+    The version name can either be passed as command argument or specified inside the yaml file using <version_name>.
     """
 
     project_name = get_current_project(error=True)

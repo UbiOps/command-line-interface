@@ -11,7 +11,7 @@ Includes:
 Excludes:
 - Managing connectors
 
-For more information, please visit [https://docs.ubiops.com/](https://docs.ubiops.com/)
+For more information, please visit [https://ubiops.com/docs](https://ubiops.com/docs)
 
 ## Requirements.
 
@@ -106,6 +106,7 @@ Pipelines | [docs/pipelines.md](https://github.com/UbiOps/command-line-interface
 Blobs | [docs/blobs.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/blobs.md)
 Environment Variables | [docs/environment_variables.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/environment_variables.md)
 Logs | [docs/logs.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/logs.md)
+Schedules | [docs/schedules.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/schedules.md)
 
 
 ### Attribution

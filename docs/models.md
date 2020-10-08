@@ -44,7 +44,7 @@ stored in `model.yaml`.
 
 Create a new model.
 
-
+
 Define the model parameters using a yaml file.
 For example:
 ```
@@ -58,6 +58,9 @@ input_fields:
     data_type: string
 output_type: plain
 ```
+
+The model name can either be passed as argument or specified inside the yaml file. If it is both passed as argument
+and specified inside the yaml file, the value passed as argument is used.
 
 Possible input/output types: [structured, plain]. Possible data_types: [blob, int,
 string, double, bool, array_string, array_int, array_double].
@@ -214,16 +217,28 @@ The <output_path> option will be used as output location of the zip file. If the
 directory, the zip will be saved in `[model_name]_[model_version]_[datetime.now()].zip`. Use
 the <assume_yes> option to overwrite without confirmation if file specified in <output_path> already exists.
 
-You may want to change some deployment options, like, programming <language> and <memory_allocation>.
-You can do this by either providing the options in a yaml file and passing the file path as <yaml_file>,
-or passing the options as command options. If both a <yaml_file> is set and options are given, the
-options defined by <yaml_file> will be overwritten by the specified command options.
+
+It is possible to define the parameters using a yaml file.
+For example:
+```
+version_name: my-model-version
+model_name: my-model-name
+language: python3.6
+memory_allocation: 256
+minimum_instances: 0
+maximum_instances: 1
+maximum_idle_time: 300
+```
+
+Those parameters can also be provided as command options. If both a <yaml_file> is set and
+options are given, the options defined by <yaml_file> will be overwritten by the specified command options.
+The model name can either be passed as command argument or specified inside the yaml file using <model_name>.
 
 **Arguments:**
-- [required] `model_name`
+- `model_name`
 
 **Options:**
-- [required] `-v`/`--version_name`
+- `-v`/`--version_name`
 
   The model version name.
 - [required] `-d`/`--directory`
@@ -285,6 +300,9 @@ For structured input, specify the data as JSON formatted string. For example:
 - [required] `-d`/`--data`
 
   The input data of the request.
+- `--timeout`
+
+  Timeout in seconds.
 - `-fmt`/`--format`
 
   The output format.

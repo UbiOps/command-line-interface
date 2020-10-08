@@ -46,7 +46,7 @@ Use the command options as filters.
 
 **Description:**
 
-
+
 Get more details of a log:
 - date
 - model_name

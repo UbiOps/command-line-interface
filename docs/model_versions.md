@@ -27,7 +27,7 @@ model version settings in a yaml file. You can either specify the <output_path> 
 directory. If the specified <output_path> is a directory, the settings will be
 stored in `version.yaml`.
 
-
+
 Example of yaml content:
 ```
 version_name: my-version
@@ -62,7 +62,7 @@ maximum_idle_time: 300
 
 Create a version of a model.
 
-
+
 It is possible to define the parameters using a yaml file.
 For example:
 ```
@@ -77,6 +77,7 @@ maximum_idle_time: 300
 
 Those parameters can also be provided as command options. If both a <yaml_file> is set and
 options are given, the options defined by <yaml_file> will be overwritten by the specified command options.
+The version name can either be passed as command argument or specified inside the yaml file using <version_name>.
 
 **Arguments:**
 - `version_name`

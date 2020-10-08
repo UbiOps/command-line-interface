@@ -8,7 +8,7 @@ from pkg.src.helpers.options import *
 
 @click.group("logs")
 def commands():
-    """Manage your blobs."""
+    """Manage your logs."""
     pass
 
 

@@ -9,8 +9,8 @@ from pkg.src.helpers.options import *
 from pkg.constants import STRUCTURED_TYPE
 
 
-LIST_ITEMS = ['id', 'name', 'input_type', 'creation_date']
-REQUEST_LIST_ITEMS = ['id', 'status', 'time_created', 'time_last_updated']
+LIST_ITEMS = ['id', 'name', 'input_type', 'last_updated']
+REQUEST_LIST_ITEMS = ['id', 'status', 'success', 'time_created']
 
 
 def define_pipeline(yaml_content, pipeline_name, current_pipeline_name=None):
@@ -192,7 +192,12 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
             click.echo('Pipeline file is stored in: %s' % yaml_file)
     else:
         print_item(pipeline, row_attrs=LIST_ITEMS, project_name=project_name,
-                   rename={'name': 'pipeline_name', 'description': 'pipeline_description'}, fmt=format_)
+                   required_front=['name', 'description', 'input_type'],
+                   optional=['input_fields', 'creation_date', 'last_updated',
+                             'objects name', 'objects reference_type', 'objects reference_name', 'objects version',
+                             'attachments source_name', 'attachments destination_name', 'attachments mapping'],
+                   rename={'name': 'pipeline_name', 'description': 'pipeline_description',
+                           'objects version': 'reference_version'}, fmt=format_)
 
 
 @commands.command("create")

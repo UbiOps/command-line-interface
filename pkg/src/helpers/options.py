@@ -54,14 +54,15 @@ ORGANIZATION_NAME_OPTIONAL = click.option('-o', '--organization_name', default=N
                                           help="The organization name.")
 
 # Model variables
-MODEL_NAME_ARGUMENT = click.argument('model_name', required=True, metavar='<name>', nargs=1)
+MODEL_NAME_ARGUMENT = click.argument('model_name', required=True, metavar='<model_name>', nargs=1)
 MODEL_NAME_OPTION = click.option('-m', '--model_name', required=True, metavar='<name>', help="The model name.")
 MODEL_NAME_OPTIONAL = click.option('-m', '--model_name', required=False, metavar='<name>', default=None,
                                    help="The model name.")
 MODEL_NAME_ZIP = click.option('-m', '--model_name', required=False, default=None,
                               help="The model name used in the ZIP filename.", metavar='<name>')
-MODEL_NAME_OVERRULE = click.argument('model_name', required=False, default=None, metavar='<name>', nargs=1)
-MODEL_NAME_UPDATE = click.option('-n', '--new_name', required=False, default=None, help="The new model name.")
+MODEL_NAME_OVERRULE = click.argument('model_name', required=False, default=None, metavar='<model_name>', nargs=1)
+MODEL_NAME_UPDATE = click.option('-n', '--new_name', required=False, default=None, help="The new model name.",
+                                 metavar='<name>')
 MODEL_YAML_FILE = click.option("-f", "--yaml_file", required=True, type=click.Path(), metavar='<path>',
                                help="Path to a yaml file that contains at least the following fields: "
                                     "[%s]." % ", ".join(MODEL_REQUIRED_FIELDS))
@@ -69,16 +70,16 @@ MODEL_YAML_OUTPUT = click.option('-o', '--output_path', required=False, default=
                                  help="Path to file or directory to store model yaml file.")
 
 # Model version variables
-VERSION_NAME_ARGUMENT = click.argument('version_name', required=True, metavar='<name>', nargs=1)
+VERSION_NAME_ARGUMENT = click.argument('version_name', required=True, metavar='<version_name>', nargs=1)
 VERSION_NAME_OPTION = click.option('-v', '--version_name', required=True, metavar='<name>',
                                    help="The model version name.")
 VERSION_NAME_OPTIONAL = click.option('-v', '--version_name', required=False, metavar='<name>', default=None,
                                      help="The model version name.")
 VERSION_NAME_UPDATE = click.option('-n', '--new_name', required=False, default=None,
-                                   help="The new model version name.")
+                                   help="The new model version name.", metavar='<name>')
 VERSION_NAME_ZIP = click.option('-v', '--version_name', required=False, default=None, metavar='<name>',
                                 help="The model version name used in the ZIP filename.")
-VERSION_NAME_OVERRULE = click.argument('version_name', required=False, default=None, metavar='<name>', nargs=1)
+VERSION_NAME_OVERRULE = click.argument('version_name', required=False, default=None, metavar='<version_name>', nargs=1)
 VERSION_YAML_FILE = click.option("-f", "--yaml_file", required=False, default=None, type=click.Path(), metavar='<path>',
                                  help="Path to a yaml file that contains deployment options")
 VERSION_YAML_OUTPUT = click.option('-o', '--output_path', required=False, default=None, metavar='<path>',
@@ -116,6 +117,8 @@ ZIP_OUTPUT = click.option('-o', '--output_path', required=False, default='', met
 
 # Requests
 REQUEST_DATA = click.option('-d', '--data', required=True, help="The input data of the request.", metavar='<string>')
+REQUEST_DATA_UPDATE = click.option('-d', '--data', required=False, help="The new input data of the request.",
+                                   metavar='<string>')
 REQUEST_DATA_MULTI = click.option('-d', '--data', required=True, help="The input data of the request.",
                                   metavar='<string>', multiple=True)
 REQUEST_ID_MULTI = click.option('-id', '--request_id', required=True, metavar='<id>', multiple=True,
@@ -125,7 +128,9 @@ REQUEST_ID_OPTIONAL = click.option('-id', '--request_id', required=False, defaul
 PIPELINE_REQUEST_ID_OPTIONAL = click.option('-pid', '--pipeline_request_id', required=False, default=None,
                                             metavar='<id>', help="The ID of the pipeline request.")
 REQUEST_LIMIT = click.option('--limit', required=False, default=10, type=click.IntRange(1, 50), show_default=True,
-                             help="Limit of the number of requests. The maximum value is 50.")
+                             help="Limit of the number of requests. The maximum value is 50.", metavar='[1-50]')
+REQUEST_TIMEOUT = click.option('--timeout', required=False, default=300, type=click.IntRange(10, 3600),
+                               metavar='[10-3600]', show_default=True, help="Timeout in seconds.")
 
 # Blobs
 BLOB_ID = click.argument('blob_id', required=True, metavar="<id>", nargs=1)
@@ -161,7 +166,7 @@ ENV_VAR_SECRET = click.option('--secret', required=False, default=False, is_flag
                               help="Store value as secret.")
 
 # Logs
-SYSTEM = click.option('--system', required=False, default=None, type=click.BOOL, metavar='[true|false]',
+SYSTEM = click.option('--system', required=False, default=None, type=click.BOOL, metavar='[True|False]',
                       help="Filter on logs generated by the system (true) or generated by user code (false).")
 START_DATE = click.option('--start_date', required=False, default=None, metavar='<datetime in iso-format>',
                           help="Start date of the interval for which the logs are retrieved. Formatted like "
@@ -181,3 +186,36 @@ DATE_RANGE = click.option('--date_range', required=False, default=-86400, type=c
                                "starting from the specified date / log id (both inclusive) minus date range "
                                "seconds towards the past are returned.")
 LOG_ID = click.argument('log_id', required=True, metavar='<id>', nargs=1)
+
+
+# Scheduled requests
+SCHEDULE_NAME = click.argument('schedule_name', required=True, metavar="<name>", nargs=1)
+SCHEDULE_NAME_UPDATE = click.option('-n', '--new_name', required=False, default=None, help="The new schedule name.",
+                                    metavar='<name>')
+OBJECT_TYPE = click.option('-ot', '--object_type', default="model", help="The object type.",
+                           type=click.Choice(['model', 'pipeline'], case_sensitive=False), show_default=True)
+OBJECT_NAME = click.option('-on', '--object_name', required=True, metavar="[<model name>|<pipeline name>]",
+                           help="The object name.")
+OBJECT_VERSION = click.option('-ov', '--object_version', required=False, metavar="<version name>",
+                              help="The version name. Only relevant for object_type='model'.")
+SCHEDULE = click.option('-s', '--schedule', required=True, metavar="<0 0 1 * *>",
+                        help="Schedule in crontab format (in UTC)")
+SCHEDULE_UPDATE = click.option('-s', '--schedule', required=False, default=None, metavar="<0 0 1 * *>",
+                               help="New schedule in crontab format (in UTC)")
+IS_BATCH_REQUEST = click.option('--batch', required=False, default=True, type=click.BOOL, metavar='[True|False]',
+                                help="Boolean value indicating whether the request will be performed as "
+                                     "batch request (true) or as direct request (false)", show_default=True)
+IS_BATCH_REQUEST_UPDATE = click.option('--batch', required=False, default=None, type=click.BOOL, metavar='[True|False]',
+                                       help="Boolean value indicating whether the request will be performed as "
+                                            "batch request (true) or as direct request (false)")
+IS_ENABLED = click.option('--enabled', required=False, default=True, type=click.BOOL, metavar='[True|False]',
+                          help="Boolean value indicating whether the created schedule is enabled or disabled.",
+                          show_default=True)
+IS_ENABLED_UPDATE = click.option('--enabled', required=False, default=None, type=click.BOOL, metavar='[True|False]',
+                                 help="Boolean value indicating whether the created schedule is enabled or disabled.")
+SCHEDULE_TIMEOUT = click.option('--timeout', required=False, default=300, type=click.IntRange(10, 3600),
+                                metavar='[10-3600]', show_default=True,
+                                help="Timeout in seconds. This field is not used for batch requests.")
+SCHEDULE_TIMEOUT_UPDATE = click.option('--timeout', required=False, default=None, type=click.IntRange(10, 3600),
+                                       metavar='[10-3600]',
+                                       help="Timeout in seconds. This field is not used for batch requests.")
