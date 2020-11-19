@@ -1,19 +1,19 @@
 from pkg.src.helpers.options import *
 
 
-@click.group("config")
+@click.group("config", short_help="Manage your CLI configurations")
 def commands():
-    """Manage your UbiOps CLI configurations."""
+    """Manage your CLI configurations."""
     pass
 
 
-@commands.command("list")
+@commands.command("list", short_help="List your configurations")
 def config_list():
-    """List your UbiOps CLI configurations."""
+    """List your CLI configurations."""
     click.echo(Config())
 
 
-@commands.command("set")
+@commands.command("set", short_help="Set a configuration")
 @KEY
 @SET_VALUE
 def config_set(key, value):
@@ -23,7 +23,7 @@ def config_set(key, value):
     user_config.write()
 
 
-@commands.command("get")
+@commands.command("get", short_help="Get a configuration")
 @KEY
 def config_get(key):
     """Get a configuration, like, `default.project`."""
@@ -33,7 +33,7 @@ def config_get(key):
         click.echo(value)
 
 
-@commands.command("delete")
+@commands.command("delete", short_help="Delete a configuration")
 @KEY
 def config_delete(key):
     """Delete a configuration, like, `default.project`."""

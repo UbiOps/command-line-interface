@@ -4,7 +4,7 @@
 
 **Description:**
 
-List your UbiOps CLI configurations.
+List your CLI configurations.
 
 **Arguments:** - 
 

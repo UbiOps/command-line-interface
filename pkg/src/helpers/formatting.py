@@ -31,6 +31,29 @@ def format_boolean(value):
     return value
 
 
+def format_action(action):
+    """Format status with color."""
+    if action == 'create':
+        return click.style(action, fg='blue')
+    if action == 'update':
+        return click.style(action, fg='yellow')
+    if action == 'delete':
+        return click.style(action, fg='red')
+    return action
+
+
+def format_labels(labels_dict):
+    """Format labels dictionary as 'key:value,key2:value'."""
+
+    if labels_dict is None:
+        return ""
+
+    labels = []
+    for k, v in labels_dict.items():
+        labels.append("%s:%s" % (k, str(v)))
+    return ", ".join(labels)
+
+
 def parse_datetime(dt):
     """Parse ISO formatted datetime-string."""
     try:
@@ -189,6 +212,10 @@ def print_list(items, attrs, project_name=None, rename_cols=None, sorting_col=No
                         row.append(format_status(getattr(i, attr)))
                     elif attr == 'enabled' or attr == 'success':
                         row.append(format_boolean(getattr(i, attr)))
+                    elif attr == 'action':
+                        row.append(format_action(getattr(i, attr)))
+                    elif attr.endswith('labels'):
+                        row.append(format_labels(getattr(i, attr)))
                     else:
                         row.append(getattr(i, attr))
             if project_name is not None:
@@ -344,13 +371,13 @@ def format_pipeline_requests_reference(pipeline_requests):
             request_data = '-' if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
             overview += '\nPipeline request data: %s' % request_data
 
-        if hasattr(pipeline_request, 'model_requests'):
-            if pipeline_request.model_requests is not None:
+        if hasattr(pipeline_request, 'deployment_requests'):
+            if pipeline_request.deployment_requests is not None:
                 overview += '\n'
-                model_requests = format_requests_reference(pipeline_request.model_requests, split_requests='\n')
-                model_requests = "\n".join(["\n - %s" % line if line.startswith('Object') else "   %s" % line
-                                           for line in model_requests.split("\n")])
-                overview += model_requests
+                deployment_requests = format_requests_reference(pipeline_request.deployment_requests, split_requests='\n')
+                deployment_requests = "\n".join(["\n - %s" % line if line.startswith('Object') else "   %s" % line
+                                           for line in deployment_requests.split("\n")])
+                overview += deployment_requests
 
         if j+1 < total:
             overview += '\n\n'
@@ -384,14 +411,14 @@ def format_pipeline_requests_oneline(pipeline_requests):
             request_data = '-' if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
             overview += request_data
 
-        if hasattr(pipeline_request, 'model_requests'):
-            if pipeline_request.model_requests is not None:
-                model_requests = format_requests_oneline(pipeline_request.model_requests)
-                lines = model_requests.split("\n")
+        if hasattr(pipeline_request, 'deployment_requests'):
+            if pipeline_request.deployment_requests is not None:
+                deployment_requests = format_requests_oneline(pipeline_request.deployment_requests)
+                lines = deployment_requests.split("\n")
                 if len(lines) > 0 and len(lines[0]) > 0:
                     overview += '\n'
-                    model_requests = "\n".join([" - %s" % line for line in lines])
-                overview += model_requests
+                    deployment_requests = "\n".join([" - %s" % line for line in lines])
+                overview += deployment_requests
         if j+1 < total:
             overview += '\n'
     return overview

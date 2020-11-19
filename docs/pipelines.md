@@ -1,17 +1,27 @@
 
 ## ubiops pipelines
+
+**Alias:**  ubiops ppl
+
 ### ubiops pipelines list
 
 **Description:**
 
 List pipelines in project.
 
+The <labels> option can be used to filter on specific labels.
+
 **Arguments:** - 
 
 **Options:**
+- `-l`/`--labels`
+
+  Labels defined as key/value pairs
+
+  This option can be provided multiple times in a single command.
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops pipelines get
 
@@ -30,13 +40,13 @@ stored in `pipeline.yaml`.
 **Options:**
 - `-o`/`--output_path`
 
-  Path to file or directory to store pipeline yaml file.
+  Path to file or directory to store pipeline yaml file
 - `-q`/`--quiet`
 
-  Suppress informational messages.
+  Suppress informational messages
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops pipelines create
 
@@ -50,21 +60,23 @@ For example:
 ```
 pipeline_name: my-pipeline-name
 pipeline_description: Pipeline created via command line.
+pipeline_labels:
+  my-key-1: my-label-1
+  my-key-2: my-label-2
 input_type: structured
 input_fields:
   - name: my-pipeline-param1
     data_type: int
 objects:
   - name: object1
-    reference_type: model
-    reference_name: my-model-name
-    reference_version: my-model-version
+    reference_name: my-deployment-name
+    reference_version: my-deployment-version
 attachments:
   - source_name: pipeline_start
     destination_name: object1
     mapping:
     - source_field_name: my-pipeline-param1
-      destination_field_name: my-model-param1
+      destination_field_name: my-deployment-param1
 ```
 
 Possible input/output types: [structured, plain]. Possible data_types: [blob, int, string, double,
@@ -80,10 +92,10 @@ Please, connect the start of the pipeline to your first object. You can do this 
 **Options:**
 - [required] `-f`/`--yaml_file`
 
-  Path to a yaml file that contains at least the following fields: [input_type].
+  Path to a yaml file that contains at least the following fields: [input_type]
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops pipelines update
 
@@ -100,13 +112,13 @@ If you want to update anything else (and the pipeline name), please use a yaml f
 **Options:**
 - `-n`/`--new_name`
 
-  The new pipeline name.
+  The new pipeline name
 - `-f`/`--yaml_file`
 
-  Path to a yaml file that contains at least the following fields: [input_type].
+  Path to a yaml file that contains at least the following fields: [input_type]
 - `-q`/`--quiet`
 
-  Suppress informational messages.
+  Suppress informational messages
 
 ### ubiops pipelines delete
 
@@ -120,10 +132,10 @@ Delete a pipeline.
 **Options:**
 - `-y`/`--assume_yes`
 
-  Assume yes instead of asking for confirmation.
+  Assume yes instead of asking for confirmation
 - `-q`/`--quiet`
 
-  Suppress informational messages.
+  Suppress informational messages
 
 ### ubiops pipelines request
 
@@ -132,7 +144,7 @@ Delete a pipeline.
 Create a pipeline request and retrieve the result.
 
 For structured input, specify the data as JSON formatted string. For example:
-`ubiops pipelines request <my-model> -v <my-version> -d "{"param1": 1, "param2": "two"}"`
+`ubiops pipelines request <my-deployment> -v <my-version> --data "{"param1": 1, "param2": "two"}"`
 
 **Arguments:**
 - [required] `pipeline_name`
@@ -140,10 +152,10 @@ For structured input, specify the data as JSON formatted string. For example:
 **Options:**
 - [required] `-d`/`--data`
 
-  The input data of the request.
+  The input data of the request
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops pipelines batch_requests
 #### ubiops pipelines batch_requests create
@@ -153,23 +165,23 @@ For structured input, specify the data as JSON formatted string. For example:
 Create a pipeline batch request and retrieve request IDs to collect the results later.
 
 Multiple data inputs can be specified at ones by using the '-d' options multiple times:
-`ubiops pipelines batch_requests create <my-pipeline> -d <input-1> -d <input-2> -d <input-3>`
+`ubiops pipelines batch_requests create <my-pipeline> --data <input-1> --data <input-2> --data <input-3>`
 
 For structured input, specify each data input as JSON formatted string. For example:
-`ubiops pipelines batch_requests create <my-pipeline> -d "{"param1": 1, "param2": "two"}"`
+`ubiops pipelines batch_requests create <my-pipeline> --data "{"param1": 1, "param2": "two"}"`
 
 **Arguments:**
 - [required] `pipeline_name`
 
 **Options:**
-- [required] `-d`/`--data`
+- [required] `--data`
 
-  The input data of the request.
+  The input data of the request
 
   This option can be provided multiple times in a single command.
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 #### ubiops pipelines batch_requests get
 
@@ -186,12 +198,12 @@ Multiple request ids can be specified at ones by using the '-id' options multipl
 **Options:**
 - [required] `-id`/`--request_id`
 
-  The ID of the request.
+  The ID of the request
 
   This option can be provided multiple times in a single command.
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 #### ubiops pipelines batch_requests list
 
@@ -209,4 +221,4 @@ List pipeline batch requests.
   Limit of the number of requests. The maximum value is 50.
 - `-fmt`/`--format`
 
-  The output format.
+  The output format

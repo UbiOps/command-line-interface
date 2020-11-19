@@ -11,7 +11,7 @@ List blobs in project.
 **Options:**
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops blobs create
 
@@ -24,13 +24,13 @@ Upload a new blob.
 **Options:**
 - [required] `-f`/`--input_path`
 
-  Path to file.
+  Path to file
 - `-ttl`/`--time_to_live`
 
-  The time to live of the blob in seconds (default = 259200 seconds, 3 days).
+  The time to live of the blob in seconds (default = 259200 seconds, 3 days)
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops blobs get
 
@@ -44,10 +44,10 @@ Download an existing blob.
 **Options:**
 - `-o`/`--output_path`
 
-  Path to file or directory to store blob.
+  Path to file or directory to store blob
 - `-q`/`--quiet`
 
-  Suppress informational messages.
+  Suppress informational messages
 
 ### ubiops blobs delete
 
@@ -61,7 +61,7 @@ Delete a blob.
 **Options:**
 - `-y`/`--assume_yes`
 
-  Assume yes instead of asking for confirmation.
+  Assume yes instead of asking for confirmation
 - `-q`/`--quiet`
 
-  Suppress informational messages.
+  Suppress informational messages

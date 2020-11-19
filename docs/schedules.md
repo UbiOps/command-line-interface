@@ -11,7 +11,7 @@ List request schedules in project.
 **Options:**
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops schedules create
 
@@ -25,16 +25,16 @@ Create a new request schedule.
 **Options:**
 - `-ot`/`--object_type`
 
-  The object type.
+  The object type
 - [required] `-on`/`--object_name`
 
-  The object name.
+  The object name
 - `-ov`/`--object_version`
 
-  The version name. Only relevant for object_type='model'.
+  The version name. Only relevant for object_type='deployment'.
 - [required] `-d`/`--data`
 
-  The input data of the request.
+  The input data of the request
 - [required] `-s`/`--schedule`
 
   Schedule in crontab format (in UTC)
@@ -46,10 +46,10 @@ Create a new request schedule.
   Timeout in seconds. This field is not used for batch requests.
 - `--enabled`
 
-  Boolean value indicating whether the created schedule is enabled or disabled.
+  Boolean value indicating whether the created schedule is enabled or disabled
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops schedules update
 
@@ -63,10 +63,10 @@ Update a request schedule.
 **Options:**
 - `-n`/`--new_name`
 
-  The new schedule name.
-- `-d`/`--data`
+  The new schedule name
+- `--data`
 
-  The new input data of the request.
+  The new input data of the request
 - `-s`/`--schedule`
 
   New schedule in crontab format (in UTC)
@@ -78,10 +78,10 @@ Update a request schedule.
   Timeout in seconds. This field is not used for batch requests.
 - `--enabled`
 
-  Boolean value indicating whether the created schedule is enabled or disabled.
+  Boolean value indicating whether the created schedule is enabled or disabled
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops schedules get
 
@@ -95,7 +95,7 @@ Get a request schedule.
 **Options:**
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops schedules delete
 
@@ -109,7 +109,7 @@ Delete a request schedule.
 **Options:**
 - `-y`/`--assume_yes`
 
-  Assume yes instead of asking for confirmation.
+  Assume yes instead of asking for confirmation
 - `-q`/`--quiet`
 
-  Suppress informational messages.
+  Suppress informational messages

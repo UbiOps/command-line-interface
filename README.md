@@ -1,15 +1,12 @@
 # ubiops-cli
-Command Line Interface to interact with the UbiOps API (v2.1).
+Command Line Interface to interact with the [UbiOps](https://ubiops.com) API (v2.1).
 
 Includes:
 - Managing projects
-- Managing models
-- Deploying new model versions
+- Managing deployments
+- Deploying new deployment versions
 - Managing pipelines
 - Making requests
-
-Excludes:
-- Managing connectors
 
 For more information, please visit [https://ubiops.com/docs](https://ubiops.com/docs)
 
@@ -87,10 +84,10 @@ Set a current project:
 ubiops current_project set <MY_PROJECT_NAME>
 ```
 
-Show your models:
+Show your deployments:
 
 ```bash
-ubiops models list
+ubiops deployments list
 ```
 
 ## Documentation
@@ -100,12 +97,13 @@ Category | Documentation reference
 Authentication | [docs/authentication.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/authentication.md)
 Projects | [docs/projects.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/projects.md)
 Config | [docs/config.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/config.md)
-Models | [docs/models.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/models.md)
-Model Versions | [docs/model_versions.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/model_versions.md)
+Deployments | [docs/deployments.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/deployments.md)
+Deployment Versions | [docs/deployment_versions.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/deployment_versions.md)
 Pipelines | [docs/pipelines.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/pipelines.md)
 Blobs | [docs/blobs.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/blobs.md)
 Environment Variables | [docs/environment_variables.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/environment_variables.md)
 Logs | [docs/logs.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/logs.md)
+Audit Events | [docs/audit_events.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/audit_events.md)
 Schedules | [docs/schedules.md](https://github.com/UbiOps/command-line-interface/tree/master/docs/schedules.md)
 
 

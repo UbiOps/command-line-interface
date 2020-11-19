@@ -23,7 +23,7 @@ def readme():
         return f.read()
 
 
-ubiops_version = "2.1.*"
+ubiops_version = "3.0.0"
 REQUIRES = ["urllib3>=1.15", "six>=1.10", "certifi", "requests>=2.17.3", "tabulate==0.8.7",
             "python-dateutil", "click>=7.0", "ConfigParser==4.0.2", "colorama==0.4.3", "pyyaml",
             "ubiops==%s" % ubiops_version]

@@ -4,23 +4,24 @@ import json
 
 from pkg.version import VERSION
 import pkg.src.projects as projects
-import pkg.src.models as models
-import pkg.src.model_versions as model_versions
+import pkg.src.deployments as deployments
+import pkg.src.deployment_versions as deployment_versions
 import pkg.src.pipelines as pipelines
 import pkg.src.blobs as blobs
 import pkg.src.logs as logs
 import pkg.src.config as config
 import pkg.src.auth as auth
 import pkg.src.environment_variables as env_vars
-import pkg.src.scheduled_requests as schedules
+import pkg.src.request_schedules as schedules
+from pkg.src.helpers.click_helpers import CustomGroup
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
+@click.group(cls=CustomGroup, context_settings=CONTEXT_SETTINGS)
 @click.version_option(VERSION, prog_name="UbiOps CLI")
 def cli():
-    """UbiOps command line interface."""
+    """UbiOps command line interface (CLI)"""
     pass
 
 
@@ -31,12 +32,13 @@ cli.add_command(auth.signout)
 cli.add_command(config.commands)
 cli.add_command(projects.current_project)
 cli.add_command(projects.commands)
-cli.add_command(models.commands)
-cli.add_command(model_versions.commands)
+cli.add_command(deployments.commands)
+cli.add_command(deployment_versions.commands)
 cli.add_command(pipelines.commands)
 cli.add_command(blobs.commands)
 cli.add_command(env_vars.commands)
 cli.add_command(logs.commands)
+cli.add_command(logs.audit_events)
 cli.add_command(schedules.commands)
 
 

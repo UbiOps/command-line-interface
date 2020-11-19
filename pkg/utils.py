@@ -3,11 +3,13 @@ import ubiops as api
 import configparser
 from pkg.exceptions import UnAuthorizedException
 from pkg.ignore.ignore import walk
+from pkg.version import VERSION
 from datetime import datetime
 
 import yaml
 import zipfile
 import click
+import json
 
 
 class Config:
@@ -112,6 +114,7 @@ def init_client():
             raise Exception("No access or service token found.")
 
         client = api.CoreApi(api.ApiClient(configuration))
+        client.user_agent = "UbiOps/cli/%s" % VERSION
         assert client.service_status().status == 'ok'
         return client
     except Exception:
@@ -124,6 +127,7 @@ def get_current_project(error=False):
     if not current:
         client = init_client()
         projects = client.projects_list()
+        client.api_client.close()
         try:
             # try to sort list
             projects = sorted(projects, key=lambda x: x.name)
@@ -148,6 +152,9 @@ def abs_path(path_param):
 
 
 def read_yaml(yaml_file, required_fields=None):
+    if yaml_file is None:
+        return {}
+
     with open(yaml_file) as f:
         content = yaml.safe_load(f)
     if required_fields:
@@ -166,14 +173,15 @@ def write_yaml(yaml_file, dictionary, default_file_name):
     return yaml_file
 
 
-def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", model_name=None, model_version=None, force=False):
+def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", deployment_name=None, version_name=None,
+            force=False):
     path_dir = abs_path(directory)
     assert os.path.isdir(path_dir), "Given path is not a directory."
     has_ignore_file = os.path.isfile(os.path.join(path_dir, ignore_filename)) if ignore_filename else False
 
     output_path = abs_path(output_path)
     if os.path.isdir(output_path):
-        output_path = os.path.join(output_path, default_model_version_zip_name(model_name, model_version))
+        output_path = os.path.join(output_path, default_version_zip_name(deployment_name, version_name))
     if not force and os.path.isfile(output_path):
         click.confirm("File %s already exists. Do you want to overwrite it?" % output_path, abort=True)
 
@@ -181,7 +189,7 @@ def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", model_name
     with zipfile.ZipFile(output_path, "w") as zf:
         for r, d, files in walk(path_dir, filename=ignore_filename) if has_ignore_file else os.walk(path_dir):
             root_subdir = os.path.join('', *r.split(package_path)[1:])
-            package_subdir = os.path.join('model_package', root_subdir)
+            package_subdir = os.path.join('deployment_package', root_subdir)
             for filename in files:
                 if os.path.join(r, filename) != output_path:
                     zf.write(os.path.join(r, filename), os.path.join(package_subdir, filename))
@@ -210,12 +218,12 @@ def set_object_default(value, defaults_object, default_key):
     return value
 
 
-def default_model_version_zip_name(model_name, version_name):
+def default_version_zip_name(deployment_name, version_name):
     datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
-    if model_name and version_name:
-        return "%s_%s_%s.zip" % (model_name, version_name, datetime_str)
-    elif model_name:
-        return "%s_%s.zip" % (model_name, datetime_str)
+    if deployment_name and version_name:
+        return "%s_%s_%s.zip" % (deployment_name, version_name, datetime_str)
+    elif deployment_name:
+        return "%s_%s.zip" % (deployment_name, datetime_str)
     else:
         return "%s.zip" % datetime_str
 
@@ -225,3 +233,13 @@ def check_required_fields(input_dict, list_name, required_fields):
         for requirement in required_fields:
             assert requirement in list_item, "No '%s' found for one of the %s." \
                                              "\nFound: %s" % (requirement, list_name, str(list_item))
+
+
+def parse_json(data):
+    if data is None:
+        return {}
+
+    try:
+        return json.loads(data)
+    except json.JSONDecodeError:
+        raise Exception("Failed to parse request data. JSON format expected. Input: %s" % str(data))

@@ -1,15 +1,14 @@
 import ubiops as api
 import requests
 import json
-import os
 from json import JSONDecodeError
 
 from pkg.exceptions import UnAuthorizedException
-from pkg.utils import get_current_project, init_client
+from pkg.utils import get_current_project
 from pkg.src.helpers.options import *
 
 
-@click.command("signin")
+@click.command("signin", short_help="Sign in using your credentials")
 @BEARER
 @TOKEN
 @API_ENDPOINT
@@ -22,7 +21,7 @@ def signin(type_, api_endpoint, email, password):
 
     user_config = Config()
 
-    assert len(api_endpoint) > 0, 'Please, specify the UbiOps API endpoint.'
+    assert len(api_endpoint) > 0, 'Please, specify the UbiOps API endpoint'
     # API endpoint should not end with a '/'
     api_endpoint = api_endpoint[:-1] if api_endpoint[-1] == "/" else api_endpoint
     user_config.set('auth.api', api_endpoint)
@@ -34,14 +33,13 @@ def signin(type_, api_endpoint, email, password):
             password = click.prompt('Password', hide_input=True)
 
         url = "%s/authorize" % api_endpoint
+        headers = {"Content-Type": "application/json", "accept": "application/json"}
         data = {"email": email, "password": password}
-
-        response = requests.post(url, data=json.dumps(data), headers={
-            "Content-Type": "application/json", "accept": "application/json"})
+        response = requests.post(url, data=json.dumps(data), headers=headers)
         try:
             response = json.loads(response.text)
         except JSONDecodeError:
-            raise Exception("Could not access %s." % api_endpoint)
+            raise Exception("Could not access %s" % api_endpoint)
 
         assert 'error' not in response, response['error']
         assert 'access' in response, "Could not authorize."
@@ -54,7 +52,7 @@ def signin(type_, api_endpoint, email, password):
         if not password:
             password = click.prompt('API Token', hide_input=True)
         if not password.startswith('Token '):
-            click.echo("%s Token should be formatted like`\"Token 1abc2def3ghi4jkl5mno6pqr7stu8vwx9yz\"`."
+            click.echo("%s Token should be formatted like`\"Token 1abc2def3ghi4jkl5mno6pqr7stu8vwx9yz\"`"
                        % click.style('Warning:', fg='yellow'))
 
         try:
@@ -64,11 +62,18 @@ def signin(type_, api_endpoint, email, password):
             configuration.api_key['Authorization'] = password
             client = api.CoreApi(api.ApiClient(configuration))
             assert client.service_status().status == 'ok'
-            service_user = client.user_get()
-        except Exception:
-            raise Exception('Could not authorize.')
 
-        user_config.set('auth.email', service_user.email)
+            url = "%s/user" % api_endpoint
+            response = requests.get(url, headers={"Authorization": password, "accept": "application/json"})
+            response = json.loads(response.text)
+            assert 'error' not in response, response['error']
+
+            service_user = response
+            client.api_client.close()
+        except Exception:
+            raise Exception('Could not authorize')
+
+        user_config.set('auth.email', service_user['email'])
         user_config.set('auth.service_token', password)
         user_config.delete_option('auth.tmp_access_token')
 
@@ -80,17 +85,17 @@ def signin(type_, api_endpoint, email, password):
         click.echo("\nSelected project: %s" % click.style(project, fg='yellow'))
         click.echo("To change the selected project, use: `ubiops current_project set <PROJECT_NAME>`")
     else:
-        click.echo("\n%s" % click.style("No projects found.", fg='yellow'))
+        click.echo("\n%s" % click.style("No projects found", fg='yellow'))
         click.echo("To create a project, use: `ubiops projects create <PROJECT_NAME>`")
 
 
-@click.group("user")
+@click.group("user", short_help="The current user interacting with the CLI")
 def user():
-    """The current user interacting with UbiOps."""
+    """The current user interacting with the CLI."""
     pass
 
 
-@user.command("get")
+@user.command("get", short_help="Show the email of the current user")
 def user_get():
     """Show the email of the current user."""
     user_config = Config()
@@ -103,13 +108,13 @@ def user_get():
 @user.command("set")
 @EMAIL_ARGUMENT
 def user_set(email):
-    """Change the user interacting with UbiOps."""
+    """Change the user interacting with the CLI."""
     user_config = Config()
     user_config.set('auth.email', email)
     user_config.write()
 
 
-@click.command("status")
+@click.command("status", short_help="Get login status")
 def status():
     """Whether the current user is authorized or not."""
     user_config = Config()
@@ -117,7 +122,6 @@ def status():
     email = user_config.get('auth.email')
 
     try:
-        init_client()
         project = get_current_project()
         click.echo("Authorized")
         click.echo("email: %s" % email)
@@ -126,12 +130,12 @@ def status():
             click.echo("project: %s" % project)
     except UnAuthorizedException:
         click.echo("Unauthorized")
-        click.echo("Please, use 'ubiops signin' to sign in.")
+        click.echo("Please, use 'ubiops signin' to sign in")
 
 
-@click.command("signout")
+@click.command("signout", short_help="Sign out of the CLI")
 def signout():
-    """Sign out to UbiOps CLI."""
+    """Sign out of the CLI."""
     user_config = Config()
     user_config.delete_option('auth.tmp_access_token')
     user_config.delete_option('auth.service_token')

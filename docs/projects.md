@@ -13,10 +13,10 @@ To select a project, use: `ubiops current_project set <project_name>`
 **Options:**
 - `-o`/`--organization_name`
 
-  The organization name.
+  The organization name
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops projects get
 
@@ -30,7 +30,7 @@ Get the details of a project.
 **Options:**
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops projects create
 
@@ -52,10 +52,10 @@ No organization yet? Please, use the user interface and follow the registration 
 **Options:**
 - `-o`/`--organization_name`
 
-  The organization name.
+  The organization name
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops projects delete
 
@@ -69,30 +69,30 @@ Delete a project.
 **Options:**
 - `-y`/`--assume_yes`
 
-  Assume yes instead of asking for confirmation.
+  Assume yes instead of asking for confirmation
 - `-q`/`--quiet`
 
-  Suppress informational messages.
+  Suppress informational messages
 
 ## ubiops current_project
 ### ubiops current_project get
 
 **Description:**
 
-Get your current project of the command line interface.
+Get your current CLI project.
 
 **Arguments:** - 
 
 **Options:**
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
 
 ### ubiops current_project set
 
 **Description:**
 
-Set your current project of the command line interface.
+Set your current CLI project.
 
 **Arguments:**
 - [required] `project_name`
@@ -100,4 +100,4 @@ Set your current project of the command line interface.
 **Options:**
 - `-fmt`/`--format`
 
-  The output format.
+  The output format
