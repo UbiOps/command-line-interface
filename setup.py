@@ -19,11 +19,18 @@ NAME = "ubiops-cli"
 
 
 def readme():
-    with open('README.md') as f:
-        return f.read()
+    return """
+Command Line Interface to interact with the UbiOps API (v2.1).
+
+Read the documentation at: https://github.com/UbiOps/command-line-interface
+
+More information about UbiOps: https://ubiops.com/
+
+UbiOps-cli is compatible with Python 3.5+ and is distributed under the Apache 2.0 License.
+"""
 
 
-ubiops_version = "3.0.0"
+ubiops_version = "3.1.0"
 REQUIRES = ["urllib3>=1.15", "six>=1.10", "certifi", "requests>=2.17.3", "tabulate==0.8.7",
             "python-dateutil", "click>=7.0", "ConfigParser==4.0.2", "colorama==0.4.3", "pyyaml",
             "ubiops==%s" % ubiops_version]

@@ -1,6 +1,11 @@
 # User settings
 *.config
 
+# Mkdocs
+mkdocs.yml
+docs/get_started.md
+docs/installation_guide.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

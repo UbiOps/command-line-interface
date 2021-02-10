@@ -1,6 +1,13 @@
-
 ## ubiops schedules
+
+**Command:** `ubiops schedules`
+
+
+<br/>
+
 ### ubiops schedules list
+
+**Command:** `ubiops schedules list`
 
 **Description:**
 
@@ -9,107 +16,122 @@ List request schedules in project.
 **Arguments:** - 
 
 **Options:**
-- `-fmt`/`--format`
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops schedules create
+
+**Command:** `ubiops schedules create`
 
 **Description:**
 
 Create a new request schedule.
 
 **Arguments:**
+
 - [required] `schedule_name`
 
+
+
 **Options:**
-- `-ot`/`--object_type`
 
-  The object type
-- [required] `-on`/`--object_name`
+- `-ot`/`--object_type`<br/>The object type
 
-  The object name
-- `-ov`/`--object_version`
+- [required] `-on`/`--object_name`<br/>The object name
 
-  The version name. Only relevant for object_type='deployment'.
-- [required] `-d`/`--data`
+- `-ov`/`--object_version`<br/>The version name. Only relevant for object_type='deployment'.
 
-  The input data of the request
-- [required] `-s`/`--schedule`
+- [required] `-d`/`--data`<br/>The input data of the request
 
-  Schedule in crontab format (in UTC)
-- `--batch`
+- [required] `-s`/`--schedule`<br/>Schedule in crontab format (in UTC)
 
-  Boolean value indicating whether the request will be performed as batch request (true) or as direct request (false)
-- `--timeout`
+- `--batch`<br/>Boolean value indicating whether the request will be performed as batch request (true) or as direct request (false)
 
-  Timeout in seconds. This field is not used for batch requests.
-- `--enabled`
+- `--timeout`<br/>Timeout in seconds. This field is not used for batch requests.
 
-  Boolean value indicating whether the created schedule is enabled or disabled
-- `-fmt`/`--format`
+- `--enabled`<br/>Boolean value indicating whether the created schedule is enabled or disabled
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops schedules update
+
+**Command:** `ubiops schedules update`
 
 **Description:**
 
 Update a request schedule.
 
 **Arguments:**
+
 - [required] `schedule_name`
 
+
+
 **Options:**
-- `-n`/`--new_name`
 
-  The new schedule name
-- `--data`
+- `-n`/`--new_name`<br/>The new schedule name
 
-  The new input data of the request
-- `-s`/`--schedule`
+- `--data`<br/>The new input data of the request
 
-  New schedule in crontab format (in UTC)
-- `--batch`
+- `-s`/`--schedule`<br/>New schedule in crontab format (in UTC)
 
-  Boolean value indicating whether the request will be performed as batch request (true) or as direct request (false)
-- `--timeout`
+- `--batch`<br/>Boolean value indicating whether the request will be performed as batch request (true) or as direct request (false)
 
-  Timeout in seconds. This field is not used for batch requests.
-- `--enabled`
+- `--timeout`<br/>Timeout in seconds. This field is not used for batch requests.
 
-  Boolean value indicating whether the created schedule is enabled or disabled
-- `-fmt`/`--format`
+- `--enabled`<br/>Boolean value indicating whether the created schedule is enabled or disabled
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops schedules get
+
+**Command:** `ubiops schedules get`
 
 **Description:**
 
 Get a request schedule.
 
 **Arguments:**
+
 - [required] `schedule_name`
 
-**Options:**
-- `-fmt`/`--format`
 
-  The output format
+
+**Options:**
+
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops schedules delete
+
+**Command:** `ubiops schedules delete`
 
 **Description:**
 
 Delete a request schedule.
 
 **Arguments:**
+
 - [required] `schedule_name`
 
+
+
 **Options:**
-- `-y`/`--assume_yes`
 
-  Assume yes instead of asking for confirmation
-- `-q`/`--quiet`
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>

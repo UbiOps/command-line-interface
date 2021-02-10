@@ -36,7 +36,7 @@ def schedules_list(format_):
     response = client.request_schedules_list(project_name=project_name)
     client.api_client.close()
 
-    print_list(response, LIST_ITEMS, project_name=project_name, rename_cols=RENAME_COLUMNS, sorting_col=1, fmt=format_)
+    print_list(response, LIST_ITEMS, rename_cols=RENAME_COLUMNS, sorting_col=1, fmt=format_)
 
 
 @commands.command("create", short_help="Create a schedule")
@@ -66,7 +66,7 @@ def schedules_create(schedule_name, object_type, object_name, object_version, da
     response = client.request_schedules_create(project_name=project_name, data=schedule)
     client.api_client.close()
 
-    print_item(response, LIST_ITEMS, project_name=project_name, rename=RENAME_COLUMNS, fmt=format_)
+    print_item(response, LIST_ITEMS, rename=RENAME_COLUMNS, fmt=format_)
 
 
 @commands.command("update", short_help="Update a schedule")
@@ -97,7 +97,7 @@ def schedules_update(schedule_name, new_name, data, format_, **kwargs):
                                                data=new_schedule)
     client.api_client.close()
 
-    print_item(response, LIST_ITEMS, project_name=project_name, rename=RENAME_COLUMNS, fmt=format_)
+    print_item(response, LIST_ITEMS, rename=RENAME_COLUMNS, fmt=format_)
 
 
 @commands.command("get", short_help="Get a schedule")
@@ -112,7 +112,7 @@ def schedules_get(schedule_name, format_):
     response = client.request_schedules_get(project_name=project_name, schedule_name=schedule_name)
     client.api_client.close()
 
-    print_item(response, row_attrs=LIST_ITEMS, project_name=project_name, rename=RENAME_COLUMNS, fmt=format_)
+    print_item(response, row_attrs=LIST_ITEMS, rename=RENAME_COLUMNS, fmt=format_)
 
 
 @commands.command("delete", short_help="Delete a schedule")

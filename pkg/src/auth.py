@@ -1,11 +1,7 @@
-import ubiops as api
-import requests
-import json
-from json import JSONDecodeError
-
 from pkg.exceptions import UnAuthorizedException
 from pkg.utils import get_current_project
 from pkg.src.helpers.options import *
+from pkg.src.helpers.requests import sign_in, authorize, authorize2fa, sign_out, raise_for_status
 
 
 @click.command("signin", short_help="Sign in using your credentials")
@@ -17,36 +13,30 @@ from pkg.src.helpers.options import *
 def signin(type_, api_endpoint, email, password):
     """Sign in using your credentials.
 
-    If you want to use a service token, use the <token> flag option."""
-
-    user_config = Config()
+    If you want to use a service token, use the `<token>` flag option."""
 
     assert len(api_endpoint) > 0, 'Please, specify the UbiOps API endpoint'
     # API endpoint should not end with a '/'
     api_endpoint = api_endpoint[:-1] if api_endpoint[-1] == "/" else api_endpoint
-    user_config.set('auth.api', api_endpoint)
 
     if type_ == 'bearer':
         if not email:
             email = click.prompt('Email', default=Config().get("auth.email"))
-        if not password:
-            password = click.prompt('Password', hide_input=True)
 
-        url = "%s/authorize" % api_endpoint
-        headers = {"Content-Type": "application/json", "accept": "application/json"}
-        data = {"email": email, "password": password}
-        response = requests.post(url, data=json.dumps(data), headers=headers)
-        try:
-            response = json.loads(response.text)
-        except JSONDecodeError:
-            raise Exception("Could not access %s" % api_endpoint)
+        provider, url = sign_in(api_endpoint=api_endpoint, email=email)
 
-        assert 'error' not in response, response['error']
-        assert 'access' in response, "Could not authorize."
+        if provider == 'ubiops':
+            if not password:
+                password = click.prompt('Password', hide_input=True)
+            success = authorize(api_endpoint, email, password)
+            if not success:
+                token2fa = click.prompt('Two factor authentication token', hide_input=True)
+                authorize2fa(api_endpoint, email, password, token2fa)
 
-        user_config.set('auth.email', email)
-        user_config.set('auth.tmp_access_token', response['access'])
-        user_config.delete_option('auth.service_token')
+        else:
+            raise NotImplementedError("Sign-in type %s not supported in the CLI.\n"
+                                      "Please, use an API Token to sign in. You can create one in the WebApp "
+                                      "in the Users & Permissions panel." % provider)
 
     elif type_ == 'token':
         if not password:
@@ -56,31 +46,13 @@ def signin(type_, api_endpoint, email, password):
                        % click.style('Warning:', fg='yellow'))
 
         try:
-            configuration = api.Configuration()
-            configuration.host = api_endpoint
-            configuration.api_key_prefix['Authorization'] = ''
-            configuration.api_key['Authorization'] = password
-            client = api.CoreApi(api.ApiClient(configuration))
-            assert client.service_status().status == 'ok'
-
-            url = "%s/user" % api_endpoint
-            response = requests.get(url, headers={"Authorization": password, "accept": "application/json"})
-            response = json.loads(response.text)
-            assert 'error' not in response, response['error']
-
-            service_user = response
-            client.api_client.close()
+            raise_for_status(api_endpoint=api_endpoint, token=password)
         except Exception:
             raise Exception('Could not authorize')
 
-        user_config.set('auth.email', service_user['email'])
-        user_config.set('auth.service_token', password)
-        user_config.delete_option('auth.tmp_access_token')
+    click.echo("\nWelcome to UbiOps!")
 
-    user_config.write()
-    click.echo("Welcome to UbiOps!")
-
-    project = get_current_project()
+    project = get_current_project(check_existing=True)
     if project:
         click.echo("\nSelected project: %s" % click.style(project, fg='yellow'))
         click.echo("To change the selected project, use: `ubiops current_project set <PROJECT_NAME>`")
@@ -136,7 +108,4 @@ def status():
 @click.command("signout", short_help="Sign out of the CLI")
 def signout():
     """Sign out of the CLI."""
-    user_config = Config()
-    user_config.delete_option('auth.tmp_access_token')
-    user_config.delete_option('auth.service_token')
-    user_config.write()
+    sign_out()

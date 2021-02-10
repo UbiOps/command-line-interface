@@ -8,7 +8,7 @@ from pkg.src.helpers.options import *
 LIST_ITEMS = ['id', 'name', 'creation_date', 'organization_name']
 
 
-@click.group("projects", short_help="Manage your projects")
+@click.group(["projects", "prj"], short_help="Manage your projects")
 def commands():
     """Manage your projects."""
     pass
@@ -20,7 +20,7 @@ def commands():
 def projects_list(organization_name, format_):
     """List all your projects.
 
-    To select a project, use: `ubiops current_project set <project_name>`
+    To select a project, use: `ubiops current_project set `<project_name>``
     """
     client = init_client()
     projects = client.projects_list()
@@ -54,7 +54,7 @@ def projects_create(project_name, organization_name, format_):
     The created project will automatically become the current project.
 
     When only one organization exists, it will automatically be selected.
-    When multiple organizations exist and the <organization_name> option is not provided, the user will be prompted
+    When multiple organizations exist and the `<organization_name>` option is not provided, the user will be prompted
     to choose the organization.
 
     No organization yet? Please, use the user interface and follow the registration process or contact sales.
@@ -106,7 +106,7 @@ def projects_delete(project_name, assume_yes, quiet):
                            "to update." % current)
 
 
-@click.group("current_project", short_help="Manage your current CLI project")
+@click.group(["current_project", "cprj"], short_help="Manage your current CLI project")
 def current_project():
     """Manage your current CLI project."""
     pass

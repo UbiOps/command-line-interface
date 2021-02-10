@@ -121,19 +121,29 @@ def init_client():
         raise UnAuthorizedException("Unauthorized. Please, use 'ubiops signin' first.")
 
 
-def get_current_project(error=False):
+def get_current_project(error=False, check_existing=False):
     user_config = Config()
     current = user_config.get('default.project')
-    if not current:
+    if not current or check_existing:
         client = init_client()
         projects = client.projects_list()
         client.api_client.close()
+
+        if check_existing and current:
+            try:
+                # Check if current project is in projects list
+                if len(list(filter(lambda x: x.name == current, projects))) == 1:
+                    return current
+            except AttributeError:
+                pass
+
         try:
-            # try to sort list
+            # Try to sort list
             projects = sorted(projects, key=lambda x: x.name)
         except AttributeError:
             pass
 
+        # Select first project in list
         if len(projects) > 0 and hasattr(projects[0], 'name') and hasattr(projects[0], 'organization_name'):
             user_config.set('default.project', projects[0].name)
             user_config.write()
@@ -229,9 +239,10 @@ def default_version_zip_name(deployment_name, version_name):
 
 
 def check_required_fields(input_dict, list_name, required_fields):
+    assert list_name in input_dict, "No list '%s' found in %s" % (list_name, str(input_dict))
     for list_item in input_dict[list_name]:
         for requirement in required_fields:
-            assert requirement in list_item, "No '%s' found for one of the %s." \
+            assert requirement in list_item, "No key '%s' found for one of the %s." \
                                              "\nFound: %s" % (requirement, list_name, str(list_item))
 
 

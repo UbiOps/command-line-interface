@@ -1,7 +1,7 @@
 import ubiops as api
 from pkg.utils import init_client, read_yaml, write_yaml, get_current_project
 from pkg.src.helpers.helpers import set_version_defaults, update_deployment_file, VERSION_FIELDS,\
-    set_dict_default, VERSION_FIELDS_RENAMED, get_label_filter
+    VERSION_FIELDS_UPDATE, set_dict_default, VERSION_FIELDS_RENAMED, get_label_filter
 from pkg.src.helpers.formatting import print_list, print_item, format_yaml
 from pkg.src.helpers.options import *
 
@@ -23,7 +23,7 @@ def versions_list(deployment_name, labels, format_):
     """
     List the versions of a deployment.
 
-    The <labels> option can be used to filter on specific labels.
+    The `<labels>` option can be used to filter on specific labels.
     """
 
     label_filter = get_label_filter(labels)
@@ -47,9 +47,9 @@ def versions_list(deployment_name, labels, format_):
 def versions_get(deployment_name, version_name, output_path, quiet, format_):
     """Get the version of a deployment.
 
-    If you specify the <output_path> option, this location will be used to store the
-    deployment version settings in a yaml file. You can either specify the <output_path>
-    as file or directory. If the specified <output_path> is a directory, the settings
+    If you specify the `<output_path>` option, this location will be used to store the
+    deployment version settings in a yaml file. You can either specify the `<output_path>`
+    as file or directory. If the specified `<output_path>` is a directory, the settings
     will be stored in `version.yaml`.
 
     \b
@@ -122,9 +122,9 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     maximum_idle_time: 300
     ```
 
-    Those parameters can also be provided as command options. If both a <yaml_file> is set and
-    options are given, the options defined by <yaml_file> will be overwritten by the specified command options.
-    The version name can either be passed as command argument or specified inside the yaml file using <version_name>.
+    Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
+    options are given, the options defined by `<yaml_file>` will be overwritten by the specified command options.
+    The version name can either be passed as command argument or specified inside the yaml file using `<version_name>`.
     """
 
     project_name = get_current_project(error=True)
@@ -143,8 +143,8 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
     version = api.VersionCreate(version=version_name, **{k: kwargs[k] for k in VERSION_FIELDS})
-
     response = client.versions_create(project_name=project_name, deployment_name=deployment_name, data=version)
+
     update_deployment_file(client, project_name, deployment_name, version_name, kwargs['deployment_file'])
     client.api_client.close()
 
@@ -158,7 +158,6 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @VERSION_NAME_UPDATE
 @DEPLOYMENT_FILE
 @VERSION_YAML_FILE
-@LANGUAGE
 @MEMORY_ALLOCATION
 @MIN_INSTANCES
 @MAX_INSTANCES
@@ -169,11 +168,27 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, **kwargs):
     """Update a version of a deployment.
 
-    You may want to change some deployment options, like, programming <language> and
-    <memory_allocation>. You can do this by either providing the options in a yaml file
-    and passing the file path as <yaml_file>, or passing the options as command options.
-    If both a <yaml_file> is set and options are given, the options defined by <yaml_file>
+    \b
+    It is possible to define the parameters using a yaml file.
+    For example:
+    ```
+    version_description: Version created via command line.
+    version_labels:
+      my-key-1: my-label-1
+      my-key-2: my-label-2
+    memory_allocation: 256
+    minimum_instances: 0
+    maximum_instances: 1
+    maximum_idle_time: 300
+    ```
+
+    You may want to change some deployment options, like, `<maximum_instances>` and
+    `<memory_allocation>`. You can do this by either providing the options in a yaml file
+    and passing the file path as `<yaml_file>`, or passing the options as command options.
+    If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
     will be overwritten by the specified command options.
+
+    It's not possible to update the programming language of an existing deployment version.
     """
 
     project_name = get_current_project(error=True)
@@ -187,10 +202,10 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     kwargs = set_version_defaults(kwargs, yaml_content, existing_version, extra_yaml_fields=['deployment_file'])
 
     new_version_name = version_name if new_name is None else new_name
-    version = api.VersionCreate(version=new_version_name, **{k: kwargs[k] for k in VERSION_FIELDS})
-    update_deployment_file(client, project_name, deployment_name, version_name, kwargs['deployment_file'])
+    version = api.VersionUpdate(version=new_version_name, **{k: kwargs[k] for k in VERSION_FIELDS_UPDATE})
     client.versions_update(project_name=project_name, deployment_name=deployment_name, version=version_name,
                            data=version)
+    update_deployment_file(client, project_name, deployment_name, version_name, kwargs['deployment_file'])
     client.api_client.close()
 
     if not quiet:

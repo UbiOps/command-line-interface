@@ -15,7 +15,7 @@ OFFSET = click.option('--offset', required=False, default=None, type=int, metava
 
 # Formatting output
 LOGS_FORMATS = click.option('-fmt', '--format', 'format_',  default='reference', help="The output format",
-                            type=click.Choice(['oneline', 'reference', 'extended'], case_sensitive=False),
+                            type=click.Choice(['oneline', 'reference', 'extended', 'json'], case_sensitive=False),
                             show_default=True)
 REQUESTS_FORMATS = click.option('-fmt', '--format', 'format_',  default='reference', help="The output format",
                                 type=click.Choice(['oneline', 'reference', 'json'], case_sensitive=False),
@@ -70,10 +70,10 @@ DEPLOYMENT_YAML_FILE = click.option("-f", "--yaml_file", required=True, type=cli
                                     "[%s]" % ", ".join(DEPLOYMENT_REQUIRED_FIELDS))
 DEPLOYMENT_YAML_OUTPUT = click.option('-o', '--output_path', required=False, default=None, metavar='<path>',
                                       help="Path to file or directory to store deployment yaml file")
-DEPLOYMENT_LABELS_OPTIONAL = click.option('-l', '--labels', 'deployment_labels', required=False, default=None,
+DEPLOYMENT_LABELS_OPTIONAL = click.option('-lb', '--labels', 'deployment_labels', required=False, default=None,
                                           type=str, metavar='<key1:value,key2:value>', multiple=True,
                                           help="Labels defined as key/value pairs")
-LABELS_FILTER = click.option('-l', '--labels', required=False, default=None, type=str, multiple=True,
+LABELS_FILTER = click.option('-lb', '--labels', required=False, default=None, type=str, multiple=True,
                              metavar='<key1:value,key2:value>', help="Labels defined as key/value pairs")
 
 
@@ -104,7 +104,7 @@ MAX_INSTANCES = click.option('-max', '--maximum_instances', required=False, defa
 MAX_IDLE_TIME = click.option('-t', '--maximum_idle_time', required=False, default=None, type=int, metavar='<int>',
                              help="Maximum idle time before shutting down instance (seconds)")
 
-VERSION_LABELS = click.option('-l', '--labels', 'version_labels', required=False, default=None, multiple=True,
+VERSION_LABELS = click.option('-lb', '--labels', 'version_labels', required=False, default=None, multiple=True,
                               type=str, metavar='<key1:value,key2:value>', help="Labels defined as key/value pairs")
 VERSION_DESCRIPTION = click.option('-desc', '--version_description', required=False, metavar='<string>',
                                    help="The version description")
@@ -130,6 +130,14 @@ ZIP_OUTPUT_STORE = click.option('-o', '--output_path', required=False, default=N
 ZIP_OUTPUT = click.option('-o', '--output_path', required=False, default='', metavar='<path>',
                           help="Path to file or directory to store deployment package zip")
 
+# Deployment version revisions
+REVISION_ID = click.argument('revision_id', required=True, metavar='<revision_id>', nargs=1)
+
+# Deployment version builds
+BUILD_ID = click.argument('build_id', required=True, metavar='<build_id>', nargs=1)
+BUILD_ID_OPTIONAL = click.option('-bid', '--build_id', required=False, default=None, metavar='<id>',
+                                 help="The deployment version build ID")
+
 # Requests
 REQUEST_DATA = click.option('-d', '--data', required=True, help="The input data of the request", metavar='<string>')
 REQUEST_DATA_UPDATE = click.option('--data', required=False, help="The new input data of the request",
@@ -144,8 +152,14 @@ PIPELINE_REQUEST_ID_OPTIONAL = click.option('-pid', '--pipeline_request_id', req
                                             metavar='<id>', help="The ID of the pipeline request")
 REQUEST_LIMIT = click.option('--limit', required=False, default=10, type=click.IntRange(1, 50), show_default=True,
                              help="Limit of the number of requests. The maximum value is 50.", metavar='[1-50]')
-REQUEST_TIMEOUT = click.option('--timeout', required=False, default=300, type=click.IntRange(10, 3600),
-                               metavar='[10-3600]', show_default=True, help="Timeout in seconds")
+REQUEST_DEPLOYMENT_TIMEOUT = click.option('-t', '--timeout', required=False, default=300, type=click.IntRange(10, 3600),
+                                          metavar='[10-3600]', show_default=True, help="Timeout in seconds")
+REQUEST_PIPELINE_TIMEOUT = click.option('-pt', '--pipeline_timeout', required=False, default=3600,
+                                        type=click.IntRange(10, 7200), metavar='[10-7200]', show_default=True,
+                                        help="Timeout for the entire pipeline request in seconds")
+REQUEST_OBJECT_TIMEOUT = click.option('-dt', '--deployment_timeout', required=False, default=300,
+                                      type=click.IntRange(10, 3600), metavar='[10-3600]', show_default=True,
+                                      help="Timeout for each deployment request in the pipeline in seconds")
 
 # Blobs
 BLOB_ID = click.argument('blob_id', required=True, metavar="<id>", nargs=1)
@@ -171,10 +185,12 @@ PIPELINE_YAML_FILE_UPDATE = click.option("-f", "--yaml_file", required=False, de
                                               "[%s]" % ", ".join(PIPELINE_REQUIRED_FIELDS), metavar='<path>')
 PIPELINE_YAML_OUTPUT = click.option('-o', '--output_path', required=False, default=None, metavar='<path>',
                                     help="Path to file or directory to store pipeline yaml file")
+PIPELINE_OBJECT_NAME = click.option('-po', '--pipeline_object_name', required=False, default=None,
+                                    metavar="<pipeline object name>", help="The pipeline object name")
 
 # Environment variables
 ENV_VAR_ID = click.argument('env_var_id', required=True, metavar="<id>", nargs=1)
-ENV_VAR_NAME = click.argument('env_var_name', required=True, metavar="<name>", nargs=1)
+ENV_VAR_NAME = click.argument('env_var_name', required=False, default=None, metavar="<name>", nargs=1)
 ENV_VAR_NAME_UPDATE = click.option('-n', '--new_name', required=False, default=False,
                                    help="The new environment variable name")
 ENV_VAR_VALUE = click.option('--value', 'env_var_value', required=False, default=None, metavar="<string>",
@@ -191,6 +207,8 @@ TO_DEPLOYMENT_NAME = click.option('-td', '--to_deployment', required=True, metav
 TO_VERSION_NAME = click.option('-tv', '--to_version', required=False, metavar="<string>",
                                help="The version name to copy the environment variables to. "
                                     "If None, the environment variables are copied to deployment level.")
+ENV_VAR_YAML_FILE = click.option("-f", "--yaml_file", required=False, default=None, type=click.Path(), metavar='<path>',
+                                 help="Path to a yaml file that contains environment variables")
 
 # Logs
 SYSTEM = click.option('--system', required=False, default=None, type=click.BOOL, metavar='[True|False]',
@@ -201,16 +219,16 @@ START_DATE = click.option('--start_date', required=False, default=None, metavar=
 START_LOG = click.option('--start_log', required=False, default=None, metavar='<id>',
                          help="Identifier for log lines. If specified, it will act as a starting point for the "
                               "interval in which to query the logs. This can be useful when making multiple queries "
-                              "to obtain consecutive logs. It will include the log having the log id equal to the "
-                              "id value in the response, regardless of whether the date_range is positive or negative.")
+                              "to obtain consecutive logs. It will include the log having the log ID equal to the "
+                              "ID value in the response, regardless of whether the date_range is positive or negative.")
 LIMIT = click.option('--limit', required=False, default=500, type=click.IntRange(1, 500), show_default=True,
                      help="Limit of the logs response. The maximum value is 500.")
 DATE_RANGE = click.option('--date_range', required=False, default=-86400, type=click.IntRange(-86400, 86400),
                           show_default=True,
                           help="Duration (seconds) of the interval for which the logs are retrieved. If it is "
-                               "positive, logs starting from the specified date / log id (both inclusive) "
+                               "positive, logs starting from the specified date / log ID (both inclusive) "
                                "plus date range seconds towards the present time are returned. Otherwise, logs "
-                               "starting from the specified date / log id (both inclusive) minus date range "
+                               "starting from the specified date / log ID (both inclusive) minus date range "
                                "seconds towards the past are returned.")
 LOG_ID = click.argument('log_id', required=True, metavar='<id>', nargs=1)
 

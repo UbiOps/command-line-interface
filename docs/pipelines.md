@@ -1,9 +1,15 @@
-
 ## ubiops pipelines
 
-**Alias:**  ubiops ppl
+**Command:** `ubiops pipelines`
+
+**Alias:** `ubiops ppl`
+
+
+<br/>
 
 ### ubiops pipelines list
+
+**Command:** `ubiops pipelines list`
 
 **Description:**
 
@@ -14,16 +20,17 @@ The <labels> option can be used to filter on specific labels.
 **Arguments:** - 
 
 **Options:**
-- `-l`/`--labels`
 
-  Labels defined as key/value pairs
+- `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
-  This option can be provided multiple times in a single command.
-- `-fmt`/`--format`
+- `-fmt`/`--format`<br/>The output format
 
-  The output format
+
+<br/>
 
 ### ubiops pipelines get
+
+**Command:** `ubiops pipelines get`
 
 **Description:**
 
@@ -35,20 +42,25 @@ directory. If the specified <output_path> is a directory, the settings will be
 stored in `pipeline.yaml`.
 
 **Arguments:**
+
 - [required] `pipeline_name`
 
+
+
 **Options:**
-- `-o`/`--output_path`
 
-  Path to file or directory to store pipeline yaml file
-- `-q`/`--quiet`
+- `-o`/`--output_path`<br/>Path to file or directory to store pipeline yaml file
 
-  Suppress informational messages
-- `-fmt`/`--format`
+- `-q`/`--quiet`<br/>Suppress informational messages
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops pipelines create
+
+**Command:** `ubiops pipelines create`
 
 **Description:**
 
@@ -72,32 +84,39 @@ objects:
     reference_name: my-deployment-name
     reference_version: my-deployment-version
 attachments:
-  - source_name: pipeline_start
-    destination_name: object1
-    mapping:
-    - source_field_name: my-pipeline-param1
-      destination_field_name: my-deployment-param1
+  - destination_name: object1
+    sources:
+      - source_name: pipeline_start
+        mapping:
+          - source_field_name: my-pipeline-param1
+            destination_field_name: my-deployment-param1
 ```
 
 Possible input/output types: [structured, plain]. Possible data_types: [blob, int, string, double,
 bool, array_string, array_int, array_double].
 
 All object references must exist. Connect the objects in the pipeline using attachments.
-Please, connect the start of the pipeline to your first object. You can do this by creating an attachment with
-'source_name: pipeline_start' and the name of your first object as destination 'destination_name: ...'.
+Please, connect the start of the pipeline to your first object. You can do this by creating an attachment with a
+source with 'source_name: pipeline_start' and the name of your first object as destination 'destination_name: ...'.
 
 **Arguments:**
+
 - `pipeline_name`
 
+
+
 **Options:**
-- [required] `-f`/`--yaml_file`
 
-  Path to a yaml file that contains at least the following fields: [input_type]
-- `-fmt`/`--format`
+- [required] `-f`/`--yaml_file`<br/>Path to a yaml file that contains at least the following fields: [input_type]
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops pipelines update
+
+**Command:** `ubiops pipelines update`
 
 **Description:**
 
@@ -107,83 +126,118 @@ If you only want to update the name of the pipeline, use the new_name option.
 If you want to update anything else (and the pipeline name), please use a yaml file to define the new pipeline.
 
 **Arguments:**
+
 - [required] `pipeline_name`
 
+
+
 **Options:**
-- `-n`/`--new_name`
 
-  The new pipeline name
-- `-f`/`--yaml_file`
+- `-n`/`--new_name`<br/>The new pipeline name
 
-  Path to a yaml file that contains at least the following fields: [input_type]
-- `-q`/`--quiet`
+- `-f`/`--yaml_file`<br/>Path to a yaml file that contains at least the following fields: [input_type]
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
 
 ### ubiops pipelines delete
+
+**Command:** `ubiops pipelines delete`
 
 **Description:**
 
 Delete a pipeline.
 
 **Arguments:**
+
 - [required] `pipeline_name`
 
+
+
 **Options:**
-- `-y`/`--assume_yes`
 
-  Assume yes instead of asking for confirmation
-- `-q`/`--quiet`
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
 
 ### ubiops pipelines request
+
+**Command:** `ubiops pipelines request`
 
 **Description:**
 
 Create a pipeline request and retrieve the result.
 
 For structured input, specify the data as JSON formatted string. For example:
-`ubiops pipelines request <my-deployment> -v <my-version> --data "{"param1": 1, "param2": "two"}"`
+`ubiops pipelines request <my-deployment> -v <my-version> --data "{\"param1\": 1, \"param2\": \"two\"}"`
 
 **Arguments:**
+
 - [required] `pipeline_name`
 
+
+
 **Options:**
-- [required] `-d`/`--data`
 
-  The input data of the request
-- `-fmt`/`--format`
+- [required] `-d`/`--data`<br/>The input data of the request
 
-  The output format
+- `-pt`/`--pipeline_timeout`<br/>Timeout for the entire pipeline request in seconds
+
+- `-dt`/`--deployment_timeout`<br/>Timeout for each deployment request in the pipeline in seconds
+
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
+
+
+***
+<br/>
 
 ### ubiops pipelines batch_requests
+
+**Command:** `ubiops pipelines batch_requests`
+
+
+<br/>
+
 #### ubiops pipelines batch_requests create
+
+**Command:** `ubiops pipelines batch_requests create`
 
 **Description:**
 
 Create a pipeline batch request and retrieve request IDs to collect the results later.
 
-Multiple data inputs can be specified at ones by using the '-d' options multiple times:
+Multiple data inputs can be specified at ones by using the '--data' options multiple times:
 `ubiops pipelines batch_requests create <my-pipeline> --data <input-1> --data <input-2> --data <input-3>`
 
 For structured input, specify each data input as JSON formatted string. For example:
-`ubiops pipelines batch_requests create <my-pipeline> --data "{"param1": 1, "param2": "two"}"`
+`ubiops pipelines batch_requests create <my-pipeline> --data "{\"param1\": 1, \"param2\": \"two\"}"`
 
 **Arguments:**
+
 - [required] `pipeline_name`
 
+
+
 **Options:**
-- [required] `--data`
 
-  The input data of the request
+- [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
 
-  This option can be provided multiple times in a single command.
-- `-fmt`/`--format`
+- `-fmt`/`--format`<br/>The output format
 
-  The output format
+
+<br/>
 
 #### ubiops pipelines batch_requests get
+
+**Command:** `ubiops pipelines batch_requests get`
 
 **Description:**
 
@@ -193,32 +247,41 @@ Multiple request ids can be specified at ones by using the '-id' options multipl
 `xenia pipelines batch_requests get <my-pipeline> -id <id-1> -id <id-2> -id <id-3>`
 
 **Arguments:**
+
 - [required] `pipeline_name`
 
+
+
 **Options:**
-- [required] `-id`/`--request_id`
 
-  The ID of the request
+- [required] `-id`/`--request_id`<br/>The ID of the request<br/>This option can be provided multiple times in a single command
 
-  This option can be provided multiple times in a single command.
-- `-fmt`/`--format`
+- `-fmt`/`--format`<br/>The output format
 
-  The output format
+
+<br/>
 
 #### ubiops pipelines batch_requests list
+
+**Command:** `ubiops pipelines batch_requests list`
 
 **Description:**
 
 List pipeline batch requests.
 
 **Arguments:**
+
 - [required] `pipeline_name`
 
+
+
 **Options:**
+
 - `--offset`
-- `--limit`
 
-  Limit of the number of requests. The maximum value is 50.
-- `-fmt`/`--format`
+- `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>

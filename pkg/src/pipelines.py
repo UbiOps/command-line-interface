@@ -28,7 +28,7 @@ def define_pipeline(yaml_content, pipeline_name, current_pipeline_name=None):
 
     description = set_dict_default(None, yaml_content, 'pipeline_description')
 
-    if 'input_fields' in yaml_content:
+    if 'input_fields' in yaml_content and isinstance(yaml_content['input_fields'], list):
         input_fields = [api.PipelineInputFieldCreate(name=item['name'], data_type=item['data_type'])
                         for item in yaml_content['input_fields']]
     else:
@@ -110,20 +110,21 @@ def create_attachments(attachments, pipeline_name, project_name):
     client = init_client()
     errors = []
     for list_item in attachments:
-        if 'mapping' in list_item:
-            mapping = [api.AttachmentFieldsCreate(source_field_name=field['source_field_name'],
-                                                  destination_field_name=field['destination_field_name'])
-                       for field in list_item['mapping']]
-        else:
+        sources = []
+        for source in list_item['sources']:
             mapping = None
-        pipeline_object = api.AttachmentsCreate(source_name=list_item['source_name'],
-                                                destination_name=list_item['destination_name'],
-                                                mapping=mapping)
+            if 'mapping' in source and isinstance(source['mapping'], list):
+                mapping = [api.AttachmentFieldsCreate(source_field_name=field['source_field_name'],
+                                                      destination_field_name=field['destination_field_name'])
+                           for field in source['mapping']]
+
+            sources.append(api.AttachmentSourcesCreate(source_name=source['source_name'], mapping=mapping))
+        pipeline_object = api.AttachmentsCreate(destination_name=list_item['destination_name'], sources=sources)
         try:
             client.pipeline_object_attachments_create(project_name=project_name, pipeline_name=pipeline_name,
                                                       data=pipeline_object)
         except api.exceptions.ApiException:
-            errors.append({'source_name': list_item['source_name'],
+            errors.append({'sources': [i['source_name'] for i in list_item['sources']],
                            'destination_name': list_item['destination_name']})
     client.api_client.close()
     if len(errors) > 0:
@@ -140,8 +141,7 @@ def delete_all_attachments(pipeline_name, project_name):
     attachments = client.pipeline_object_attachments_list(project_name=project_name, pipeline_name=pipeline_name)
     for attachment in attachments:
         client.pipeline_object_attachments_delete(project_name=project_name, pipeline_name=pipeline_name,
-                                                  source_name=attachment.source_name,
-                                                  destination_name=attachment.destination_name)
+                                                  attachment_id=attachment.id)
     client.api_client.close()
 
 
@@ -167,7 +167,7 @@ def pipelines_list(labels, format_):
     if project_name:
         client = init_client()
         pipelines = client.pipelines_list(project_name=project_name, labels=label_filter)
-        print_list(pipelines, LIST_ITEMS, project_name=project_name, sorting_col=1, fmt=format_)
+        print_list(pipelines, LIST_ITEMS, sorting_col=1, fmt=format_)
         client.api_client.close()
 
 
@@ -198,19 +198,21 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
     if output_path is not None:
         dictionary = format_yaml(pipeline, required_front=['name', 'description', 'input_type'],
                                  optional=['input_fields', 'objects name',
-                                           'objects reference_name', 'objects version', 'attachments source_name',
-                                           'attachments destination_name', 'attachments mapping'],
+                                           'objects reference_name', 'objects version', 'attachments destination_name',
+                                           'attachments sources', 'attachments sources source_name',
+                                           'attachments sources mapping'],
                                  rename={'name': 'pipeline_name', 'description': 'pipeline_description',
                                          'objects version': 'reference_version'}, as_str=False)
         yaml_file = write_yaml(output_path, dictionary, default_file_name="pipeline.yaml")
         if not quiet:
             click.echo('Pipeline file is stored in: %s' % yaml_file)
     else:
-        print_item(pipeline, row_attrs=LIST_ITEMS, project_name=project_name,
+        print_item(pipeline, row_attrs=LIST_ITEMS,
                    required_front=['name', 'description', 'input_type'],
                    optional=['input_fields', 'creation_date', 'last_updated',
                              'objects name', 'objects reference_name', 'objects version',
-                             'attachments source_name', 'attachments destination_name', 'attachments mapping'],
+                             'attachments destination_name', 'attachments sources source_name',
+                             'attachments sources mapping'],
                    rename={'name': 'pipeline_name', 'description': 'pipeline_description',
                            'objects version': 'reference_version'}, fmt=format_)
 
@@ -240,19 +242,20 @@ def pipelines_create(pipeline_name, yaml_file, format_):
         reference_name: my-deployment-name
         reference_version: my-deployment-version
     attachments:
-      - source_name: pipeline_start
-        destination_name: object1
-        mapping:
-        - source_field_name: my-pipeline-param1
-          destination_field_name: my-deployment-param1
+      - destination_name: object1
+        sources:
+          - source_name: pipeline_start
+            mapping:
+              - source_field_name: my-pipeline-param1
+                destination_field_name: my-deployment-param1
     ```
 
     Possible input/output types: [structured, plain]. Possible data_types: [blob, int, string, double,
     bool, array_string, array_int, array_double].
 
     All object references must exist. Connect the objects in the pipeline using attachments.
-    Please, connect the start of the pipeline to your first object. You can do this by creating an attachment with
-    'source_name: pipeline_start' and the name of your first object as destination 'destination_name: ...'.
+    Please, connect the start of the pipeline to your first object. You can do this by creating an attachment with a
+    source with 'source_name: pipeline_start' and the name of your first object as destination 'destination_name: ...'.
     """
 
     client = init_client()
@@ -274,7 +277,7 @@ def pipelines_create(pipeline_name, yaml_file, format_):
     if 'attachments' in yaml_content and yaml_content['attachments'] is not None:
         create_attachments(yaml_content['attachments'], pipeline.name, project_name)
 
-    print_item(pipeline_response, row_attrs=LIST_ITEMS, project_name=project_name,
+    print_item(pipeline_response, row_attrs=LIST_ITEMS,
                rename={'name': 'pipeline_name', 'description': 'pipeline_description'}, fmt=format_)
 
 
@@ -368,12 +371,14 @@ def pipelines_delete(pipeline_name, assume_yes, quiet):
 @commands.command("request", short_help="Create a pipeline direct request")
 @PIPELINE_NAME
 @REQUEST_DATA
+@REQUEST_PIPELINE_TIMEOUT
+@REQUEST_OBJECT_TIMEOUT
 @REQUESTS_FORMATS
-def pipelines_request(pipeline_name, data, format_):
+def pipelines_request(pipeline_name, data, pipeline_timeout, deployment_timeout, format_):
     """Create a pipeline request and retrieve the result.
 
     For structured input, specify the data as JSON formatted string. For example:
-    `ubiops pipelines request <my-deployment> -v <my-version> --data "{\"param1\": 1, \"param2\": \"two\"}"`
+    `ubiops pipelines request <my-deployment> -v <my-version> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
     """
 
     project_name = get_current_project(error=True)
@@ -384,7 +389,8 @@ def pipelines_request(pipeline_name, data, format_):
     if pipeline.input_type == STRUCTURED_TYPE:
         data = parse_json(data)
 
-    response = client.pipeline_requests_create(project_name=project_name, pipeline_name=pipeline_name, data=data)
+    response = client.pipeline_requests_create(project_name=project_name, pipeline_name=pipeline_name, data=data,
+                                               pipeline_timeout=pipeline_timeout, deployment_timeout=deployment_timeout)
     client.api_client.close()
     if format_ == 'reference':
         click.echo(format_pipeline_requests_reference([response]))
@@ -413,7 +419,7 @@ def batch_requests_create(pipeline_name, data, format_):
     `ubiops pipelines batch_requests create <my-pipeline> --data <input-1> --data <input-2> --data <input-3>`
 
     For structured input, specify each data input as JSON formatted string. For example:
-    `ubiops pipelines batch_requests create <my-pipeline> --data "{\"param1\": 1, \"param2\": \"two\"}"`
+    `ubiops pipelines batch_requests create <my-pipeline> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
     """
 
     data = list(data)

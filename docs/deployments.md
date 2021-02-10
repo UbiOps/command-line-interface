@@ -1,54 +1,66 @@
-
 ## ubiops deployments
 
-**Alias:**  ubiops dpl
+**Command:** `ubiops deployments`
+
+**Alias:** `ubiops dpl`
+
+
+<br/>
 
 ### ubiops deployments list
+
+**Command:** `ubiops deployments list`
 
 **Description:**
 
 List all your deployments in your project.
 
-The <labels> option can be used to filter on specific labels.
+The `<labels>` option can be used to filter on specific labels.
 
 **Arguments:** - 
 
 **Options:**
-- `-l`/`--labels`
 
-  Labels defined as key/value pairs
+- `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
-  This option can be provided multiple times in a single command.
-- `-fmt`/`--format`
+- `-fmt`/`--format`<br/>The output format
 
-  The output format
+
+<br/>
 
 ### ubiops deployments get
+
+**Command:** `ubiops deployments get`
 
 **Description:**
 
 Get the deployment settings, like, input_type and output_type.
 
-If you specify the <output_path> option, this location will be used to store the
-deployment settings in a yaml file. You can either specify the <output_path> as file or
-directory. If the specified <output_path> is a directory, the settings will be
+If you specify the `<output_path>` option, this location will be used to store the
+deployment settings in a yaml file. You can either specify the `<output_path>` as file or
+directory. If the specified `<output_path>` is a directory, the settings will be
 stored in `deployment.yaml`.
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- `-o`/`--output_path`
 
-  Path to file or directory to store deployment yaml file
-- `-q`/`--quiet`
+- `-o`/`--output_path`<br/>Path to file or directory to store deployment yaml file
 
-  Suppress informational messages
-- `-fmt`/`--format`
+- `-q`/`--quiet`<br/>Suppress informational messages
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops deployments create
+
+**Command:** `ubiops deployments create`
 
 **Description:**
 
@@ -80,156 +92,181 @@ Possible input/output types: [structured, plain]. Possible data_types: [blob, in
 string, double, bool, array_string, array_int, array_double].
 
 **Arguments:**
+
 - `deployment_name`
 
+
+
 **Options:**
-- [required] `-f`/`--yaml_file`
 
-  Path to a yaml file that contains at least the following fields: [input_type, output_type]
-- `-fmt`/`--format`
+- [required] `-f`/`--yaml_file`<br/>Path to a yaml file that contains at least the following fields: [input_type, output_type]
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops deployments update
+
+**Command:** `ubiops deployments update`
 
 **Description:**
 
 Update a deployment.
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- `-n`/`--new_name`
 
-  The new deployment name
-- `-q`/`--quiet`
+- `-n`/`--new_name`<br/>The new deployment name
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
 
 ### ubiops deployments delete
+
+**Command:** `ubiops deployments delete`
 
 **Description:**
 
 Delete a deployment.
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- `-y`/`--assume_yes`
 
-  Assume yes instead of asking for confirmation
-- `-q`/`--quiet`
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
 
 ### ubiops deployments package
+
+**Command:** `ubiops deployments package`
 
 **Description:**
 
 Package code to ZIP file which is ready to be deployed.
 
-Please, specify the code <directory> that should be deployed. The files in this directory
+Please, specify the code `<directory>` that should be deployed. The files in this directory
 will be zipped and uploaded. Subdirectories and files that shouldn't be contained in
 the ZIP can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of
 this file is assumed to be equal to the wellknown .gitignore file.
 
-Use the <output_path> option to specify the output location of the zip file. If not specified,
-the current directory will be used. If the <output_path> is a directory, the zip will be saved in
-`[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use the <assume_yes> option to overwrite
-without confirmation if file specified in <output_path> already exists.
+Use the `<output_path>` option to specify the output location of the zip file. If not specified,
+the current directory will be used. If the `<output_path>` is a directory, the zip will be saved in
+`[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use the `<assume_yes>` option to overwrite
+without confirmation if file specified in `<output_path>` already exists.
 
 **Arguments:** - 
 
 **Options:**
-- `-d`/`--deployment_name`
 
-  The deployment name used in the ZIP filename
-- `-v`/`--version_name`
+- `-d`/`--deployment_name`<br/>The deployment name used in the ZIP filename
 
-  The version name used in the ZIP filename
-- [required] `-dir`/`--directory`
+- `-v`/`--version_name`<br/>The version name used in the ZIP filename
 
-  Path to a directory that contains at least a 'deployment.py'
-- `-o`/`--output_path`
+- [required] `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
 
-  Path to file or directory to store deployment package zip
-- `-i`/`--ignore_file`
+- `-o`/`--output_path`<br/>Path to file or directory to store deployment package zip
 
-  File name of ubiops-ignore file located in the root of the specified directory [default = .ubiops-ignore]
-- `-y`/`--assume_yes`
+- `-i`/`--ignore_file`<br/>File name of ubiops-ignore file located in the root of the specified directory [default = .ubiops-ignore]
 
-  Assume yes instead of asking for confirmation
-- `-q`/`--quiet`
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
 
 ### ubiops deployments upload
+
+**Command:** `ubiops deployments upload`
 
 **Description:**
 
 Upload ZIP to a version of a deployment.
 
-Please, specify the deployment package <zip_path> that should be uploaded.
-Use the <overwrite> option to overwrite the deployment package on UbiOps if one already exists for this version.
+Please, specify the deployment package `<zip_path>` that should be uploaded.
+Use the `<overwrite>` option to overwrite the deployment package on UbiOps if one already exists for this version.
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- [required] `-v`/`--version_name`
 
-  The version name
-- [required] `-z`/`--zip_path`
+- [required] `-v`/`--version_name`<br/>The version name
 
-  Path to deployment version zip file
-- `--overwrite`
+- [required] `-z`/`--zip_path`<br/>Path to deployment version zip file
 
-  Whether you want to overwrite if exists
-- `-q`/`--quiet`
+- `--overwrite`<br/>Whether you want to overwrite if exists
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
 
 ### ubiops deployments download
+
+**Command:** `ubiops deployments download`
 
 **Description:**
 
 Get the version of a deployment.
 
-The <output_path> option will be used as output location of the zip file. If not specified,
-the current directory will be used. If the <output_path> is a directory, the zip will be
+The `<output_path>` option will be used as output location of the zip file. If not specified,
+the current directory will be used. If the `<output_path>` is a directory, the zip will be
 saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- [required] `-v`/`--version_name`
 
-  The version name
-- `-o`/`--output_path`
+- [required] `-v`/`--version_name`<br/>The version name
 
-  Path to file or directory to store deployment package zip
-- `-q`/`--quiet`
+- `-o`/`--output_path`<br/>Path to file or directory to store deployment package zip
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
 
 ### ubiops deployments deploy
+
+**Command:** `ubiops deployments deploy`
 
 **Description:**
 
 Deploy a new version of a deployment.
 
-Please, specify the code <directory> that should be deployed. The files in this directory
+Please, specify the code `<directory>` that should be deployed. The files in this directory
 will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the
 ZIP can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this
-file is assumed to be equal to the wellknown .gitignore file.
+file is assumed to be equal to the wellknown '.gitignore' file.
 
-If you want to store a local copy of the uploaded zip file, please use the <output_path> option.
-The <output_path> option will be used as output location of the zip file. If the <output_path> is a
+If you want to store a local copy of the uploaded zip file, please use the `<output_path>` option.
+The `<output_path>` option will be used as output location of the zip file. If the `<output_path>` is a
 directory, the zip will be saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
-the <assume_yes> option to overwrite without confirmation if file specified in <output_path> already exists.
+the `<assume_yes>` option to overwrite without confirmation if file specified in `<output_path>` already exists.
 
 
 It is possible to define the parameters using a yaml file.
@@ -248,93 +285,99 @@ maximum_instances: 1
 maximum_idle_time: 300
 ```
 
-Those parameters can also be provided as command options. If both a <yaml_file> is set and options are given,
-the options defined by <yaml_file> will be overwritten by the specified command options. The deployment name can
-either be passed as command argument or specified inside the yaml file using <deployment_name>.
+Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
+the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
+either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
+
+It's not possible to update the programming language of an existing deployment version.
 
 **Arguments:**
+
 - `deployment_name`
 
+
+
 **Options:**
-- `-v`/`--version_name`
 
-  The version name
-- [required] `-dir`/`--directory`
+- `-v`/`--version_name`<br/>The version name
 
-  Path to a directory that contains at least a 'deployment.py'
-- `-deployment_py`/`--deployment_file`
+- [required] `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
 
-  Name of deployment file which contains class Deployment. Must be located in the root of the deployment package directory
-- `-i`/`--ignore_file`
+- `-deployment_py`/`--deployment_file`<br/>Name of deployment file which contains class Deployment. Must be located in the root of the deployment package directory
 
-  File name of ubiops-ignore file located in the root of the specified directory [default = .ubiops-ignore]
-- `-o`/`--output_path`
+- `-i`/`--ignore_file`<br/>File name of ubiops-ignore file located in the root of the specified directory [default = .ubiops-ignore]
 
-  Path to file or directory to store local copy of deployment package zip
-- `-f`/`--yaml_file`
+- `-o`/`--output_path`<br/>Path to file or directory to store local copy of deployment package zip
 
-  Path to a yaml file that contains deployment options
-- `-l`/`--language`
+- `-f`/`--yaml_file`<br/>Path to a yaml file that contains deployment options
 
-  Programming language of code
-- `-mem`/`--memory_allocation`
+- `-l`/`--language`<br/>Programming language of code
 
-  Memory allocation for deployment
-- `-min`/`--minimum_instances`
+- `-mem`/`--memory_allocation`<br/>Memory allocation for deployment
 
-  Minimum number of instances
-- `-max`/`--maximum_instances`
+- `-min`/`--minimum_instances`<br/>Minimum number of instances
 
-  Maximum number of instances
-- `-t`/`--maximum_idle_time`
+- `-max`/`--maximum_instances`<br/>Maximum number of instances
 
-  Maximum idle time before shutting down instance (seconds)
-- `-l`/`--labels`
+- `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
-  Labels defined as key/value pairs
+- `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
-  This option can be provided multiple times in a single command.
-- `-desc`/`--version_description`
+- `-desc`/`--version_description`<br/>The version description
 
-  The version description
-- `--overwrite`
+- `--overwrite`<br/>Whether you want to overwrite if exists
 
-  Whether you want to overwrite if exists
-- `-y`/`--assume_yes`
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
-  Assume yes instead of asking for confirmation
-- `-q`/`--quiet`
+- `-q`/`--quiet`<br/>Suppress informational messages
 
-  Suppress informational messages
+
+<br/>
 
 ### ubiops deployments request
+
+**Command:** `ubiops deployments request`
 
 **Description:**
 
 Create a deployment request and retrieve the result.
 
 For structured input, specify the data as JSON formatted string. For example:
-`ubiops deployments request <my-deployment> -v <my-version> --data "{"param1": 1, "param2": "two"}"`
+`ubiops deployments request <my-deployment> -v <my-version> --data "{\"param1\": 1, \"param2\": \"two\"}"`
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- [required] `-v`/`--version_name`
 
-  The version name
-- [required] `-d`/`--data`
+- [required] `-v`/`--version_name`<br/>The version name
 
-  The input data of the request
-- `--timeout`
+- [required] `-d`/`--data`<br/>The input data of the request
 
-  Timeout in seconds
-- `-fmt`/`--format`
+- `-t`/`--timeout`<br/>Timeout in seconds
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
+
+
+***
+<br/>
 
 ### ubiops deployments batch_requests
+
+**Command:** `ubiops deployments batch_requests`
+
+
+<br/>
+
 #### ubiops deployments batch_requests create
+
+**Command:** `ubiops deployments batch_requests create`
 
 **Description:**
 
@@ -344,25 +387,28 @@ Multiple data inputs can be specified at ones by using the '--data' options mult
 `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input-1> --data <input-2> --data <input-3>`
 
 For structured input, specify each data input as JSON formatted string. For example:
-`ubiops deployments batch_requests create <my-deployment> -v <my-version> --data "{"param1": 1, "param2": "two"}"`
+`ubiops deployments batch_requests create <my-deployment> -v <my-version> --data "{\"param1\": 1, \"param2\": \"two\"}"`
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- [required] `-v`/`--version_name`
 
-  The version name
-- [required] `--data`
+- [required] `-v`/`--version_name`<br/>The version name
 
-  The input data of the request
+- [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
 
-  This option can be provided multiple times in a single command.
-- `-fmt`/`--format`
+- `-fmt`/`--format`<br/>The output format
 
-  The output format
+
+<br/>
 
 #### ubiops deployments batch_requests get
+
+**Command:** `ubiops deployments batch_requests get`
 
 **Description:**
 
@@ -372,38 +418,45 @@ Multiple request ids can be specified at ones by using the '-id' options multipl
 `ubiops deployments batch_requests get <my-deployment> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- [required] `-v`/`--version_name`
 
-  The version name
-- [required] `-id`/`--request_id`
+- [required] `-v`/`--version_name`<br/>The version name
 
-  The ID of the request
+- [required] `-id`/`--request_id`<br/>The ID of the request<br/>This option can be provided multiple times in a single command
 
-  This option can be provided multiple times in a single command.
-- `-fmt`/`--format`
+- `-fmt`/`--format`<br/>The output format
 
-  The output format
+
+<br/>
 
 #### ubiops deployments batch_requests list
+
+**Command:** `ubiops deployments batch_requests list`
 
 **Description:**
 
 List deployment batch requests.
 
 **Arguments:**
+
 - [required] `deployment_name`
 
+
+
 **Options:**
-- [required] `-v`/`--version_name`
 
-  The version name
+- [required] `-v`/`--version_name`<br/>The version name
+
 - `--offset`
-- `--limit`
 
-  Limit of the number of requests. The maximum value is 50.
-- `-fmt`/`--format`
+- `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>

@@ -1,9 +1,15 @@
-
 ## ubiops audit_events
 
-**Alias:**  ubiops audit
+**Command:** `ubiops audit_events`
+
+**Alias:** `ubiops audit`
+
+
+<br/>
 
 ### ubiops audit_events list
+
+**Command:** `ubiops audit_events list`
 
 **Description:**
 
@@ -14,21 +20,18 @@ Use the command options as filters.
 **Arguments:** - 
 
 **Options:**
-- `-d`/`--deployment_name`
 
-  The deployment name
-- `-p`/`--pipeline_name`
+- `-d`/`--deployment_name`<br/>The deployment name
 
-  The pipeline name
-- `--limit`
+- `-p`/`--pipeline_name`<br/>The pipeline name
 
-  Limit of the audit events response. The maximum value is 100.
-- `--offset`
+- `--limit`<br/>Limit of the audit events response. The maximum value is 100.
 
-  The number which forms the starting point of the audit events given back. If offset equals 2, then the first 2 events will be omitted from the list.
-- `--action`
+- `--offset`<br/>The number which forms the starting point of the audit events given back. If offset equals 2, then the first 2 events will be omitted from the list.
 
-  Type of action
-- `-fmt`/`--format`
+- `--action`<br/>Type of action
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>

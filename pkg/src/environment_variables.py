@@ -1,6 +1,6 @@
 import ubiops as api
 
-from pkg.utils import get_current_project, init_client
+from pkg.utils import get_current_project, init_client, read_yaml, check_required_fields
 from pkg.src.helpers.formatting import print_list, print_item
 from pkg.src.helpers.options import *
 
@@ -8,6 +8,22 @@ from pkg.src.helpers.options import *
 LIST_ITEMS = ['id', 'name', 'value', 'secret', 'inheritance_type', 'inheritance_name']
 WARNING_MSG = "Make sure you provided the right environment variable ID and the right inheritance level."
 
+
+def create_env_var(project_name, deployment_name, version_name, env_var_name, env_var_value, secret=False):
+    client = init_client()
+    new_env_var = api.EnvironmentVariableCreate(name=env_var_name, value=env_var_value, secret=secret)
+    if version_name:
+        item = client.version_environment_variables_create(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, data=new_env_var
+        )
+    elif deployment_name:
+        item = client.deployment_environment_variables_create(
+            project_name=project_name, deployment_name=deployment_name, data=new_env_var
+        )
+    else:
+        item = client.project_environment_variables_create(project_name=project_name, data=new_env_var)
+    client.api_client.close()
+    return item
 
 @click.group(["environment_variables", "env"], short_help="Manage your environment variables")
 def commands():
@@ -58,8 +74,9 @@ def env_vars_list(deployment_name, version_name, format_):
 @ENV_VAR_SECRET
 @DEPLOYMENT_NAME_OPTIONAL
 @VERSION_NAME_OPTIONAL
+@ENV_VAR_YAML_FILE
 @CREATE_FORMATS
-def env_vars_create(env_var_name, env_var_value, secret, deployment_name, version_name, format_):
+def env_vars_create(env_var_name, env_var_value, secret, deployment_name, version_name, yaml_file, format_):
     """
     Create an environment variable.
 
@@ -69,28 +86,48 @@ def env_vars_create(env_var_name, env_var_value, secret, deployment_name, versio
     - When a deployment name is provided, but not a version name: the environment variable will be created on
     deployment level.
     - When no deployment_name nor a version name is provided: the environment variable will be created on project level.
+
+    \b
+    It is possible to create multiple environment variables at ones by passing a yaml file.
+    The structure of this file is assumed to look like:
+    ```
+    environment_variables:
+      - name: env_var_1
+        value: value_1
+      - name: env_var_2
+        value: value_2
+        secret: true
+      - name: env_var_3
+        value: value_3
+        secret: true
+    ```
+    The 'secret' parameter is optional, and is `false` by default.
     """
 
     project_name = get_current_project(error=True)
 
+    if not yaml_file and not env_var_name:
+        raise Exception("Please, specify the environment variable in either a yaml file or as a command argument")
+    if yaml_file and (env_var_name or env_var_value or secret):
+        raise Exception("Please, use either a yaml file or command options, not both")
     if version_name and not deployment_name:
         raise Exception("Missing option <deployment_name>")
 
-    client = init_client()
-    new_env_var = api.EnvironmentVariableCreate(name=env_var_name, value=env_var_value, secret=secret)
-    if version_name:
-        item = client.version_environment_variables_create(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, data=new_env_var
-        )
-    elif deployment_name:
-        item = client.deployment_environment_variables_create(
-            project_name=project_name, deployment_name=deployment_name, data=new_env_var
-        )
-    else:
-        item = client.project_environment_variables_create(project_name=project_name, data=new_env_var)
+    if yaml_file:
+        yaml_content = read_yaml(yaml_file, required_fields=['environment_variables'])
+        check_required_fields(input_dict=yaml_content, list_name='environment_variables',
+                              required_fields=['name', 'value'])
 
-    client.api_client.close()
-    print_item(item, LIST_ITEMS, fmt=format_)
+        items = []
+        for env_var in yaml_content['environment_variables']:
+            secret = env_var['secret'] if 'secret' in env_var else False
+            item = create_env_var(project_name, deployment_name, version_name,
+                                  env_var['name'], env_var['value'], secret)
+            items.append(item)
+        print_list(items, LIST_ITEMS, fmt=format_)
+    else:
+        item = create_env_var(project_name, deployment_name, version_name, env_var_name, env_var_value, secret)
+        print_item(item, LIST_ITEMS, fmt=format_)
 
 
 @commands.command("get", short_help="Get an environment variable")

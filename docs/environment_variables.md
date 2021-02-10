@@ -1,9 +1,15 @@
-
 ## ubiops environment_variables
 
-**Alias:**  ubiops env
+**Command:** `ubiops environment_variables`
+
+**Alias:** `ubiops env`
+
+
+<br/>
 
 ### ubiops environment_variables list
+
+**Command:** `ubiops environment_variables list`
 
 **Description:**
 
@@ -19,17 +25,19 @@ deployment level.
 **Arguments:** - 
 
 **Options:**
-- `-d`/`--deployment_name`
 
-  The deployment name
-- `-v`/`--version_name`
+- `-d`/`--deployment_name`<br/>The deployment name
 
-  The version name
-- `-fmt`/`--format`
+- `-v`/`--version_name`<br/>The version name
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops environment_variables create
+
+**Command:** `ubiops environment_variables create`
 
 **Description:**
 
@@ -42,27 +50,48 @@ version level.
 deployment level.
 - When no deployment_name nor a version name is provided: the environment variable will be created on project level.
 
+
+It is possible to create multiple environment variables at ones by passing a yaml file.
+The structure of this file is assumed to look like:
+```
+environment_variables:
+  - name: env_var_1
+    value: value_1
+  - name: env_var_2
+    value: value_2
+    secret: true
+  - name: env_var_3
+    value: value_3
+    secret: true
+```
+The 'secret' parameter is optional, and is `false` by default.
+
 **Arguments:**
-- [required] `env_var_name`
+
+- `env_var_name`
+
+
 
 **Options:**
-- `--value`
 
-  Environment variable value
-- `--secret`
+- `--value`<br/>Environment variable value
 
-  Store value as secret
-- `-d`/`--deployment_name`
+- `--secret`<br/>Store value as secret
 
-  The deployment name
-- `-v`/`--version_name`
+- `-d`/`--deployment_name`<br/>The deployment name
 
-  The version name
-- `-fmt`/`--format`
+- `-v`/`--version_name`<br/>The version name
 
-  The output format
+- `-f`/`--yaml_file`<br/>Path to a yaml file that contains environment variables
+
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops environment_variables get
+
+**Command:** `ubiops environment_variables get`
 
 **Description:**
 
@@ -77,20 +106,25 @@ deployment level.
 project level.
 
 **Arguments:**
+
 - [required] `env_var_id`
 
+
+
 **Options:**
-- `-d`/`--deployment_name`
 
-  The deployment name
-- `-v`/`--version_name`
+- `-d`/`--deployment_name`<br/>The deployment name
 
-  The version name
-- `-fmt`/`--format`
+- `-v`/`--version_name`<br/>The version name
 
-  The output format
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
 
 ### ubiops environment_variables copy
+
+**Command:** `ubiops environment_variables copy`
 
 **Description:**
 
@@ -99,23 +133,23 @@ Copy environment variables from one deployment (version) to another deployment (
 **Arguments:** - 
 
 **Options:**
-- [required] `-fd`/`--from_deployment`
 
-  The deployment name to copy the environment variables from
-- `-fv`/`--from_version`
+- [required] `-fd`/`--from_deployment`<br/>The deployment name to copy the environment variables from
 
-  The version name to copy the environment variables from. If None, the environment variables on deployment level are copied.
-- [required] `-td`/`--to_deployment`
+- `-fv`/`--from_version`<br/>The version name to copy the environment variables from. If None, the environment variables on deployment level are copied.
 
-  The deployment name to copy the environment variables to
-- `-tv`/`--to_version`
+- [required] `-td`/`--to_deployment`<br/>The deployment name to copy the environment variables to
 
-  The version name to copy the environment variables to. If None, the environment variables are copied to deployment level.
-- `-y`/`--assume_yes`
+- `-tv`/`--to_version`<br/>The version name to copy the environment variables to. If None, the environment variables are copied to deployment level.
 
-  Assume yes instead of asking for confirmation
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
+
+
+<br/>
 
 ### ubiops environment_variables update
+
+**Command:** `ubiops environment_variables update`
 
 **Description:**
 
@@ -130,29 +164,31 @@ deployment level.
 project level.
 
 **Arguments:**
+
 - [required] `env_var_id`
 
+
+
 **Options:**
-- `-n`/`--new_name`
 
-  The new environment variable name
-- `--value`
+- `-n`/`--new_name`<br/>The new environment variable name
 
-  Environment variable value
-- `--secret`
+- `--value`<br/>Environment variable value
 
-  Store value as secret
-- `-d`/`--deployment_name`
+- `--secret`<br/>Store value as secret
 
-  The deployment name
-- `-v`/`--version_name`
+- `-d`/`--deployment_name`<br/>The deployment name
 
-  The version name
-- `-q`/`--quiet`
+- `-v`/`--version_name`<br/>The version name
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
 
 ### ubiops environment_variables delete
+
+**Command:** `ubiops environment_variables delete`
 
 **Description:**
 
@@ -167,18 +203,20 @@ deployment level.
 project level.
 
 **Arguments:**
+
 - [required] `env_var_id`
 
+
+
 **Options:**
-- `-d`/`--deployment_name`
 
-  The deployment name
-- `-v`/`--version_name`
+- `-d`/`--deployment_name`<br/>The deployment name
 
-  The version name
-- `-y`/`--assume_yes`
+- `-v`/`--version_name`<br/>The version name
 
-  Assume yes instead of asking for confirmation
-- `-q`/`--quiet`
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
-  Suppress informational messages
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>

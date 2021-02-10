@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from pkg.utils import init_client, get_current_project
 from pkg.src.helpers.formatting import print_item, format_logs_reference, format_logs_oneline, parse_datetime, \
-    print_list
+    print_list, format_json
 from pkg.src.helpers.options import *
 
 
@@ -16,6 +16,9 @@ def commands():
 @commands.command("list", short_help="List logs")
 @DEPLOYMENT_NAME_OPTIONAL
 @VERSION_NAME_OPTIONAL
+@PIPELINE_NAME_OPTIONAL
+@PIPELINE_OBJECT_NAME
+@BUILD_ID_OPTIONAL
 @REQUEST_ID_OPTIONAL
 @PIPELINE_REQUEST_ID_OPTIONAL
 @SYSTEM
@@ -24,7 +27,8 @@ def commands():
 @DATE_RANGE
 @LIMIT
 @LOGS_FORMATS
-def logs_list(deployment_name, version_name, request_id, pipeline_request_id, system, start_date, start_log,
+def logs_list(deployment_name, version_name, pipeline_name, pipeline_object_name,
+              request_id, pipeline_request_id, build_id, system, start_date, start_log,
               date_range, limit, format_):
     """Get the logs of your project.
 
@@ -38,7 +42,13 @@ def logs_list(deployment_name, version_name, request_id, pipeline_request_id, sy
     if deployment_name:
         filters['deployment_name'] = deployment_name
     if version_name:
-        filters['deployment_version'] = version_name
+        filters['version'] = version_name
+    if pipeline_name:
+        filters['pipeline_name'] = pipeline_name
+    if pipeline_object_name:
+        filters['pipeline_object_name'] = pipeline_object_name
+    if build_id:
+        filters['build_id'] = build_id
     if request_id:
         filters['request_id'] = request_id
     if pipeline_request_id:
@@ -57,6 +67,10 @@ def logs_list(deployment_name, version_name, request_id, pipeline_request_id, sy
     logs = client.projects_log_list(project_name=project_name, data=log_filters)
     client.api_client.close()
 
+    if format_ == 'json':
+        click.echo(format_json(logs))
+        return
+
     if len(logs) > 0:
         if format_ == 'oneline':
             lines = format_logs_oneline(logs)
@@ -64,8 +78,8 @@ def logs_list(deployment_name, version_name, request_id, pipeline_request_id, sy
             lines = format_logs_reference(logs)
         elif format_ == 'extended':
             lines = format_logs_reference(logs, extended=['request_id', 'pipeline_request_id', 'deployment_name',
-                                                          'deployment_version', 'pipeline_name',
-                                                          'pipeline_object_name'])
+                                                          'version', 'pipeline_name', 'pipeline_object_name',
+                                                          'build_id'])
         else:
             lines = format_logs_reference(logs)
         click.echo_via_pager(lines)
@@ -108,7 +122,7 @@ def logs_get(log_id, format_):
         row_attrs=['id', 'date', 'log'],
         required_front=['id', 'date', 'system'],
         optional=['request_id', 'pipeline_request_id', 'deployment_name', 'version',
-                  'pipeline_name', 'pipeline_object_name'],
+                  'pipeline_name', 'pipeline_object_name', 'build_id'],
         required_end=['log'],
         rename={'version': 'version_name'}, fmt=format_
     )

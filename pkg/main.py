@@ -1,3 +1,4 @@
+import sys
 import ubiops as api
 import click
 import json
@@ -6,6 +7,8 @@ from pkg.version import VERSION
 import pkg.src.projects as projects
 import pkg.src.deployments as deployments
 import pkg.src.deployment_versions as deployment_versions
+import pkg.src.deployment_revisions as deployment_revisions
+import pkg.src.deployment_builds as deployment_builds
 import pkg.src.pipelines as pipelines
 import pkg.src.blobs as blobs
 import pkg.src.logs as logs
@@ -34,6 +37,8 @@ cli.add_command(projects.current_project)
 cli.add_command(projects.commands)
 cli.add_command(deployments.commands)
 cli.add_command(deployment_versions.commands)
+cli.add_command(deployment_revisions.commands)
+cli.add_command(deployment_builds.commands)
 cli.add_command(pipelines.commands)
 cli.add_command(blobs.commands)
 cli.add_command(env_vars.commands)
@@ -47,6 +52,7 @@ def print_error(msg, status=None):
         click.secho("Error (%s): %s" % (status, msg), fg="red")
     else:
         click.secho("Error: %s" % msg, fg="red")
+    sys.exit(1)
 
 
 def main():

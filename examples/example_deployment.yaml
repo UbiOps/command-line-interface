@@ -1,0 +1,12 @@
+deployment_name: demo-example
+deployment_description: UbiOps CLI example.
+deployment_labels:
+  demo: ubiops-cli
+input_type: structured
+input_fields:
+  - name: input
+    data_type: double
+output_type: structured
+output_fields:
+  - name: output
+    data_type: double

@@ -188,7 +188,7 @@ def format_datetime_attrs(items, prettify=True):
     return formatted
 
 
-def print_list(items, attrs, project_name=None, rename_cols=None, sorting_col=None, fmt='table', pager=False):
+def print_list(items, attrs, rename_cols=None, sorting_col=None, fmt='table', pager=False):
     rename_cols = {} if rename_cols is None else rename_cols
     if fmt == 'json':
         click.echo(format_json(items))
@@ -198,8 +198,6 @@ def print_list(items, attrs, project_name=None, rename_cols=None, sorting_col=No
         if len(items) > 0:
             header = [rename_cols[attr].upper() if attr in rename_cols else attr.upper()
                       for attr in attrs if hasattr(items[0], attr)]
-            if project_name is not None:
-                header.append('PROJECT_NAME')
         else:
             header = [rename_cols[attr].upper() if attr in rename_cols else attr.upper() for attr in attrs]
 
@@ -218,8 +216,6 @@ def print_list(items, attrs, project_name=None, rename_cols=None, sorting_col=No
                         row.append(format_labels(getattr(i, attr)))
                     else:
                         row.append(getattr(i, attr))
-            if project_name is not None:
-                row.append(project_name)
             table.append(row)
 
         if sorting_col is not None:
@@ -240,7 +236,7 @@ def print_projects_list(projects, current, attrs, fmt='simple'):
         print_list(projects, attrs, sorting_col=1, fmt=fmt)
 
 
-def print_item(item, row_attrs, project_name=None, required_front=None, optional=None, required_end=None,
+def print_item(item, row_attrs, required_front=None, optional=None, required_end=None,
                rename=None, fmt='row'):
     if fmt == 'json':
         click.echo(format_json(item))
@@ -248,13 +244,13 @@ def print_item(item, row_attrs, project_name=None, required_front=None, optional
         click.echo(format_yaml(item, required_front=required_front, optional=optional,
                                required_end=required_end, rename=rename))
     else:  # fmt = 'row'
-        print_list([item], row_attrs, project_name=project_name, rename_cols=rename, fmt='table')
+        print_list([item], row_attrs, rename_cols=rename, fmt='table')
 
 
 def format_logs_reference(logs, extended=None):
     overview = ''
     total = len(logs)
-    for i, log in enumerate(logs):
+    for i, log in enumerate(reversed(logs)):
         overview += "Log: %s\n" % click.style(log.id, fg='yellow')
         overview += 'Date: %s\n' % format_datetime(parse_datetime(log.date))
         if extended:
@@ -271,7 +267,7 @@ def format_logs_reference(logs, extended=None):
 def format_logs_oneline(logs):
     overview = ''
     total = len(logs)
-    for i, log in enumerate(logs):
+    for i, log in enumerate(reversed(logs)):
         overview += click.style(str(log.id), fg='yellow')
         overview += ' '
         overview += click.style(format_datetime(parse_datetime(log.date), '%H:%M:%S %Z'), fg='green')
@@ -294,8 +290,10 @@ def format_requests_reference(requests, split_requests='\n\n'):
             overview += "Request id: %s\n" % click.style(str(request.request_id), fg='yellow')
         if hasattr(request, 'time_created'):
             overview += 'Creation date: %s\n' % format_datetime(request.time_created)
-        if hasattr(request, 'time_last_updated'):
-            overview += 'Last updated date: %s\n' % format_datetime(request.time_last_updated)
+        if hasattr(request, 'time_started'):
+            overview += 'Start date: %s\n' % format_datetime(request.time_started)
+        if hasattr(request, 'time_completed'):
+            overview += 'Completion date: %s\n' % format_datetime(request.time_completed)
         if hasattr(request, 'status'):
             overview += 'Status: %s' % format_status(request.status, success_green=True)
         elif hasattr(request, 'success'):

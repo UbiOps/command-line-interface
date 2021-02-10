@@ -1,0 +1,7 @@
+deployment_name: demo-example
+version_name: v1
+language: python3.8
+memory_allocation: 256
+minimum_instances: 0
+maximum_instances: 1
+maximum_idle_time: 1800
