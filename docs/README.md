@@ -14,3 +14,8 @@ Includes:
 - Making requests
 - View logs
 - View audit events
+
+
+## Examples
+
+An example notebook can be found <a target="_blank" href="https://github.com/UbiOps/command-line-interface/blob/master/examples/quickstart-simple-CLI.ipynb">here</a>.

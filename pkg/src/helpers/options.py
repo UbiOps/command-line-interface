@@ -1,7 +1,8 @@
 import click
 from pkg.utils import Config
 from pkg.constants import SYS_DEPLOYMENT_FILE_NAME_VALUE
-from pkg.src.helpers.helpers import DEPLOYMENT_REQUIRED_FIELDS, PIPELINE_REQUIRED_FIELDS
+from pkg.src.helpers.deployment_helpers import DEPLOYMENT_REQUIRED_FIELDS
+from pkg.src.helpers.pipeline_helpers import PIPELINE_REQUIRED_FIELDS
 
 
 # General
@@ -77,19 +78,26 @@ LABELS_FILTER = click.option('-lb', '--labels', required=False, default=None, ty
                              metavar='<key1:value,key2:value>', help="Labels defined as key/value pairs")
 
 
-# Deployment version variables
+# Deployment/pipeline version variables
 VERSION_NAME_ARGUMENT = click.argument('version_name', required=True, metavar='<version_name>', nargs=1)
 VERSION_NAME_OPTION = click.option('-v', '--version_name', required=True, metavar='<name>',
                                    help="The version name")
 VERSION_NAME_OPTIONAL = click.option('-v', '--version_name', required=False, metavar='<name>', default=None,
                                      help="The version name")
+DEPLOYMENT_VERSION_OPTIONAL = click.option('-dv', '--deployment_version_name', required=False, metavar='<name>',
+                                           default=None, help="The deployment version name")
+PIPELINE_VERSION_OPTIONAL = click.option('-pv', '--pipeline_version_name', required=False, metavar='<name>',
+                                         default=None, help="The pipeline version name")
+
+VERSION_DEFAULT_UPDATE = click.option('-default', '--default_version', required=False, default=None,
+                                      help="The name of the version that should become the default", metavar='<name>')
 VERSION_NAME_UPDATE = click.option('-n', '--new_name', required=False, default=None,
                                    help="The new version name", metavar='<name>')
 VERSION_NAME_ZIP = click.option('-v', '--version_name', required=False, default=None, metavar='<name>',
                                 help="The version name used in the ZIP filename")
 VERSION_NAME_OVERRULE = click.argument('version_name', required=False, default=None, metavar='<version_name>', nargs=1)
 VERSION_YAML_FILE = click.option("-f", "--yaml_file", required=False, default=None, type=click.Path(), metavar='<path>',
-                                 help="Path to a yaml file that contains deployment options")
+                                 help="Path to a yaml file that contains version options")
 VERSION_YAML_OUTPUT = click.option('-o', '--output_path', required=False, default=None, metavar='<path>',
                                    help="Path to file or directory to store version yaml file")
 
@@ -171,7 +179,8 @@ BLOB_TTL = click.option('-ttl', '--time_to_live', 'ttl', required=False, default
                         help="The time to live of the blob in seconds (default = 259200 seconds, 3 days)")
 
 # Pipelines
-PIPELINE_NAME = click.argument('pipeline_name', required=True, metavar='<name>', nargs=1)
+PIPELINE_NAME_ARGUMENT = click.argument('pipeline_name', required=True, metavar='<pipeline_name>', nargs=1)
+PIPELINE_NAME_OPTION = click.option('-p', '--pipeline_name', required=True, metavar='<name>', help="The pipeline name")
 PIPELINE_NAME_OPTIONAL = click.option('-p', '--pipeline_name', required=False, default=None, metavar='<name>',
                                       help="The pipeline name")
 PIPELINE_NAME_OVERRULE = click.argument('pipeline_name', required=False, default=None, metavar='<name>', nargs=1)

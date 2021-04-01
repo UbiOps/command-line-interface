@@ -1,10 +1,9 @@
-import ubiops as api
 from pkg.utils import init_client, get_current_project
 from pkg.src.helpers.formatting import print_list, print_item
 from pkg.src.helpers.options import *
 
 
-LIST_ITEMS = ['id','creation_date', 'revision', 'status']
+LIST_ITEMS = ['creation_date', 'id', 'revision', 'status']
 
 
 @click.group(["version_builds", "builds"], short_help="Manage your deployment version builds")
@@ -28,7 +27,7 @@ def builds_list(deployment_name, version_name, format_):
     response = client.builds_list(project_name=project_name, deployment_name=deployment_name, version=version_name)
     client.api_client.close()
 
-    print_list(response, LIST_ITEMS, sorting_col=1, fmt=format_)
+    print_list(response, LIST_ITEMS, sorting_col=0, fmt=format_)
 
 
 @commands.command("get", short_help="Get the builds of a deployment version")

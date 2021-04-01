@@ -8,7 +8,10 @@ from pkg.constants import SUCCESS_STATUSES, WARNING_STATUSES, ERROR_STATUSES
 
 
 def format_status(status, success_green=False):
-    """Format status with color."""
+    """
+    Format status with color
+    """
+
     if status in SUCCESS_STATUSES:
         if success_green:
             return click.style(status, fg='green')
@@ -22,7 +25,10 @@ def format_status(status, success_green=False):
 
 
 def format_boolean(value):
-    """Format boolean with color."""
+    """
+    Format boolean with color
+    """
+
     if type(value) == bool:
         if value:
             return click.style(str(value), fg='green')
@@ -32,7 +38,10 @@ def format_boolean(value):
 
 
 def format_action(action):
-    """Format status with color."""
+    """
+    Format status with color
+    """
+
     if action == 'create':
         return click.style(action, fg='blue')
     if action == 'update':
@@ -43,7 +52,9 @@ def format_action(action):
 
 
 def format_labels(labels_dict):
-    """Format labels dictionary as 'key:value,key2:value'."""
+    """
+    Format labels dictionary as 'key:value,key2:value'
+    """
 
     if labels_dict is None:
         return ""
@@ -55,7 +66,10 @@ def format_labels(labels_dict):
 
 
 def parse_datetime(dt):
-    """Parse ISO formatted datetime-string."""
+    """
+    Parse ISO formatted datetime-string
+    """
+
     try:
         return dateutil.parser.parse(dt)
     except TypeError:
@@ -64,7 +78,13 @@ def parse_datetime(dt):
 
 
 def format_datetime(dt, fmt='%a %b %d %Y %H:%M:%S %Z'):
-    """Format datetime human readable."""
+    """
+    Format datetime human readable
+    """
+
+    if dt is None:
+        return "-"
+
     try:
         return dt.strftime(fmt)
     except TypeError:
@@ -73,22 +93,32 @@ def format_datetime(dt, fmt='%a %b %d %Y %H:%M:%S %Z'):
 
 
 def object_to_dict(obj):
-    """Change object to dict."""
+    """
+    Change object to dict
+    """
+
     attributes = [k[1:] for k in obj.__dict__.keys() if k.startswith('_')]
     dictionary = {}
     for attr in attributes:
         value = getattr(obj, attr)
         if type(value) == list:
             dictionary[attr] = [object_to_dict(j) for j in value]
+
+        elif type(value) == datetime or type(value) == date:
+            dictionary[attr] = str(value)
+
         else:
             dictionary[attr] = value
+
     return dictionary
 
 
 def format_json(items):
     items = format_datetime_attrs(items, prettify=False)
+
     if type(items) == list:
         return json.dumps([object_to_dict(i) for i in items])
+
     else:
         return json.dumps(object_to_dict(items))
 
@@ -166,9 +196,12 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
 
 
 def format_datetime_attrs(items, prettify=True):
-    """Change datetime attributes of object(s) to formatted string.
+    """
+    Change datetime attributes of object(s) to formatted string.
     If prettify = True: use format_datetime() to format datetime attribute values.
-    If prettify = False: use str() to format datetime attribute values."""
+    If prettify = False: use str() to format datetime attribute values.
+    """
+
     def _format_date_fields(obj):
         attrs = [k[1:] for k in obj.__dict__.keys() if k.startswith('_')]
         for attr in attrs:
@@ -176,6 +209,7 @@ def format_datetime_attrs(items, prettify=True):
                 value = getattr(obj, attr)
                 value = format_datetime(value) if prettify else str(value)
                 setattr(obj, attr, value)
+
         return obj
 
     if type(items) == list:
@@ -236,8 +270,7 @@ def print_projects_list(projects, current, attrs, fmt='simple'):
         print_list(projects, attrs, sorting_col=1, fmt=fmt)
 
 
-def print_item(item, row_attrs, required_front=None, optional=None, required_end=None,
-               rename=None, fmt='row'):
+def print_item(item, row_attrs, required_front=None, optional=None, required_end=None, rename=None, fmt='row'):
     if fmt == 'json':
         click.echo(format_json(item))
     elif fmt == 'yaml':
@@ -279,92 +312,138 @@ def format_logs_oneline(logs):
 
 
 def format_requests_reference(requests, split_requests='\n\n'):
+    """
+    Format deployment requests in a pipeline request with reference
+    """
+
     overview = ''
     total = len(requests)
+
     for i, request in enumerate(requests):
         if hasattr(request, 'pipeline_object'):
             overview += 'Object: %s\n' % request.pipeline_object
+
         if hasattr(request, 'id') and request.id is not None:
             overview += "Id: %s\n" % click.style(str(request.id), fg='yellow')
+
         if hasattr(request, 'request_id') and request.request_id is not None:
             overview += "Request id: %s\n" % click.style(str(request.request_id), fg='yellow')
+
         if hasattr(request, 'time_created'):
             overview += 'Creation date: %s\n' % format_datetime(request.time_created)
+
         if hasattr(request, 'time_started'):
             overview += 'Start date: %s\n' % format_datetime(request.time_started)
+
         if hasattr(request, 'time_completed'):
             overview += 'Completion date: %s\n' % format_datetime(request.time_completed)
+
         if hasattr(request, 'status'):
             overview += 'Status: %s' % format_status(request.status, success_green=True)
+
         elif hasattr(request, 'success'):
             if request.success:
                 overview += 'Status: %s' % click.style('completed', fg='green')
             else:
                 overview += 'Status: %s' % click.style('failed', fg='red')
+
         if hasattr(request, 'error_message') and request.error_message:
             overview += '\nError message: %s' % click.style(str(request.error_message), fg='red')
+
         if hasattr(request, 'request_data'):
             request_data = '-' if request.request_data is None else json.dumps(request.request_data)
             overview += '\nRequest data: %s' % request_data
+
         if hasattr(request, 'result'):
             request_result = '-' if request.result is None else json.dumps(request.result)
             overview += '\nResult: %s' % request_result
-        if i+1 < total:
+
+        if i + 1 < total:
             overview += split_requests
+
     return overview
 
 
 def format_requests_oneline(requests):
+    """
+    Format deployment requests in a pipeline request in one line
+    """
+
     overview = ''
     total = len(requests)
+
     for i, request in enumerate(requests):
         if hasattr(request, 'id') and request.id is not None:
             overview += click.style(str(request.id), fg='yellow')
             overview += ' '
+
         elif hasattr(request, 'request_id') and request.request_id is not None:
             overview += click.style(str(request.request_id), fg='yellow')
             overview += ' '
+
         if hasattr(request, 'pipeline_object'):
             overview += request.pipeline_object
             overview += ' '
+
         if hasattr(request, 'status'):
             overview += format_status(request.status, success_green=True)
             overview += ' '
+
         elif hasattr(request, 'success'):
             if request.success:
                 overview += click.style('completed ', fg='green')
             else:
                 overview += click.style('failed ', fg='red')
+
         if hasattr(request, 'request_data'):
             overview += '-' if request.request_data is None else json.dumps(request.request_data)
             overview += ' '
+
         if hasattr(request, 'result'):
             overview += '-' if request.result is None else json.dumps(request.result)
+
         if hasattr(request, 'error_message') and request.error_message:
             overview += ' '
             overview += click.style(str(request.error_message), fg='red')
-        if i+1 < total:
+
+        if i + 1 < total:
             overview += '\n'
+
     return overview
 
 
 def format_pipeline_requests_reference(pipeline_requests):
+    """
+    Format the given pipeline request(s) with reference for showing in response
+    """
+
     overview = ''
     total = len(pipeline_requests)
+
     for j, pipeline_request in enumerate(pipeline_requests):
         if hasattr(pipeline_request, 'id') and pipeline_request.id is not None:
             overview += "Pipeline request id: %s\n" % click.style(str(pipeline_request.id), fg='yellow')
+
         elif hasattr(pipeline_request, 'pipeline_request_id') and pipeline_request.pipeline_request_id is not None:
-            overview += "Pipeline request id: %s\n" % click.style(str(pipeline_request.pipeline_request_id),
-                                                                  fg='yellow')
+            overview += "Pipeline request id: %s\n" % click.style(
+                str(pipeline_request.pipeline_request_id), fg='yellow'
+            )
+
         if hasattr(pipeline_request, 'pipeline'):
             overview += 'Pipeline: %s\n' % pipeline_request.pipeline
+
+        if hasattr(pipeline_request, 'version'):
+            overview += 'Version: %s\n' % pipeline_request.version
+
         if hasattr(pipeline_request, 'time_created'):
             overview += 'Creation date: %s\n' % format_datetime(pipeline_request.time_created)
+
         if hasattr(pipeline_request, 'status'):
             overview += 'Status: %s' % format_status(pipeline_request.status, success_green=True)
+
         if hasattr(pipeline_request, 'error_message') and pipeline_request.error_message:
             overview += '\nError message: %s' % click.style(str(pipeline_request.error_message), fg='red')
+
         if hasattr(pipeline_request, 'request_data'):
             request_data = '-' if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
             overview += '\nPipeline request data: %s' % request_data
@@ -372,35 +451,50 @@ def format_pipeline_requests_reference(pipeline_requests):
         if hasattr(pipeline_request, 'deployment_requests'):
             if pipeline_request.deployment_requests is not None:
                 overview += '\n'
-                deployment_requests = format_requests_reference(pipeline_request.deployment_requests, split_requests='\n')
-                deployment_requests = "\n".join(["\n - %s" % line if line.startswith('Object') else "   %s" % line
-                                           for line in deployment_requests.split("\n")])
+                deployment_requests = format_requests_reference(
+                    pipeline_request.deployment_requests, split_requests='\n'
+                )
+                deployment_requests = "\n".join(
+                    ["\n - %s" % line if line.startswith('Object') else "   %s" % line
+                     for line in deployment_requests.split("\n")]
+                )
                 overview += deployment_requests
 
-        if j+1 < total:
+        if j + 1 < total:
             overview += '\n\n'
+
     return overview
 
 
 def format_pipeline_requests_oneline(pipeline_requests):
+    """
+    Format the given pipeline request(s) in oneline for showing in response
+    """
+
     overview = ''
     total = len(pipeline_requests)
     for j, pipeline_request in enumerate(pipeline_requests):
+
         if hasattr(pipeline_request, 'id') and pipeline_request.id is not None:
             overview += click.style(str(pipeline_request.id), fg='yellow')
             overview += ' '
-        if hasattr(pipeline_request, 'pipeline_request_id') and pipeline_request.pipeline_request_id is not None:
-            overview += click.style(str(pipeline_request.pipeline_request_id), fg='yellow')
-            overview += ' '
+
         if hasattr(pipeline_request, 'pipeline'):
             overview += pipeline_request.pipeline
             overview += ' '
+
+        if hasattr(pipeline_request, 'version'):
+            overview += pipeline_request.version
+            overview += ' '
+
         if hasattr(pipeline_request, 'time_created'):
             overview += format_datetime(pipeline_request.time_created)
             overview += ' '
+
         if hasattr(pipeline_request, 'status'):
             overview += format_status(pipeline_request.status, success_green=True)
             overview += ' '
+
         if hasattr(pipeline_request, 'error_message') and pipeline_request.error_message:
             overview += ' '
             overview += click.style(str(pipeline_request.error_message), fg='red')
@@ -417,6 +511,8 @@ def format_pipeline_requests_oneline(pipeline_requests):
                     overview += '\n'
                     deployment_requests = "\n".join([" - %s" % line for line in lines])
                 overview += deployment_requests
-        if j+1 < total:
+
+        if j + 1 < total:
             overview += '\n'
+
     return overview

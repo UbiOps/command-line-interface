@@ -1,10 +1,9 @@
-import ubiops as api
 from pkg.utils import init_client, get_current_project, default_version_zip_name, write_blob
 from pkg.src.helpers.formatting import print_list, print_item
 from pkg.src.helpers.options import *
 
 
-LIST_ITEMS = ['id', 'creation_date', 'created_by']
+LIST_ITEMS = ['creation_date', 'id', 'created_by']
 
 
 @click.group(["version_revisions", "revisions"], short_help="Manage your deployment version revisions")
@@ -28,7 +27,7 @@ def revisions_list(deployment_name, version_name, format_):
     response = client.revisions_list(project_name=project_name, deployment_name=deployment_name, version=version_name)
     client.api_client.close()
 
-    print_list(response, LIST_ITEMS, sorting_col=1, fmt=format_)
+    print_list(response, LIST_ITEMS, sorting_col=0, fmt=format_)
 
 
 @commands.command("get", short_help="Get a revision of a deployment version")
@@ -51,6 +50,7 @@ def revisions_get(deployment_name, version_name, revision_id, format_):
     client.api_client.close()
 
     print_item(revision, row_attrs=LIST_ITEMS, fmt=format_)
+
 
 @commands.command("download", short_help="Download a revision of a deployment version")
 @DEPLOYMENT_NAME_OPTION
@@ -77,6 +77,7 @@ def revisions_download(deployment_name, version_name, revision_id, output_path, 
 
     if not quiet:
         click.echo("Zip stored in: %s" % output_path)
+
 
 @commands.command("upload", short_help="Create a revision of a deployment version")
 @DEPLOYMENT_NAME_OPTION

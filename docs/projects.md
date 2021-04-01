@@ -15,7 +15,7 @@
 
 List all your projects.
 
-To select a project, use: `ubiops current_project set `<project_name>``
+To select a project, use: `ubiops current_project set <project_name>`
 
 **Arguments:** - 
 

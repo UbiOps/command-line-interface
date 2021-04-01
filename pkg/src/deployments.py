@@ -4,21 +4,24 @@ from time import sleep
 
 from pkg.utils import init_client, read_yaml, write_yaml, zip_dir, get_current_project, \
     set_dict_default, write_blob, default_version_zip_name, parse_json
-from pkg.src.helpers.helpers import set_version_defaults, update_deployment_file, update_existing_version,\
-    VERSION_FIELDS, VERSION_FIELDS_UPDATE, VERSION_FIELDS_WAIT, get_label_filter
+from pkg.src.helpers.deployment_helpers import set_deployment_version_defaults, update_deployment_file, \
+    update_existing_deployment_version, DEPLOYMENT_REQUIRED_FIELDS, DEPLOYMENT_VERSION_FIELDS
+from pkg.src.helpers.helpers import get_label_filter
 from pkg.src.helpers.formatting import print_list, print_item, format_yaml, format_requests_reference, \
     format_requests_oneline, format_json
 from pkg.src.helpers.options import *
 from pkg.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME
 
 
-LIST_ITEMS = ['id', 'name', 'last_updated', 'labels']
+LIST_ITEMS = ['last_updated', 'name', 'labels']
 REQUEST_LIST_ITEMS = ['id', 'status', 'success', 'time_created']
 
 
 @click.group(["deployments", "dpl"], short_help="Manage your deployments")
 def commands():
-    """Manage your deployments."""
+    """
+    Manage your deployments.
+    """
     pass
 
 
@@ -39,7 +42,7 @@ def deployments_list(labels, format_):
         client = init_client()
         deployments = client.deployments_list(project_name=project_name, labels=label_filter)
         client.api_client.close()
-        print_list(deployments, LIST_ITEMS, sorting_col=1, fmt=format_)
+        print_list(items=deployments, attrs=LIST_ITEMS, sorting_col=1, fmt=format_)
 
 
 @commands.command("get", short_help="Get details of a deployment")
@@ -48,12 +51,14 @@ def deployments_list(labels, format_):
 @QUIET
 @GET_FORMATS
 def deployments_get(deployment_name, output_path, quiet, format_):
-    """Get the deployment settings, like, input_type and output_type.
+    """
+    Get the deployment settings, like, input_type and output_type.
 
     If you specify the `<output_path>` option, this location will be used to store the
     deployment settings in a yaml file. You can either specify the `<output_path>` as file or
     directory. If the specified `<output_path>` is a directory, the settings will be
-    stored in `deployment.yaml`."""
+    stored in `deployment.yaml`.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -63,20 +68,22 @@ def deployments_get(deployment_name, output_path, quiet, format_):
 
     if output_path is not None:
         dictionary = format_yaml(
-            deployment,
+            item=deployment,
             required_front=['name', 'description', 'labels', 'input_type', 'output_type'],
             optional=['input_fields', 'output_fields'],
-            rename={'name': 'deployment_name', 'description': 'deployment_description',
-                    'labels': 'deployment_labels'},
+            rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
             as_str=False
         )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="deployment.yaml")
         if not quiet:
             click.echo('Deployment file is stored in: %s' % yaml_file)
     else:
-        print_item(deployment, row_attrs=LIST_ITEMS,
-                   rename={'name': 'deployment_name', 'description': 'deployment_description',
-                           'labels': 'deployment_labels'}, fmt=format_)
+        print_item(
+            item=deployment,
+            row_attrs=LIST_ITEMS,
+            rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
+            fmt=format_
+        )
 
 
 @commands.command("create", short_help="Create a deployment")
@@ -84,7 +91,8 @@ def deployments_get(deployment_name, output_path, quiet, format_):
 @DEPLOYMENT_YAML_FILE
 @CREATE_FORMATS
 def deployments_create(deployment_name, yaml_file, format_):
-    """Create a new deployment.
+    """
+    Create a new deployment.
 
     \b
     Define the deployment parameters using a yaml file.
@@ -141,28 +149,39 @@ def deployments_create(deployment_name, yaml_file, format_):
         labels = {}
 
     deployment = api.DeploymentCreate(
-        name=deployment_name, description=description,
-        input_type=yaml_content['input_type'], output_type=yaml_content['output_type'],
-        input_fields=input_fields, output_fields=output_fields, labels=labels)
+        name=deployment_name,
+        description=description,
+        input_type=yaml_content['input_type'],
+        output_type=yaml_content['output_type'],
+        input_fields=input_fields,
+        output_fields=output_fields,
+        labels=labels
+    )
     response = client.deployments_create(project_name=project_name, data=deployment)
     client.api_client.close()
 
-    print_item(response, row_attrs=LIST_ITEMS,
-               rename={'name': 'deployment_name', 'description': 'deployment_description',
-                       'labels': 'deployment_labels'}, fmt=format_)
+    print_item(
+        item=response,
+        row_attrs=LIST_ITEMS,
+        rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
+        fmt=format_
+    )
 
 
 @commands.command("update", short_help="Update a deployment")
 @DEPLOYMENT_NAME_ARGUMENT
 @DEPLOYMENT_NAME_UPDATE
+@VERSION_DEFAULT_UPDATE
 @QUIET
-def deployments_update(deployment_name, new_name, quiet):
-    """Update a deployment."""
+def deployments_update(deployment_name, new_name, default_version, quiet):
+    """
+    Update a deployment.
+    """
 
     project_name = get_current_project(error=True)
 
     client = init_client()
-    deployment = api.DeploymentUpdate(name=new_name if new_name else deployment_name)
+    deployment = api.DeploymentUpdate(name=new_name, default_version=default_version)
     client.deployments_update(project_name=project_name, deployment_name=deployment_name, data=deployment)
     client.api_client.close()
 
@@ -175,7 +194,9 @@ def deployments_update(deployment_name, new_name, quiet):
 @ASSUME_YES
 @QUIET
 def deployments_delete(deployment_name, assume_yes, quiet):
-    """Delete a deployment."""
+    """
+    Delete a deployment.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -198,7 +219,8 @@ def deployments_delete(deployment_name, assume_yes, quiet):
 @ASSUME_YES
 @QUIET
 def deployments_package(deployment_name, version_name, directory, output_path, ignore_file, assume_yes, quiet):
-    """Package code to ZIP file which is ready to be deployed.
+    """
+    Package code to ZIP file which is ready to be deployed.
 
     Please, specify the code `<directory>` that should be deployed. The files in this directory
     will be zipped and uploaded. Subdirectories and files that shouldn't be contained in
@@ -212,8 +234,14 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
     """
 
     ignore_file = DEFAULT_IGNORE_FILE if ignore_file is None else ignore_file
-    zip_path = zip_dir(directory, output_path, ignore_filename=ignore_file,
-                       deployment_name=deployment_name, version_name=version_name, force=assume_yes)
+    zip_path = zip_dir(
+        directory=directory,
+        output_path=output_path,
+        ignore_filename=ignore_file,
+        deployment_name=deployment_name,
+        version_name=version_name,
+        force=assume_yes
+    )
     if not quiet:
         click.echo("Created zip: %s" % zip_path)
 
@@ -225,7 +253,8 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
 @OVERWRITE
 @QUIET
 def deployments_upload(deployment_name, version_name, zip_path, overwrite, quiet):
-    """Upload ZIP to a version of a deployment.
+    """
+    Upload ZIP to a version of a deployment.
 
     Please, specify the deployment package `<zip_path>` that should be uploaded.
     Use the `<overwrite>` option to overwrite the deployment package on UbiOps if one already exists for this version.
@@ -234,12 +263,14 @@ def deployments_upload(deployment_name, version_name, zip_path, overwrite, quiet
     project_name = get_current_project(error=True)
 
     client = init_client()
-    current_version = client.versions_get(project_name=project_name, deployment_name=deployment_name,
-                                          version=version_name)
+    current_version = client.deployment_versions_get(
+        project_name=project_name, deployment_name=deployment_name, version=version_name
+    )
 
     if overwrite or current_version.status == STATUS_UNAVAILABLE:
-        client.revisions_file_upload(project_name=project_name, deployment_name=deployment_name,
-                                    version=version_name, file=zip_path)
+        client.revisions_file_upload(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path
+        )
         client.api_client.close()
 
         if not quiet:
@@ -255,7 +286,8 @@ def deployments_upload(deployment_name, version_name, zip_path, overwrite, quiet
 @ZIP_OUTPUT
 @QUIET
 def deployments_download(deployment_name, version_name, output_path, quiet):
-    """Get the version of a deployment.
+    """
+    Get the version of a deployment.
 
     The `<output_path>` option will be used as output location of the zip file. If not specified,
     the current directory will be used. If the `<output_path>` is a directory, the zip will be
@@ -265,7 +297,9 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
     project_name = get_current_project(error=True)
 
     client = init_client()
-    version = client.versions_get(project_name=project_name, deployment_name=deployment_name, version=version_name)
+    version = client.deployment_versions_get(
+        project_name=project_name, deployment_name=deployment_name, version=version_name
+    )
     if not version.active_revision:
         raise Exception("No active revision available for this deployment")
 
@@ -299,7 +333,8 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @QUIET
 def deployments_deploy(deployment_name, version_name, directory, output_path, yaml_file, overwrite, assume_yes, quiet,
                        **kwargs):
-    """Deploy a new version of a deployment.
+    """
+    Deploy a new version of a deployment.
 
     Please, specify the code `<directory>` that should be deployed. The files in this directory
     will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the
@@ -356,45 +391,58 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     existing_version = None
     if overwrite:
         try:
-            existing_version = client.versions_get(project_name=project_name, deployment_name=deployment_name,
-                                                   version=version_name)
+            existing_version = client.deployment_versions_get(
+                project_name=project_name, deployment_name=deployment_name, version=version_name
+            )
         except api.exceptions.ApiException:
             # Do nothing if version doesn't exist
             pass
 
-    kwargs = set_version_defaults(kwargs, yaml_content, existing_version,
-                                  extra_yaml_fields=['deployment_file', 'ignore_file'])
+    kwargs = set_deployment_version_defaults(
+        kwargs, yaml_content, existing_version, extra_yaml_fields=['deployment_file', 'ignore_file']
+    )
     kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
-    zip_path = zip_dir(directory, output_path, ignore_filename=kwargs['ignore_file'],
-                       deployment_name=deployment_name, version_name=version_name, force=assume_yes)
+    zip_path = zip_dir(
+        directory=directory,
+        output_path=output_path,
+        ignore_filename=kwargs['ignore_file'],
+        deployment_name=deployment_name,
+        version_name=version_name,
+        force=assume_yes
+    )
 
     try:
         has_uploaded_zips = False
         has_changed_fields = False
-        has_changed_env_vars = False
 
         if not (overwrite and existing_version):
-            version = api.VersionCreate(version=version_name, **{k: kwargs[k] for k in VERSION_FIELDS})
-            client.versions_create(project_name=project_name, deployment_name=deployment_name, data=version)
+            version = api.DeploymentVersionCreate(
+                version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS}
+            )
+            client.deployment_versions_create(project_name=project_name, deployment_name=deployment_name, data=version)
         else:
-            revisions = client.revisions_list(project_name=project_name, deployment_name=deployment_name,
-                                              version=version_name)
+            revisions = client.revisions_list(
+                project_name=project_name, deployment_name=deployment_name, version=version_name
+            )
             has_uploaded_zips = len(revisions) > 0
 
         if overwrite and existing_version:
-            has_changed_fields = update_existing_version(client, project_name, deployment_name, version_name,
-                                                         existing_version, kwargs)
+            has_changed_fields = update_existing_deployment_version(
+                client, project_name, deployment_name, version_name, existing_version, kwargs
+            )
 
-        has_changed_env_vars = update_deployment_file(client, project_name, deployment_name,
-                                                      version_name, kwargs['deployment_file'])
+        has_changed_env_vars = update_deployment_file(
+            client, project_name, deployment_name, version_name, kwargs['deployment_file']
+        )
 
         if has_uploaded_zips and (has_changed_fields or has_changed_env_vars):
             # Wait for changes being applied
             click.echo("Waiting for changes to take effect... This takes %d seconds." % UPDATE_TIME)
             sleep(UPDATE_TIME)
 
-        client.revisions_file_upload(project_name=project_name, deployment_name=deployment_name,
-                                     version=version_name, file=zip_path)
+        client.revisions_file_upload(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path
+        )
         client.api_client.close()
     except Exception as e:
         if os.path.isfile(zip_path) and not store_zip:
@@ -415,15 +463,22 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
 
 @commands.command("request", short_help="Create deployment direct requests")
 @DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTION
+@VERSION_NAME_OPTIONAL
 @REQUEST_DATA
 @REQUEST_DEPLOYMENT_TIMEOUT
 @REQUESTS_FORMATS
 def deployments_request(deployment_name, version_name, data, timeout, format_):
-    """Create a deployment request and retrieve the result.
+    """
+    Create a deployment request and retrieve the result.
+
+    Use the version option to make a request to a specific deployment version:
+    `ubiops deployments request <my-deployment> -v <my-version> --data <input>`
+
+    If not specified, a request is made to the default version:
+    `ubiops deployments request <my-deployment> --data <input>`
 
     For structured input, specify the data as JSON formatted string. For example:
-    `ubiops deployments request <my-deployment> -v <my-version> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
+    `ubiops deployments request <my-deployment> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
     """
 
     project_name = get_current_project(error=True)
@@ -434,8 +489,15 @@ def deployments_request(deployment_name, version_name, data, timeout, format_):
     if deployment.input_type == STRUCTURED_TYPE:
         data = parse_json(data)
 
-    response = client.deployment_requests_create(project_name=project_name, deployment_name=deployment_name,
-                                                 version=version_name, data=data, timeout=timeout)
+    if version_name is not None:
+        response = client.deployment_version_requests_create(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, data=data, timeout=timeout
+        )
+    else:
+        response = client.deployment_requests_create(
+            project_name=project_name, deployment_name=deployment_name, data=data, timeout=timeout
+        )
+
     client.api_client.close()
 
     if format_ == 'reference':
@@ -450,23 +512,32 @@ def deployments_request(deployment_name, version_name, data, timeout, format_):
 
 @commands.group("batch_requests", short_help="Manage your deployment batch requests")
 def batch_requests():
-    """Manage your deployment batch requests."""
+    """
+    Manage your deployment batch requests.
+    """
     pass
 
 
 @batch_requests.command("create", short_help="Create deployment batch request")
 @DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTION
+@VERSION_NAME_OPTIONAL
 @REQUEST_DATA_MULTI
 @REQUESTS_FORMATS
 def batch_requests_create(deployment_name, version_name, data, format_):
-    """Create a deployment batch request and retrieve request IDs to collect the results later.
+    """
+    Create a deployment batch request and retrieve request IDs to collect the results later.
+
+    Use the version option to make a batch request to a specific deployment version:
+    `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input>`
+
+    If not specified, a batch request is made to the default version:
+    `ubiops deployments batch_requests create <my-deployment> --data <input>`
 
     Multiple data inputs can be specified at ones by using the '--data' options multiple times:
-    `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input-1> --data <input-2> --data <input-3>`
+    `ubiops deployments batch_requests create <my-deployment> --data <input-1> --data <input-2> --data <input-3>`
 
     For structured input, specify each data input as JSON formatted string. For example:
-    `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
+    `ubiops deployments batch_requests create <my-deployment> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
     """
 
     data = list(data)
@@ -483,8 +554,14 @@ def batch_requests_create(deployment_name, version_name, data, format_):
     else:
         input_data = data
 
-    response = client.batch_deployment_requests_create(project_name=project_name, deployment_name=deployment_name,
-                                                       version=version_name, data=input_data)
+    if version_name is not None:
+        response = client.batch_deployment_version_requests_create(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, data=input_data
+        )
+    else:
+        response = client.batch_deployment_requests_create(
+            project_name=project_name, deployment_name=deployment_name, data=input_data
+        )
     client.api_client.close()
 
     if format_ == 'reference':
@@ -499,11 +576,15 @@ def batch_requests_create(deployment_name, version_name, data, format_):
 
 @batch_requests.command("get", short_help="Get deployment batch request")
 @DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTION
+@VERSION_NAME_OPTIONAL
 @REQUEST_ID_MULTI
 @REQUESTS_FORMATS
 def batch_requests_get(deployment_name, version_name, request_id, format_):
-    """Get the results of one or more deployment batch requests.
+    """
+    Get the results of one or more deployment batch requests.
+
+    Use the version option to get a batch request for a specific deployment version.
+    If not specified, the batch request is retrieved for the default version.
 
     Multiple request ids can be specified at ones by using the '-id' options multiple times:
     `ubiops deployments batch_requests get <my-deployment> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
@@ -514,9 +595,14 @@ def batch_requests_get(deployment_name, version_name, request_id, format_):
     project_name = get_current_project(error=True)
 
     client = init_client()
-    response = client.batch_deployment_requests_batch_get(
-        project_name=project_name, deployment_name=deployment_name, version=version_name, data=request_ids
-    )
+    if version_name is not None:
+        response = client.batch_deployment_version_requests_batch_get(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, data=request_ids
+        )
+    else:
+        response = client.batch_deployment_requests_batch_get(
+            project_name=project_name, deployment_name=deployment_name, data=request_ids
+        )
     client.api_client.close()
 
     if format_ == 'reference':
@@ -531,19 +617,29 @@ def batch_requests_get(deployment_name, version_name, request_id, format_):
 
 @batch_requests.command("list", short_help="List deployment batch requests")
 @DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTION
+@VERSION_NAME_OPTIONAL
 @OFFSET
 @REQUEST_LIMIT
 @LIST_FORMATS
 def batch_requests_list(deployment_name, version_name, offset, limit, format_):
-    """List deployment batch requests."""
+    """
+    List deployment batch requests.
+
+    Use the version option to list the batch requests for a specific deployment version.
+    If not specified, the batch requests are listed for the default version.
+    """
 
     project_name = get_current_project(error=True)
 
     client = init_client()
-    response = client.batch_deployment_requests_list(
-        project_name=project_name, deployment_name=deployment_name, version=version_name, limit=limit, offset=offset
-    )
+    if version_name is not None:
+        response = client.batch_deployment_version_requests_list(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, limit=limit, offset=offset
+        )
+    else:
+        response = client.batch_deployment_requests_list(
+            project_name=project_name, deployment_name=deployment_name, limit=limit, offset=offset
+        )
     client.api_client.close()
 
     print_list(response, REQUEST_LIST_ITEMS, fmt=format_)

@@ -5,7 +5,7 @@ from pkg.src.helpers.formatting import print_item, print_projects_list
 from pkg.src.helpers.options import *
 
 
-LIST_ITEMS = ['id', 'name', 'creation_date', 'organization_name']
+LIST_ITEMS = ['creation_date', 'name', 'organization_name']
 
 
 @click.group(["projects", "prj"], short_help="Manage your projects")
@@ -20,7 +20,7 @@ def commands():
 def projects_list(organization_name, format_):
     """List all your projects.
 
-    To select a project, use: `ubiops current_project set `<project_name>``
+    To select a project, use: `ubiops current_project set <project_name>`
     """
     client = init_client()
     projects = client.projects_list()

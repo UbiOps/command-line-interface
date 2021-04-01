@@ -1,12 +1,13 @@
 import ubiops as api
-from pkg.utils import init_client, read_yaml, write_yaml, get_current_project
-from pkg.src.helpers.helpers import set_version_defaults, update_deployment_file, VERSION_FIELDS,\
-    VERSION_FIELDS_UPDATE, set_dict_default, VERSION_FIELDS_RENAMED, get_label_filter
+from pkg.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
+from pkg.src.helpers.deployment_helpers import set_deployment_version_defaults, update_deployment_file, \
+    DEPLOYMENT_VERSION_FIELDS, DEPLOYMENT_VERSION_FIELDS_UPDATE, DEPLOYMENT_VERSION_FIELDS_RENAMED
+from pkg.src.helpers.helpers import get_label_filter
 from pkg.src.helpers.formatting import print_list, print_item, format_yaml
 from pkg.src.helpers.options import *
 
 
-LIST_ITEMS = ['id', 'version', 'creation_date', 'status', 'labels']
+LIST_ITEMS = ['last_updated', 'version', 'status', 'labels']
 
 
 @click.group(["deployment_versions", "versions"], short_help="Manage your deployment versions")
@@ -31,11 +32,27 @@ def versions_list(deployment_name, labels, format_):
     project_name = get_current_project(error=True)
 
     client = init_client()
-    response = client.versions_list(project_name=project_name, deployment_name=deployment_name, labels=label_filter)
+    default = client.deployments_get(
+        project_name=project_name, deployment_name=deployment_name
+    ).default_version
+    response = client.deployment_versions_list(
+        project_name=project_name, deployment_name=deployment_name, labels=label_filter
+    )
     client.api_client.close()
 
-    print_list(response, LIST_ITEMS, rename_cols={'version': 'version_name', **VERSION_FIELDS_RENAMED},
-               sorting_col=1, fmt=format_)
+    if format_ == 'table':
+        # Add [DEFAULT] to default version
+        for i in response:
+            if default and hasattr(i, 'version') and i.version == default:
+                i.version = f"{i.version} {click.style('[DEFAULT]', fg='yellow')}"
+
+    print_list(
+        items=response,
+        attrs=LIST_ITEMS,
+        rename_cols={'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
+        sorting_col=0,
+        fmt=format_
+    )
 
 
 @commands.command("get", short_help="Get the version of a deployment")
@@ -73,20 +90,29 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 
     # Show version details
     client = init_client()
-    version = client.versions_get(project_name=project_name, deployment_name=deployment_name, version=version_name)
+    version = client.deployment_versions_get(
+        project_name=project_name, deployment_name=deployment_name, version=version_name
+    )
     client.api_client.close()
 
     if output_path is not None:
         # Store only reusable settings
-        dictionary = format_yaml(version, required_front=['version', 'deployment', *VERSION_FIELDS],
-                                 rename={'deployment': 'deployment_name', 'version': 'version_name',
-                                         **VERSION_FIELDS_RENAMED}, as_str=False)
+        dictionary = format_yaml(
+            item=version,
+            required_front=['version', 'deployment', *DEPLOYMENT_VERSION_FIELDS],
+            rename={'deployment': 'deployment_name', 'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
+            as_str=False
+        )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="version.yaml")
         if not quiet:
             click.echo('Version file stored in: %s' % yaml_file)
     else:
-        print_item(version, row_attrs=LIST_ITEMS, rename={'deployment': 'deployment_name', 'version': 'version_name',
-                                                          **VERSION_FIELDS_RENAMED}, fmt=format_)
+        print_item(
+            item=version,
+            row_attrs=LIST_ITEMS,
+            rename={'deployment': 'deployment_name', 'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
+            fmt=format_
+        )
 
 
 @commands.command("create", short_help="Create a version")
@@ -137,19 +163,25 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either ' \
                                                            'the yaml file or as a command argument'
 
-    kwargs = set_version_defaults(kwargs, yaml_content, None, extra_yaml_fields=['deployment_file'])
+    kwargs = set_deployment_version_defaults(kwargs, yaml_content, None, extra_yaml_fields=['deployment_file'])
 
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
-    version = api.VersionCreate(version=version_name, **{k: kwargs[k] for k in VERSION_FIELDS})
-    response = client.versions_create(project_name=project_name, deployment_name=deployment_name, data=version)
+    version = api.DeploymentVersionCreate(version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS})
+    response = client.deployment_versions_create(
+        project_name=project_name, deployment_name=deployment_name, data=version
+    )
 
     update_deployment_file(client, project_name, deployment_name, version_name, kwargs['deployment_file'])
     client.api_client.close()
 
-    print_item(response, row_attrs=LIST_ITEMS, rename={'deployment': 'deployment_name', 'version': 'version_name',
-                                                       **VERSION_FIELDS_RENAMED}, fmt=format_)
+    print_item(
+        item=response,
+        row_attrs=LIST_ITEMS,
+        rename={'deployment': 'deployment_name', 'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
+        fmt=format_
+    )
 
 
 @commands.command("update", short_help="Update a version")
@@ -196,15 +228,21 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     client = init_client()
 
     yaml_content = read_yaml(yaml_file, required_fields=[])
-    existing_version = client.versions_get(project_name=project_name, deployment_name=deployment_name,
-                                           version=version_name)
+    existing_version = client.deployment_versions_get(
+        project_name=project_name, deployment_name=deployment_name, version=version_name
+    )
 
-    kwargs = set_version_defaults(kwargs, yaml_content, existing_version, extra_yaml_fields=['deployment_file'])
+    kwargs = set_deployment_version_defaults(
+        kwargs, yaml_content, existing_version, extra_yaml_fields=['deployment_file']
+    )
 
     new_version_name = version_name if new_name is None else new_name
-    version = api.VersionUpdate(version=new_version_name, **{k: kwargs[k] for k in VERSION_FIELDS_UPDATE})
-    client.versions_update(project_name=project_name, deployment_name=deployment_name, version=version_name,
-                           data=version)
+    version = api.DeploymentVersionUpdate(
+        version=new_version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE}
+    )
+    client.deployment_versions_update(
+        project_name=project_name, deployment_name=deployment_name, version=version_name, data=version
+    )
     update_deployment_file(client, project_name, deployment_name, version_name, kwargs['deployment_file'])
     client.api_client.close()
 
@@ -225,7 +263,9 @@ def versions_delete(deployment_name, version_name, assume_yes, quiet):
     if assume_yes or click.confirm("Are you sure you want to delete deployment version <%s> of deployment <%s> in"
                                    " project <%s>?" % (version_name, deployment_name, project_name)):
         client = init_client()
-        client.versions_delete(project_name=project_name, deployment_name=deployment_name, version=version_name)
+        client.deployment_versions_delete(
+            project_name=project_name, deployment_name=deployment_name, version=version_name
+        )
         client.api_client.close()
         if not quiet:
             click.echo("Deployment version was successfully deleted")

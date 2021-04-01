@@ -1,9 +1,11 @@
 pipeline_name: demo-example-pipeline
-pipeline_description: 'UbiOps CLI example.'
+pipeline_description: 'UbiOps CLI example'
 input_type: structured
 input_fields:
 - name: input
   data_type: double
+version_name: v1
+version_description: 'This is a pipeline version'
 objects:
 - name: demo-example
   reference_name: demo-example

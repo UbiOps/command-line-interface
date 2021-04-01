@@ -13,7 +13,7 @@ def create_env_var(project_name, deployment_name, version_name, env_var_name, en
     client = init_client()
     new_env_var = api.EnvironmentVariableCreate(name=env_var_name, value=env_var_value, secret=secret)
     if version_name:
-        item = client.version_environment_variables_create(
+        item = client.deployment_version_environment_variables_create(
             project_name=project_name, deployment_name=deployment_name, version=version_name, data=new_env_var
         )
     elif deployment_name:
@@ -24,6 +24,7 @@ def create_env_var(project_name, deployment_name, version_name, env_var_name, en
         item = client.project_environment_variables_create(project_name=project_name, data=new_env_var)
     client.api_client.close()
     return item
+
 
 @click.group(["environment_variables", "env"], short_help="Manage your environment variables")
 def commands():
@@ -54,7 +55,7 @@ def env_vars_list(deployment_name, version_name, format_):
 
     client = init_client()
     if version_name:
-        response = client.version_environment_variables_list(
+        response = client.deployment_version_environment_variables_list(
             project_name=project_name, deployment_name=deployment_name, version=version_name
         )
     elif deployment_name:
@@ -156,7 +157,7 @@ def env_vars_get(env_var_id, deployment_name, version_name, format_):
     client = init_client()
     try:
         if version_name:
-            item = client.version_environment_variables_get(
+            item = client.deployment_version_environment_variables_get(
                 project_name=project_name, deployment_name=deployment_name, version=version_name, id=env_var_id
             )
         elif deployment_name:
@@ -193,8 +194,9 @@ def env_vars_copy(from_deployment, from_version, to_deployment, to_version, assu
                                                                 deployment_name=from_deployment)
     else:
         data = api.EnvironmentVariableCopy(source_deployment=from_deployment, source_version=from_version)
-        env_vars = client.version_environment_variables_list(project_name=project_name,
-                                                             deployment_name=from_deployment, version=from_version)
+        env_vars = client.deployment_version_environment_variables_list(
+            project_name=project_name, deployment_name=from_deployment, version=from_version
+        )
 
     if not assume_yes:
         env_vars = [env for env in env_vars if env.inheritance_type is None]
@@ -206,11 +208,13 @@ def env_vars_copy(from_deployment, from_version, to_deployment, to_version, assu
 
     if assume_yes or click.confirm(confirm_message):
         if to_version is None:
-            client.deployment_environment_variables_copy(project_name=project_name, deployment_name=to_deployment,
-                                                         data=data)
+            client.deployment_environment_variables_copy(
+                project_name=project_name, deployment_name=to_deployment, data=data
+            )
         else:
-            client.version_environment_variables_copy(project_name=project_name, deployment_name=to_deployment,
-                                                      version=to_version, data=data)
+            client.deployment_version_environment_variables_copy(
+                project_name=project_name, deployment_name=to_deployment, version=to_version, data=data
+            )
     client.api_client.close()
 
 
@@ -235,9 +239,9 @@ def env_vars_update(env_var_id, new_name, env_var_value, secret, deployment_name
     project level.
     """
 
-    def define_env_var(current_name, new_name, new_value, new_secret):
-        new_name = new_name if new_name else current_name
-        return api.EnvironmentVariableCreate(name=new_name, value=new_value, secret=new_secret)
+    def define_env_var(current_name, new_env_var_name, new_env_var_value, new_secret):
+        new_env_var_name = new_env_var_name if new_env_var_name else current_name
+        return api.EnvironmentVariableCreate(name=new_env_var_name, value=new_env_var_value, secret=new_secret)
 
     project_name = get_current_project(error=True)
 
@@ -247,11 +251,11 @@ def env_vars_update(env_var_id, new_name, env_var_value, secret, deployment_name
     client = init_client()
     try:
         if version_name:
-            current = client.version_environment_variables_get(
+            current = client.deployment_version_environment_variables_get(
                 project_name=project_name, deployment_name=deployment_name, version=version_name, id=env_var_id
             )
             new_env_var = define_env_var(current.name, new_name, env_var_value, secret)
-            client.version_environment_variables_update(
+            client.deployment_version_environment_variables_update(
                 project_name=project_name, deployment_name=deployment_name, version=version_name,
                 id=env_var_id, data=new_env_var
             )
@@ -305,12 +309,12 @@ def env_vars_delete(env_var_id, deployment_name, version_name, assume_yes, quiet
     confirm_message = "Are you sure you want to delete environment variable "
     try:
         if version_name:
-            response = client.version_environment_variables_get(
+            response = client.deployment_version_environment_variables_get(
                 project_name=project_name, deployment_name=deployment_name, version=version_name, id=env_var_id
             )
             if assume_yes or click.confirm(confirm_message + "<%s> of deployment <%s> version <%s> in project <%s>?"
                                            % (response.name, deployment_name, version_name, project_name)):
-                client.version_environment_variables_delete(
+                client.deployment_version_environment_variables_delete(
                     project_name=project_name, deployment_name=deployment_name, version=version_name, id=env_var_id
                 )
         elif deployment_name:

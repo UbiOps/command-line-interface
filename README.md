@@ -19,6 +19,11 @@ Includes:
 For more information, please visit [https://ubiops.com/docs](https://ubiops.com/docs)
 
 
+## Examples
+
+An example notebook can be found <a target="_blank" href="https://github.com/UbiOps/command-line-interface/blob/master/examples/quickstart-simple-CLI.ipynb">here</a>.
+
+
 ## Requirements
 
 Python 3.5+
@@ -85,7 +90,7 @@ ubiops projects list
 
 Set a current project:
 ```bash
-ubiops current_project set <MY_PROJECT_NAME>
+ubiops current_project set <project_name>
 ```
 
 Show your deployments:
@@ -107,6 +112,7 @@ Deployment Versions | [docs/deployment_versions.md](docs/deployment_versions.md)
 Version Revisions | [docs/version_revisions.md](docs/version_revisions.md)
 Version Builds | [docs/version_builds.md](docs/version_builds.md)
 Pipelines | [docs/pipelines.md](docs/pipelines.md)
+Pipeline Versions | [docs/pipeline_versions.md](docs/pipeline_versions.md)
 Blobs | [docs/blobs.md](docs/blobs.md)
 Environment Variables | [docs/environment_variables.md](docs/environment_variables.md)
 Logs | [docs/logs.md](docs/logs.md)

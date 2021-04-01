@@ -10,6 +10,7 @@ import pkg.src.deployment_versions as deployment_versions
 import pkg.src.deployment_revisions as deployment_revisions
 import pkg.src.deployment_builds as deployment_builds
 import pkg.src.pipelines as pipelines
+import pkg.src.pipeline_versions as pipeline_versions
 import pkg.src.blobs as blobs
 import pkg.src.logs as logs
 import pkg.src.config as config
@@ -40,6 +41,7 @@ cli.add_command(deployment_versions.commands)
 cli.add_command(deployment_revisions.commands)
 cli.add_command(deployment_builds.commands)
 cli.add_command(pipelines.commands)
+cli.add_command(pipeline_versions.commands)
 cli.add_command(blobs.commands)
 cli.add_command(env_vars.commands)
 cli.add_command(logs.commands)
@@ -64,6 +66,8 @@ def main():
                 message = json.loads(e.body)
                 if 'error' in message:
                     print_error(message['error'])
+                elif 'error_message' in message:
+                    print_error(message['error_message'])
                 else:
                     print_error(message)
             except json.JSONDecodeError:

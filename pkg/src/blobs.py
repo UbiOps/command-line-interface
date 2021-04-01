@@ -3,7 +3,7 @@ from pkg.src.helpers.formatting import print_list, print_item
 from pkg.src.helpers.options import *
 
 
-LIST_ITEMS = ['id', 'filename', 'size', 'ttl', 'creation_date']
+LIST_ITEMS = ['last_updated', 'id', 'filename', 'size', 'ttl']
 
 
 @click.group("blobs", short_help="Manage your blobs")
@@ -23,7 +23,7 @@ def blobs_list(format_):
     response = client.blobs_list(project_name=project_name)
     client.api_client.close()
 
-    print_list(response, LIST_ITEMS, rename_cols={'ttl': 'time_to_live'}, sorting_col=1, fmt=format_)
+    print_list(response, LIST_ITEMS, rename_cols={'ttl': 'time_to_live'}, sorting_col=2, fmt=format_)
 
 
 @commands.command("create", short_help="Upload a new blob")
@@ -60,6 +60,25 @@ def blobs_get(blob_id, output_path, quiet):
 
     if not quiet:
         click.echo("Blob stored in: %s" % output_path)
+
+
+@commands.command("update", short_help="Overwrite an existing blob")
+@BLOB_ID
+@BLOB_PATH
+@BLOB_TTL
+@QUIET
+def blobs_update(blob_id, input_path, ttl, quiet):
+    """Update an existing blob by uploading a new file."""
+
+    project_name = get_current_project(error=True)
+    input_path = abs_path(input_path)
+
+    client = init_client()
+    client.blobs_update(project_name=project_name, blob_id=blob_id, file=input_path, blob_ttl=ttl)
+    client.api_client.close()
+
+    if not quiet:
+        click.echo("Blob was successfully updated")
 
 
 @commands.command("delete", short_help="Delete a blob")

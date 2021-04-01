@@ -21,9 +21,11 @@ Use the command options as filters.
 
 - `-d`/`--deployment_name`<br/>The deployment name
 
-- `-v`/`--version_name`<br/>The version name
+- `-dv`/`--deployment_version_name`<br/>The deployment version name
 
 - `-p`/`--pipeline_name`<br/>The pipeline name
+
+- `-pv`/`--pipeline_version_name`<br/>The pipeline version name
 
 - `-po`/`--pipeline_object_name`<br/>The pipeline object name
 
@@ -58,8 +60,9 @@ Use the command options as filters.
 Get more details of a log:
 - date
 - deployment_name
-- version_name
+- deployment_version_name
 - pipeline_name
+- pipeline_version_name
 - pipeline_object_name
 - request_id
 - pipeline_request_id

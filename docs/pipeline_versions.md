@@ -1,19 +1,19 @@
-## ubiops deployment_versions
+## ubiops pipeline_versions
 
-**Command:** `ubiops deployment_versions`
+**Command:** `ubiops pipeline_versions`
 
-**Alias:** `ubiops versions`
+**Alias:** `ubiops pversions`
 
 
 <br/>
 
-### ubiops deployment_versions list
+### ubiops pipeline_versions list
 
-**Command:** `ubiops deployment_versions list`
+**Command:** `ubiops pipeline_versions list`
 
 **Description:**
 
-List the versions of a deployment.
+List the versions of a pipeline.
 
 The `<labels>` option can be used to filter on specific labels.
 
@@ -21,7 +21,7 @@ The `<labels>` option can be used to filter on specific labels.
 
 **Options:**
 
-- [required] `-d`/`--deployment_name`<br/>The deployment name
+- [required] `-p`/`--pipeline_name`<br/>The pipeline name
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
@@ -30,33 +30,43 @@ The `<labels>` option can be used to filter on specific labels.
 
 <br/>
 
-### ubiops deployment_versions get
+### ubiops pipeline_versions get
 
-**Command:** `ubiops deployment_versions get`
+**Command:** `ubiops pipeline_versions get`
 
 **Description:**
 
-Get the version of a deployment.
+Get the pipeline version structure: input_type, version, objects and connections between the objects (attachments).
 
 If you specify the `<output_path>` option, this location will be used to store the
-deployment version settings in a yaml file. You can either specify the `<output_path>`
+pipeline version settings in a yaml file. You can either specify the `<output_path>`
 as file or directory. If the specified `<output_path>` is a directory, the settings
 will be stored in `version.yaml`.
 
 
 Example of yaml content:
 ```
-deployment_name: my-deployment
-version_name: my-version
+pipeline_name: my-pipeline-name
+input_type: structured
+input_fields:
+  - name: my-pipeline-param1
+    data_type: int
+version_name: my-version-name
 version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-language: python3.7
-memory_allocation: 2048
-minimum_instances: 0
-maximum_instances: 5
-maximum_idle_time: 300
+objects:
+  - name: object1
+    reference_name: my-deployment-name
+    reference_version: my-deployment-version
+attachments:
+  - destination_name: object1
+    sources:
+      - source_name: pipeline_start
+        mapping:
+          - source_field_name: my-pipeline-param1
+            destination_field_name: my-deployment-param1
 ```
 
 **Arguments:**
@@ -67,7 +77,7 @@ maximum_idle_time: 300
 
 **Options:**
 
-- [required] `-d`/`--deployment_name`<br/>The deployment name
+- [required] `-p`/`--pipeline_name`<br/>The pipeline name
 
 - `-o`/`--output_path`<br/>Path to file or directory to store version yaml file
 
@@ -78,29 +88,35 @@ maximum_idle_time: 300
 
 <br/>
 
-### ubiops deployment_versions create
+### ubiops pipeline_versions create
 
-**Command:** `ubiops deployment_versions create`
+**Command:** `ubiops pipeline_versions create`
 
 **Description:**
 
-Create a version of a deployment.
+Create a version of a pipeline.
 
 
 It is possible to define the parameters using a yaml file.
 For example:
 ```
-deployment_name: my-deployment-name
-version_name: my-deployment-version
+pipeline_name: my-pipeline-name
+version_name: my-pipeline-version
 version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-language: python3.6
-memory_allocation: 256
-minimum_instances: 0
-maximum_instances: 1
-maximum_idle_time: 300
+objects:
+  - name: object1
+    reference_name: my-deployment-name
+    reference_version: my-deployment-version
+attachments:
+  - destination_name: object1
+    sources:
+      - source_name: pipeline_start
+        mapping:
+          - source_field_name: my-pipeline-param1
+            destination_field_name: my-deployment-param1
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
@@ -115,17 +131,7 @@ The version name can either be passed as command argument or specified inside th
 
 **Options:**
 
-- `-d`/`--deployment_name`<br/>The deployment name
-
-- `-l`/`--language`<br/>Programming language of code
-
-- `-mem`/`--memory_allocation`<br/>Memory allocation for deployment
-
-- `-min`/`--minimum_instances`<br/>Minimum number of instances
-
-- `-max`/`--maximum_instances`<br/>Maximum number of instances
-
-- `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
+- `-p`/`--pipeline_name`<br/>The pipeline name
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
@@ -133,20 +139,18 @@ The version name can either be passed as command argument or specified inside th
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
-- `-deployment_py`/`--deployment_file`<br/>Name of deployment file which contains class Deployment. Must be located in the root of the deployment package directory
-
 - `-fmt`/`--format`<br/>The output format
 
 
 <br/>
 
-### ubiops deployment_versions update
+### ubiops pipeline_versions update
 
-**Command:** `ubiops deployment_versions update`
+**Command:** `ubiops pipeline_versions update`
 
 **Description:**
 
-Update a version of a deployment.
+Update a version of a pipeline.
 
 
 It is possible to define the parameters using a yaml file.
@@ -156,19 +160,23 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-memory_allocation: 256
-minimum_instances: 0
-maximum_instances: 1
-maximum_idle_time: 300
+objects:
+  - name: object1
+    reference_name: my-deployment-name
+    reference_version: my-deployment-version
+attachments:
+  - destination_name: object1
+    sources:
+      - source_name: pipeline_start
+        mapping:
+          - source_field_name: my-pipeline-param1
+            destination_field_name: my-deployment-param1
 ```
 
-You may want to change some deployment options, like, `<maximum_instances>` and
-`<memory_allocation>`. You can do this by either providing the options in a yaml file
+You can update version parameters by either providing the options in a yaml file
 and passing the file path as `<yaml_file>`, or passing the options as command options.
 If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
 will be overwritten by the specified command options.
-
-It's not possible to update the programming language of an existing deployment version.
 
 **Arguments:**
 
@@ -178,38 +186,28 @@ It's not possible to update the programming language of an existing deployment v
 
 **Options:**
 
-- [required] `-d`/`--deployment_name`<br/>The deployment name
+- [required] `-p`/`--pipeline_name`<br/>The pipeline name
 
 - `-n`/`--new_name`<br/>The new version name
-
-- `-deployment_py`/`--deployment_file`<br/>Name of deployment file which contains class Deployment. Must be located in the root of the deployment package directory
-
-- `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
-
-- `-mem`/`--memory_allocation`<br/>Memory allocation for deployment
-
-- `-min`/`--minimum_instances`<br/>Minimum number of instances
-
-- `-max`/`--maximum_instances`<br/>Maximum number of instances
-
-- `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
 - `-desc`/`--version_description`<br/>The version description
+
+- `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
 
 <br/>
 
-### ubiops deployment_versions delete
+### ubiops pipeline_versions delete
 
-**Command:** `ubiops deployment_versions delete`
+**Command:** `ubiops pipeline_versions delete`
 
 **Description:**
 
-Delete a version of a deployment.
+Delete a version of a pipeline.
 
 **Arguments:**
 
@@ -219,7 +217,7 @@ Delete a version of a deployment.
 
 **Options:**
 
-- [required] `-d`/`--deployment_name`<br/>The deployment name
+- [required] `-p`/`--pipeline_name`<br/>The pipeline name
 
 - `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 

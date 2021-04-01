@@ -124,6 +124,8 @@ Update a deployment.
 
 - `-n`/`--new_name`<br/>The new deployment name
 
+- `-default`/`--default_version`<br/>The name of the version that should become the default
+
 - `-q`/`--quiet`<br/>Suppress informational messages
 
 
@@ -309,7 +311,7 @@ It's not possible to update the programming language of an existing deployment v
 
 - `-o`/`--output_path`<br/>Path to file or directory to store local copy of deployment package zip
 
-- `-f`/`--yaml_file`<br/>Path to a yaml file that contains deployment options
+- `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
 - `-l`/`--language`<br/>Programming language of code
 
@@ -342,8 +344,14 @@ It's not possible to update the programming language of an existing deployment v
 
 Create a deployment request and retrieve the result.
 
+Use the version option to make a request to a specific deployment version:
+`ubiops deployments request <my-deployment> -v <my-version> --data <input>`
+
+If not specified, a request is made to the default version:
+`ubiops deployments request <my-deployment> --data <input>`
+
 For structured input, specify the data as JSON formatted string. For example:
-`ubiops deployments request <my-deployment> -v <my-version> --data "{\"param1\": 1, \"param2\": \"two\"}"`
+`ubiops deployments request <my-deployment> --data "{\"param1\": 1, \"param2\": \"two\"}"`
 
 **Arguments:**
 
@@ -353,7 +361,7 @@ For structured input, specify the data as JSON formatted string. For example:
 
 **Options:**
 
-- [required] `-v`/`--version_name`<br/>The version name
+- `-v`/`--version_name`<br/>The version name
 
 - [required] `-d`/`--data`<br/>The input data of the request
 
@@ -383,11 +391,17 @@ For structured input, specify the data as JSON formatted string. For example:
 
 Create a deployment batch request and retrieve request IDs to collect the results later.
 
+Use the version option to make a batch request to a specific deployment version:
+`ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input>`
+
+If not specified, a batch request is made to the default version:
+`ubiops deployments batch_requests create <my-deployment> --data <input>`
+
 Multiple data inputs can be specified at ones by using the '--data' options multiple times:
-`ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input-1> --data <input-2> --data <input-3>`
+`ubiops deployments batch_requests create <my-deployment> --data <input-1> --data <input-2> --data <input-3>`
 
 For structured input, specify each data input as JSON formatted string. For example:
-`ubiops deployments batch_requests create <my-deployment> -v <my-version> --data "{\"param1\": 1, \"param2\": \"two\"}"`
+`ubiops deployments batch_requests create <my-deployment> --data "{\"param1\": 1, \"param2\": \"two\"}"`
 
 **Arguments:**
 
@@ -397,7 +411,7 @@ For structured input, specify each data input as JSON formatted string. For exam
 
 **Options:**
 
-- [required] `-v`/`--version_name`<br/>The version name
+- `-v`/`--version_name`<br/>The version name
 
 - [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
 
@@ -414,6 +428,9 @@ For structured input, specify each data input as JSON formatted string. For exam
 
 Get the results of one or more deployment batch requests.
 
+Use the version option to get a batch request for a specific deployment version.
+If not specified, the batch request is retrieved for the default version.
+
 Multiple request ids can be specified at ones by using the '-id' options multiple times:
 `ubiops deployments batch_requests get <my-deployment> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
 
@@ -425,7 +442,7 @@ Multiple request ids can be specified at ones by using the '-id' options multipl
 
 **Options:**
 
-- [required] `-v`/`--version_name`<br/>The version name
+- `-v`/`--version_name`<br/>The version name
 
 - [required] `-id`/`--request_id`<br/>The ID of the request<br/>This option can be provided multiple times in a single command
 
@@ -442,6 +459,9 @@ Multiple request ids can be specified at ones by using the '-id' options multipl
 
 List deployment batch requests.
 
+Use the version option to list the batch requests for a specific deployment version.
+If not specified, the batch requests are listed for the default version.
+
 **Arguments:**
 
 - [required] `deployment_name`
@@ -450,7 +470,7 @@ List deployment batch requests.
 
 **Options:**
 
-- [required] `-v`/`--version_name`<br/>The version name
+- `-v`/`--version_name`<br/>The version name
 
 - `--offset`
 
