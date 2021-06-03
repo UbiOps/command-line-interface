@@ -4,7 +4,7 @@ from pkg.utils import get_current_project, init_client, set_dict_default, read_y
 from pkg.src.helpers.pipeline_helpers import check_objects_requirements, check_attachments_requirements, \
     get_pipeline_and_version_fields_from_yaml, pipeline_version_exists, get_pipeline_if_exists, \
     check_pipeline_can_be_updated, patch_pipeline_version, define_pipeline, \
-    create_objects_and_attachments, get_changed_pipeline_input_data
+    create_objects_and_attachments, get_changed_pipeline_structure
 from pkg.src.helpers.helpers import get_label_filter
 from pkg.src.helpers.formatting import print_list, print_item, format_yaml, format_pipeline_requests_reference, \
     format_pipeline_requests_oneline, format_json
@@ -13,7 +13,7 @@ from pkg.constants import STRUCTURED_TYPE
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
-REQUEST_LIST_ITEMS = ['time_created', 'version', 'status', 'success']
+REQUEST_LIST_ITEMS = ['id', 'status', 'success', 'time_created']
 
 
 @click.group(["pipelines", "ppl"], short_help="Manage your pipelines")
@@ -70,7 +70,7 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
         dictionary = format_yaml(
             pipeline,
             required_front=['name', 'description', 'input_type'],
-            optional=['input_fields'],
+            optional=['input_fields', 'output_type', 'output_fields'],
             rename={
                 'name': 'pipeline_name',
                 'description': 'pipeline_description'
@@ -87,7 +87,8 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
             pipeline,
             row_attrs=LIST_ITEMS,
             required_front=['name', 'description', 'input_type'],
-            optional=['input_fields', 'creation_date', 'last_updated', 'default_version'],
+            optional=['input_fields', 'output_type', 'output_fields',
+                      'creation_date', 'last_updated', 'default_version'],
             rename={
                 'name': 'pipeline_name',
                 'description': 'pipeline_description'
@@ -117,6 +118,10 @@ def pipelines_create(pipeline_name, yaml_file, format_):
     input_fields:
       - name: my-pipeline-param1
         data_type: int
+    output_type: structured
+    output_fields:
+      - name: my-pipeline-output1
+        data_type: int
     ```
 
     Possible input/output types: [structured, plain].
@@ -130,8 +135,8 @@ def pipelines_create(pipeline_name, yaml_file, format_):
     assert 'pipeline_name' in yaml_content or pipeline_name, \
         'Please, specify the pipeline name in either the yaml file or as a command argument'
 
-    pipeline_fields, input_fields = define_pipeline(yaml_content, pipeline_name)
-    pipeline_data = api.PipelineCreate(**pipeline_fields, **input_fields)
+    pipeline_fields, input_fields, output_fields = define_pipeline(yaml_content, pipeline_name)
+    pipeline_data = api.PipelineCreate(**pipeline_fields, **input_fields, **output_fields)
     pipeline_response = client.pipelines_create(project_name=project_name, data=pipeline_data)
     client.api_client.close()
 
@@ -155,10 +160,11 @@ def pipelines_update(pipeline_name, new_name, yaml_file, default_version, quiet)
 
     If you only want to update the name of the pipeline or the default pipeline version,
     use the options `<new_name>` and `<default_version>`.
-    If you want to update the pipeline input type and fields, please use a yaml file to define the new pipeline.
+    If you want to update the pipeline input/output type and fields, please use a yaml file to define the new pipeline.
 
     Please note that it's only possible to update the input of a pipeline for pipelines that have no pipeline versions
-    with a connected pipeline start
+    with a connected pipeline start, that it's only possible to update the output of a pipeline for pipelines that have
+    no pipeline versions with a connected pipeline end
     """
 
     client = init_client()
@@ -173,13 +179,14 @@ def pipelines_update(pipeline_name, new_name, yaml_file, default_version, quiet)
         # Update pipeline according to yaml (and default version update if given)
         yaml_content = read_yaml(yaml_file, required_fields=PIPELINE_REQUIRED_FIELDS)
 
-        pipeline_fields, input_fields = define_pipeline(
+        pipeline_fields, input_fields, output_fields = define_pipeline(
             yaml_content, pipeline_name, current_pipeline_name=pipeline_name
         )
-        changed_input_data = get_changed_pipeline_input_data(existing_pipeline, input_fields)
+        changed_input_data = get_changed_pipeline_structure(existing_pipeline, input_fields)
+        changed_output_data = get_changed_pipeline_structure(existing_pipeline, output_fields, is_input=False)
 
         pipeline = api.PipelineUpdate(
-            **pipeline_fields, **changed_input_data, default_version=default_version
+            **pipeline_fields, **changed_input_data, **changed_output_data, default_version=default_version
         )
         if pipeline.name != pipeline_name:
             # Pipeline will be renamed
@@ -277,12 +284,18 @@ def pipelines_complete(pipeline_name, version_name, yaml_file, overwrite, quiet)
     input_fields:
       - name: my-pipeline-param1
         data_type: int
+    output_type: structured
+    output_fields:
+      - name: my-pipeline-output1
+        data_type: int
     version_name: my-version-name
     version_name: my-pipeline-version
     version_description: Version created via command line.
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
+    request_retention_mode: none
+    request_retention_time: 604800
     objects:
       - name: object1
         reference_name: my-deployment-name
@@ -303,6 +316,8 @@ def pipelines_complete(pipeline_name, version_name, yaml_file, overwrite, quiet)
     Please, connect the start of the pipeline version to your first object. You can do this by creating an attachment
     with a source with 'source_name: pipeline_start' and the name of your first object as destination
     'destination_name: ...'.
+    Connect the object output fields to destination_name 'pipeline_end', to retrieve the output as pipeline
+    request result.
     """
 
     client = init_client()
@@ -319,7 +334,9 @@ def pipelines_complete(pipeline_name, version_name, yaml_file, overwrite, quiet)
     # Get the pipeline and version names
     pipeline_name = set_dict_default(pipeline_name, yaml_content, 'pipeline_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
-    pipeline_fields, input_fields, version_fields = get_pipeline_and_version_fields_from_yaml(yaml_content=yaml_content)
+    pipeline_fields, input_fields, output_fields, version_fields = get_pipeline_and_version_fields_from_yaml(
+        yaml_content=yaml_content
+    )
 
     # Check the objects and attachments
     object_deployment_names = check_objects_requirements(yaml_content)
@@ -330,13 +347,23 @@ def pipelines_complete(pipeline_name, version_name, yaml_file, overwrite, quiet)
 
     if overwrite and existing_pipeline is not None:
         # Check if input of pipeline needs to be updated
-        changed_input_data = get_changed_pipeline_input_data(existing_pipeline, input_fields)
+        changed_input_data = get_changed_pipeline_structure(existing_pipeline, input_fields)
         check_pipeline_can_be_updated(
             client=client,
             version_name=version_name,
             pipeline_name=pipeline_name,
             project_name=project_name,
-            input_data=changed_input_data
+            data=changed_input_data
+        )
+
+        # Check if output of pipeline needs to be updated
+        changed_output_data = get_changed_pipeline_structure(existing_pipeline, output_fields, is_input=False)
+        check_pipeline_can_be_updated(
+            client=client,
+            version_name=version_name,
+            pipeline_name=pipeline_name,
+            project_name=project_name,
+            data=changed_output_data
         )
 
         # Check if given pipeline version exists
@@ -347,7 +374,8 @@ def pipelines_complete(pipeline_name, version_name, yaml_file, overwrite, quiet)
                 version_name=version_name,
                 pipeline_name=pipeline_name,
                 project_name=project_name,
-                pipeline_data=changed_input_data,
+                pipeline_input_data=changed_input_data,
+                pipeline_output_data=changed_output_data,
                 version_data=version_fields,
                 quiet=quiet
             )
@@ -362,19 +390,23 @@ def pipelines_complete(pipeline_name, version_name, yaml_file, overwrite, quiet)
             return
 
         # Update the pipeline
-        data = api.PipelineUpdate(**changed_input_data, **pipeline_fields)
+        data = api.PipelineUpdate(**pipeline_fields, **changed_input_data, **changed_output_data)
         client.pipelines_update(project_name=project_name, pipeline_name=pipeline_name, data=data)
 
     # Pipeline exists, but don't want to change it
     elif existing_pipeline is not None:
         # Check if input of pipeline is the same
-        if get_changed_pipeline_input_data(existing_pipeline, input_fields):
+        if get_changed_pipeline_structure(existing_pipeline, input_fields):
             raise Exception(f"The input of existing pipeline '{pipeline_name}' does not match the input fields "
                             f"provided in the yaml. Please, use --overwrite option to update the pipeline input.")
+        # Check if output of pipeline is the same
+        if get_changed_pipeline_structure(existing_pipeline, output_fields):
+            raise Exception(f"The output of existing pipeline '{pipeline_name}' does not match the output fields "
+                            f"provided in the yaml. Please, use --overwrite option to update the pipeline output.")
 
     if existing_pipeline is None:
         # Create the pipeline
-        pipeline_data = api.PipelineCreate(**pipeline_fields, **input_fields)
+        pipeline_data = api.PipelineCreate(**pipeline_fields, **input_fields, **output_fields)
         client.pipelines_create(project_name=project_name, data=pipeline_data)
 
     # Create the pipeline version
@@ -398,16 +430,177 @@ def pipelines_complete(pipeline_name, version_name, yaml_file, overwrite, quiet)
         click.echo("Pipeline was successfully created")
 
 
-@commands.command("request", short_help="Create a pipeline direct request")
+@commands.group("requests", short_help="Manage your pipeline requests")
+def requests():
+    """
+    Manage your pipeline requests.
+    """
+    pass
+
+
+@requests.command("create", short_help="Create pipeline request")
+@PIPELINE_NAME_ARGUMENT
+@VERSION_NAME_OPTIONAL
+@REQUEST_BATCH
+@REQUEST_DATA_MULTI
+@REQUESTS_FORMATS
+def requests_create(pipeline_name, version_name, batch, data, format_):
+    """
+    Create a pipeline request.
+    Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
+
+    Use the version option to make a request to a specific pipeline version:
+    `ubiops pipelines requests create <my-pipeline> -v <my-version> --data <input>`
+
+    If not specified, a request is made to the default version:
+    `ubiops pipelines requests create <my-pipeline> --data <input>`
+
+    Use `--batch` to make an asynchronous batch request:
+    `ubiops pipelines requests create <my-pipeline> --batch --data <input>`
+
+    Multiple data inputs can be specified at ones and send as batch by using the '--data' options multiple times:
+    `ubiops pipelines requests create <my-pipeline> --batch --data <input-1> --data <input-2> --data <input-3>`
+
+    For structured input, specify each data input as JSON formatted string. For example:
+    `ubiops pipelines requests create <my-pipeline> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
+    """
+
+    data = list(data)
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    pipeline = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name)
+
+    if pipeline.input_type == STRUCTURED_TYPE:
+        input_data = []
+        for d in data:
+            input_data.append(parse_json(d))
+    else:
+        input_data = data
+
+    if version_name is not None:
+        if batch:
+            response = client.batch_pipeline_version_requests_create(
+                project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=input_data
+            )
+        else:
+            response = [client.pipeline_version_requests_create(
+                project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=input_data[0]
+            )]
+    else:
+        if batch:
+            response = client.batch_pipeline_requests_create(
+                project_name=project_name, pipeline_name=pipeline_name, data=input_data
+            )
+        else:
+            response = [client.pipeline_requests_create(
+                project_name=project_name, pipeline_name=pipeline_name, data=input_data[0]
+            )]
+
+    client.api_client.close()
+
+    if format_ == 'reference':
+        click.echo(format_pipeline_requests_reference(response))
+    elif format_ == 'oneline':
+        click.echo(format_pipeline_requests_oneline(response))
+    elif format_ == 'json':
+        click.echo(format_json(response))
+    else:
+        click.echo(format_pipeline_requests_reference(response))
+
+
+@requests.command("get", short_help="Get a pipeline request")
+@PIPELINE_NAME_ARGUMENT
+@VERSION_NAME_OPTIONAL
+@REQUEST_ID_MULTI
+@REQUESTS_FORMATS
+def requests_get(pipeline_name, version_name, request_id, format_):
+    """
+    Get one or more pipeline requests.
+    Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
+
+    Use the version option to get a request for a specific pipeline version.
+    If not specified, the request is retrieved for the default version.
+
+    Multiple request ids can be specified at ones by using the '-id' options multiple times:
+    `ubiops pipelines requests get <my-pipeline> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
+    """
+
+    request_ids = list(request_id)
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    if version_name is not None:
+        response = client.pipeline_version_requests_batch_get(
+            project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=request_ids
+        )
+
+    else:
+        response = client.pipeline_requests_batch_get(
+            project_name=project_name, pipeline_name=pipeline_name, data=request_ids
+        )
+
+    client.api_client.close()
+
+    if format_ == 'reference':
+        click.echo(format_pipeline_requests_reference(response))
+
+    elif format_ == 'oneline':
+        click.echo(format_pipeline_requests_oneline(response))
+
+    elif format_ == 'json':
+        click.echo(format_json(response))
+
+    else:
+        click.echo(format_pipeline_requests_reference(response))
+
+
+@requests.command("list", short_help="List pipeline requests")
+@PIPELINE_NAME_ARGUMENT
+@VERSION_NAME_OPTIONAL
+@OFFSET
+@REQUEST_LIMIT
+@LIST_FORMATS
+def requests_list(pipeline_name, version_name, offset, limit, format_):
+    """
+    List pipeline requests.
+    Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
+
+    Use the version option to list the requests for a specific pipeline version.
+    If not specified, the requests are listed for the default version.
+    """
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    if version_name is not None:
+        response = client.pipeline_version_requests_list(
+            project_name=project_name, pipeline_name=pipeline_name, version=version_name, limit=limit, offset=offset
+        )
+
+    else:
+        response = client.pipeline_requests_list(
+            project_name=project_name, pipeline_name=pipeline_name, limit=limit, offset=offset
+        )
+
+    client.api_client.close()
+    print_list(response, REQUEST_LIST_ITEMS, fmt=format_)
+    if len(response) == limit:
+        click.echo("\n(Use the <offset> and <limit> options to load more)")
+
+
+@commands.command("request", short_help="[DEPRECATED] Create a pipeline direct request")
 @PIPELINE_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_DATA
 @REQUEST_PIPELINE_TIMEOUT
 @REQUEST_OBJECT_TIMEOUT
 @REQUESTS_FORMATS
-def pipelines_request(pipeline_name, version_name, data, pipeline_timeout, deployment_timeout, format_):
+def deprecated_pipelines_request(pipeline_name, version_name, data, pipeline_timeout, deployment_timeout, format_):
     """
-    Create a pipeline request and retrieve the result.
+    [DEPRECATED] Create a pipeline request and retrieve the result.
 
     Use the version option to make a request to a specific pipeline version:
     `ubiops pipelines request <my-deployment> -v <my-version> --data <input>`
@@ -418,6 +611,12 @@ def pipelines_request(pipeline_name, version_name, data, pipeline_timeout, deplo
     For structured input, specify the data as JSON formatted string. For example:
     `ubiops pipelines request <my-deployment> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
     """
+
+    if format_ != 'json':
+        click.secho(
+            "Deprecation warning: 'request' is deprecated, use 'requests create' instead",
+            fg='red'
+        )
 
     project_name = get_current_project(error=True)
 
@@ -460,23 +659,24 @@ def pipelines_request(pipeline_name, version_name, data, pipeline_timeout, deplo
         click.echo(format_pipeline_requests_reference([response]))
 
 
-@commands.group("batch_requests", short_help="Manage your pipeline batch requests")
-def batch_requests():
+@commands.group("batch_requests", short_help="[DEPRECATED] Manage your pipeline batch requests")
+def deprecated_batch_requests():
     """
-    Manage your pipeline batch requests.
+    [DEPRECATED] Manage your pipeline batch requests.
     """
 
     pass
 
 
-@batch_requests.command("create", short_help="Create a pipeline batch request")
+@deprecated_batch_requests.command("create", short_help="[DEPRECATED] Create a pipeline batch request")
 @PIPELINE_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_DATA_MULTI
 @REQUESTS_FORMATS
-def batch_requests_create(pipeline_name, version_name, data, format_):
+def deprecated_batch_requests_create(pipeline_name, version_name, data, format_):
     """
-    Create a pipeline batch request and retrieve request IDs to collect the results later.
+    [DEPRECATED] Create a pipeline batch request and retrieve request IDs to collect the results later.
+    Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the version option to make a batch request to a specific pipeline version:
     `ubiops pipelines batch_requests create <my-pipeline> -v <my-version> --data <input>`
@@ -490,6 +690,12 @@ def batch_requests_create(pipeline_name, version_name, data, format_):
     For structured input, specify each data input as JSON formatted string. For example:
     `ubiops pipelines batch_requests create <my-pipeline> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
     """
+
+    if format_ != 'json':
+        click.secho(
+            "Deprecation warning: 'batch_requests create' is deprecated, use 'requests create --batch' instead",
+            fg='red'
+        )
 
     data = list(data)
 
@@ -527,14 +733,15 @@ def batch_requests_create(pipeline_name, version_name, data, format_):
         click.echo(format_pipeline_requests_reference(response))
 
 
-@batch_requests.command("get", short_help="Get a pipeline batch request")
+@deprecated_batch_requests.command("get", short_help="[DEPRECATED] Get a pipeline batch request")
 @PIPELINE_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_ID_MULTI
 @REQUESTS_FORMATS
-def batch_requests_get(pipeline_name, version_name, request_id, format_):
+def deprecated_batch_requests_get(pipeline_name, version_name, request_id, format_):
     """
-    Get the results of one or more pipeline batch requests.
+    [DEPRECATED] Get the results of one or more pipeline batch requests.
+    Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the version option to get a batch request for a specific pipeline version.
     If not specified, the batch request is retrieved for the default version.
@@ -543,18 +750,24 @@ def batch_requests_get(pipeline_name, version_name, request_id, format_):
     `ubiops pipelines batch_requests get <my-pipeline> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
     """
 
+    if format_ != 'json':
+        click.secho(
+            "Deprecation warning: 'batch_requests get' is deprecated, use 'requests get' instead",
+            fg='red'
+        )
+
     request_ids = list(request_id)
 
     project_name = get_current_project(error=True)
 
     client = init_client()
     if version_name is not None:
-        response = client.batch_pipeline_version_requests_batch_get(
+        response = client.pipeline_version_requests_batch_get(
             project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=request_ids
         )
 
     else:
-        response = client.batch_pipeline_requests_batch_get(
+        response = client.pipeline_requests_batch_get(
             project_name=project_name, pipeline_name=pipeline_name, data=request_ids
         )
 
@@ -573,30 +786,37 @@ def batch_requests_get(pipeline_name, version_name, request_id, format_):
         click.echo(format_pipeline_requests_reference(response))
 
 
-@batch_requests.command("list", short_help="List pipeline batch requests")
+@deprecated_batch_requests.command("list", short_help="[DEPRECATED] List pipeline batch requests")
 @PIPELINE_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @OFFSET
 @REQUEST_LIMIT
 @LIST_FORMATS
-def batch_requests_list(pipeline_name, version_name, offset, limit, format_):
+def deprecated_batch_requests_list(pipeline_name, version_name, offset, limit, format_):
     """
-    List pipeline batch requests.
+    [DEPRECATED] List pipeline batch requests.
+    Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the version option to list the batch requests for a specific pipeline version.
     If not specified, the batch requests are listed for the default version.
     """
 
+    if format_ != 'json':
+        click.secho(
+            "Deprecation warning: 'batch_requests list' is deprecated, use 'requests list' instead",
+            fg='red'
+        )
+
     project_name = get_current_project(error=True)
 
     client = init_client()
     if version_name is not None:
-        response = client.batch_pipeline_version_requests_list(
+        response = client.pipeline_version_requests_list(
             project_name=project_name, pipeline_name=pipeline_name, version=version_name, limit=limit, offset=offset
         )
 
     else:
-        response = client.batch_pipeline_requests_list(
+        response = client.pipeline_requests_list(
             project_name=project_name, pipeline_name=pipeline_name, limit=limit, offset=offset
         )
 

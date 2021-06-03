@@ -5,7 +5,7 @@ from time import sleep
 from pkg.utils import init_client, read_yaml, write_yaml, zip_dir, get_current_project, \
     set_dict_default, write_blob, default_version_zip_name, parse_json
 from pkg.src.helpers.deployment_helpers import set_deployment_version_defaults, update_deployment_file, \
-    update_existing_deployment_version, DEPLOYMENT_REQUIRED_FIELDS, DEPLOYMENT_VERSION_FIELDS
+    update_existing_deployment_version, DEPLOYMENT_VERSION_FIELDS
 from pkg.src.helpers.helpers import get_label_filter
 from pkg.src.helpers.formatting import print_list, print_item, format_yaml, format_requests_reference, \
     format_requests_oneline, format_json
@@ -326,6 +326,8 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
+@RETENTION_MODE
+@RETENTION_TIME
 @VERSION_LABELS
 @VERSION_DESCRIPTION
 @OVERWRITE
@@ -356,11 +358,13 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    language: python3.6
+    language: python3.7
     memory_allocation: 256
     minimum_instances: 0
     maximum_instances: 1
     maximum_idle_time: 300
+    request_retention_mode: none
+    request_retention_time: 604800
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
@@ -461,15 +465,169 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
         click.echo("Deployment was successfully deployed")
 
 
-@commands.command("request", short_help="Create deployment direct requests")
+@commands.group("requests", short_help="Manage your deployment requests")
+def requests():
+    """
+    Manage your deployment requests.
+    """
+    pass
+
+
+@requests.command("create", short_help="Create deployment request")
+@DEPLOYMENT_NAME_ARGUMENT
+@VERSION_NAME_OPTIONAL
+@REQUEST_BATCH
+@REQUEST_DATA_MULTI
+@REQUESTS_FORMATS
+def requests_create(deployment_name, version_name, batch, data, format_):
+    """
+    Create a deployment request and retrieve request IDs to collect the results later.
+
+    Use the version option to make a request to a specific deployment version:
+    `ubiops deployments requests create <my-deployment> -v <my-version> --data <input>`
+
+    If not specified, a request is made to the default version:
+    `ubiops deployments requests create <my-deployment> --data <input>`
+
+    Use `--batch` to make an asynchronous batch request:
+    `ubiops deployments requests create <my-deployment> --batch --data <input>`
+
+    Multiple data inputs can be specified at ones and send as batch by using the '--data' options multiple times:
+    `ubiops deployments requests create <my-deployment> --batch --data <input-1> --data <input-2> --data <input-3>`
+
+    For structured input, specify data input as JSON formatted string. For example:
+    `ubiops deployments requests create <my-deployment> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
+    """
+
+    data = list(data)
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)
+
+    if deployment.input_type == STRUCTURED_TYPE:
+        input_data = []
+        for d in data:
+            input_data.append(parse_json(d))
+    else:
+        input_data = data
+
+    if version_name is not None:
+        if batch:
+            response = client.batch_deployment_version_requests_create(
+                project_name=project_name, deployment_name=deployment_name, version=version_name, data=input_data
+            )
+        else:
+            response = [client.deployment_version_requests_create(
+                project_name=project_name, deployment_name=deployment_name, version=version_name, data=input_data[0]
+            )]
+    else:
+        if batch:
+            response = client.batch_deployment_requests_create(
+                project_name=project_name, deployment_name=deployment_name, data=input_data
+            )
+        else:
+            response = [client.deployment_requests_create(
+                project_name=project_name, deployment_name=deployment_name, data=input_data[0]
+            )]
+
+    client.api_client.close()
+
+    if format_ == 'reference':
+        click.echo(format_requests_reference(response))
+    elif format_ == 'oneline':
+        click.echo(format_requests_oneline(response))
+    elif format_ == 'json':
+        click.echo(format_json(response))
+    else:
+        click.echo(format_requests_reference(response))
+
+
+@requests.command("get", short_help="Get deployment request")
+@DEPLOYMENT_NAME_ARGUMENT
+@VERSION_NAME_OPTIONAL
+@REQUEST_ID_MULTI
+@REQUESTS_FORMATS
+def requests_get(deployment_name, version_name, request_id, format_):
+    """
+    Get one or more stored deployment requests.
+    Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
+
+    Use the version option to get a request for a specific deployment version.
+    If not specified, the request is retrieved for the default version.
+
+    Multiple request ids can be specified at ones by using the '-id' options multiple times:
+    `ubiops deployments requests get <my-deployment> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
+    """
+
+    request_ids = list(request_id)
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    if version_name is not None:
+        response = client.deployment_version_requests_batch_get(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, data=request_ids
+        )
+    else:
+        response = client.deployment_requests_batch_get(
+            project_name=project_name, deployment_name=deployment_name, data=request_ids
+        )
+    client.api_client.close()
+
+    if format_ == 'reference':
+        click.echo(format_requests_reference(response))
+    elif format_ == 'oneline':
+        click.echo(format_requests_oneline(response))
+    elif format_ == 'json':
+        click.echo(format_json(response))
+    else:
+        click.echo(format_requests_reference(response))
+
+
+@requests.command("list", short_help="List deployment requests")
+@DEPLOYMENT_NAME_ARGUMENT
+@VERSION_NAME_OPTIONAL
+@OFFSET
+@REQUEST_LIMIT
+@LIST_FORMATS
+def requests_list(deployment_name, version_name, offset, limit, format_):
+    """
+    List stored deployment requests.
+    Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
+
+    Use the version option to list the requests for a specific deployment version.
+    If not specified, the requests are listed for the default version.
+    """
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    if version_name is not None:
+        response = client.deployment_version_requests_list(
+            project_name=project_name, deployment_name=deployment_name, version=version_name, limit=limit, offset=offset
+        )
+    else:
+        response = client.deployment_requests_list(
+            project_name=project_name, deployment_name=deployment_name, limit=limit, offset=offset
+        )
+    client.api_client.close()
+
+    print_list(response, REQUEST_LIST_ITEMS, fmt=format_)
+    if len(response) == limit:
+        click.echo("\n(Use the <offset> and <limit> options to load more)")
+
+
+@commands.command("request", short_help="[DEPRECATED] Create deployment direct requests")
 @DEPLOYMENT_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_DATA
 @REQUEST_DEPLOYMENT_TIMEOUT
 @REQUESTS_FORMATS
-def deployments_request(deployment_name, version_name, data, timeout, format_):
+def deprecated_deployments_request(deployment_name, version_name, data, timeout, format_):
     """
-    Create a deployment request and retrieve the result.
+    [DEPRECATED] Create a deployment request and retrieve the result.
 
     Use the version option to make a request to a specific deployment version:
     `ubiops deployments request <my-deployment> -v <my-version> --data <input>`
@@ -480,6 +638,12 @@ def deployments_request(deployment_name, version_name, data, timeout, format_):
     For structured input, specify the data as JSON formatted string. For example:
     `ubiops deployments request <my-deployment> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
     """
+
+    if format_ != 'json':
+        click.secho(
+            "Deprecation warning: 'request' is deprecated, use 'requests create' instead",
+            fg='red'
+        )
 
     project_name = get_current_project(error=True)
 
@@ -510,22 +674,23 @@ def deployments_request(deployment_name, version_name, data, timeout, format_):
         click.echo(format_requests_reference([response]))
 
 
-@commands.group("batch_requests", short_help="Manage your deployment batch requests")
-def batch_requests():
+@commands.group("batch_requests", short_help="[DEPRECATED] Manage your deployment batch requests")
+def deprecated_batch_requests():
     """
-    Manage your deployment batch requests.
+    [DEPRECATED] Manage your deployment batch requests.
     """
     pass
 
 
-@batch_requests.command("create", short_help="Create deployment batch request")
+@deprecated_batch_requests.command("create", short_help="[DEPRECATED] Create deployment batch request")
 @DEPLOYMENT_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_DATA_MULTI
 @REQUESTS_FORMATS
-def batch_requests_create(deployment_name, version_name, data, format_):
+def deprecated_batch_requests_create(deployment_name, version_name, data, format_):
     """
-    Create a deployment batch request and retrieve request IDs to collect the results later.
+    [DEPRECATED] Create a deployment batch request and retrieve request IDs to collect the results later.
+    Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the version option to make a batch request to a specific deployment version:
     `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input>`
@@ -539,6 +704,12 @@ def batch_requests_create(deployment_name, version_name, data, format_):
     For structured input, specify each data input as JSON formatted string. For example:
     `ubiops deployments batch_requests create <my-deployment> --data "{\\"param1\\": 1, \\"param2\\": \\"two\\"}"`
     """
+
+    if format_ != 'json':
+        click.secho(
+            "Deprecation warning: 'batch_requests create' is deprecated, use 'requests create --batch' instead",
+            fg='red'
+        )
 
     data = list(data)
 
@@ -574,14 +745,15 @@ def batch_requests_create(deployment_name, version_name, data, format_):
         click.echo(format_requests_reference(response))
 
 
-@batch_requests.command("get", short_help="Get deployment batch request")
+@deprecated_batch_requests.command("get", short_help="[DEPRECATED] Get deployment batch request")
 @DEPLOYMENT_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_ID_MULTI
 @REQUESTS_FORMATS
-def batch_requests_get(deployment_name, version_name, request_id, format_):
+def deprecated_batch_requests_get(deployment_name, version_name, request_id, format_):
     """
-    Get the results of one or more deployment batch requests.
+    [DEPRECATED] Get the results of one or more deployment batch requests.
+    Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the version option to get a batch request for a specific deployment version.
     If not specified, the batch request is retrieved for the default version.
@@ -590,17 +762,23 @@ def batch_requests_get(deployment_name, version_name, request_id, format_):
     `ubiops deployments batch_requests get <my-deployment> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
     """
 
+    if format_ != 'json':
+        click.secho(
+            "Deprecation warning: 'batch_requests get' is deprecated, use 'requests get' instead",
+            fg='red'
+        )
+
     request_ids = list(request_id)
 
     project_name = get_current_project(error=True)
 
     client = init_client()
     if version_name is not None:
-        response = client.batch_deployment_version_requests_batch_get(
+        response = client.deployment_version_requests_batch_get(
             project_name=project_name, deployment_name=deployment_name, version=version_name, data=request_ids
         )
     else:
-        response = client.batch_deployment_requests_batch_get(
+        response = client.deployment_requests_batch_get(
             project_name=project_name, deployment_name=deployment_name, data=request_ids
         )
     client.api_client.close()
@@ -615,29 +793,36 @@ def batch_requests_get(deployment_name, version_name, request_id, format_):
         click.echo(format_requests_reference(response))
 
 
-@batch_requests.command("list", short_help="List deployment batch requests")
+@deprecated_batch_requests.command("list", short_help="[DEPRECATED] List deployment batch requests")
 @DEPLOYMENT_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @OFFSET
 @REQUEST_LIMIT
 @LIST_FORMATS
-def batch_requests_list(deployment_name, version_name, offset, limit, format_):
+def deprecated_batch_requests_list(deployment_name, version_name, offset, limit, format_):
     """
-    List deployment batch requests.
+    [DEPRECATED] List deployment batch requests.
+    Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the version option to list the batch requests for a specific deployment version.
     If not specified, the batch requests are listed for the default version.
     """
 
+    if format_ != 'json':
+        click.secho(
+            "Deprecation warning: 'batch_requests list' is deprecated, use 'requests list' instead",
+            fg='red'
+        )
+
     project_name = get_current_project(error=True)
 
     client = init_client()
     if version_name is not None:
-        response = client.batch_deployment_version_requests_list(
+        response = client.deployment_version_requests_list(
             project_name=project_name, deployment_name=deployment_name, version=version_name, limit=limit, offset=offset
         )
     else:
-        response = client.batch_deployment_requests_list(
+        response = client.deployment_requests_list(
             project_name=project_name, deployment_name=deployment_name, limit=limit, offset=offset
         )
     client.api_client.close()

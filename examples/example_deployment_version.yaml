@@ -5,3 +5,5 @@ memory_allocation: 256
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 1800
+request_retention_mode: full
+request_retention_time: 3600

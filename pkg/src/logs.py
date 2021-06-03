@@ -52,7 +52,7 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
     if build_id:
         filters['build_id'] = build_id
     if request_id:
-        filters['request_id'] = request_id
+        filters['deployment_request_id'] = request_id
     if pipeline_request_id:
         filters['pipeline_request_id'] = pipeline_request_id
     if system is not None:
@@ -79,8 +79,9 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
         elif format_ == 'reference':
             lines = format_logs_reference(logs)
         elif format_ == 'extended':
-            lines = format_logs_reference(logs, extended=['request_id', 'pipeline_request_id', 'deployment_name',
-                                                          'deployment_version', 'pipeline_name', 'pipeline_version',
+            lines = format_logs_reference(logs, extended=['deployment_request_id', 'pipeline_request_id',
+                                                          'deployment_name', 'deployment_version',
+                                                          'pipeline_name', 'pipeline_version',
                                                           'pipeline_object_name', 'build_id'])
         else:
             lines = format_logs_reference(logs)
@@ -124,7 +125,7 @@ def logs_get(log_id, format_):
         log,
         row_attrs=['id', 'date', 'log'],
         required_front=['id', 'date', 'system'],
-        optional=['request_id', 'pipeline_request_id', 'deployment_name', 'deployment_version',
+        optional=['deployment_request_id', 'pipeline_request_id', 'deployment_name', 'deployment_version',
                   'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id'],
         required_end=['log'],
         rename={'deployment_version': 'deployment_version_name', 'pipeline_version': 'pipeline_version_name'},

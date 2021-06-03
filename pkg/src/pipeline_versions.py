@@ -82,11 +82,17 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
     input_fields:
       - name: my-pipeline-param1
         data_type: int
+    output_type: structured
+    output_fields:
+      - name: my-pipeline-output1
+        data_type: int
     version_name: my-version-name
     version_description: Version created via command line.
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
+    request_retention_mode: none
+    request_retention_time: 604800
     objects:
       - name: object1
         reference_name: my-deployment-name
@@ -117,6 +123,8 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
 
     setattr(version, 'input_type', pipeline.input_type)
     setattr(version, 'input_fields', pipeline.input_fields)
+    setattr(version, 'output_type', pipeline.output_type)
+    setattr(version, 'output_fields', pipeline.output_fields)
     setattr(version, 'objects', objects)
     setattr(version, 'attachments', attachments)
 
@@ -125,7 +133,8 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
         dictionary = format_yaml(
             item=version,
             required_front=[
-                'pipeline', 'input_type', 'input_fields', 'version', *PIPELINE_VERSION_FIELDS
+                'pipeline', 'input_type', 'input_fields', 'output_type', 'output_fields',
+                'version', *PIPELINE_VERSION_FIELDS
             ],
             optional=[
                 'objects name', 'objects reference_name', 'objects version', 'attachments destination_name',
@@ -150,7 +159,8 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
             item=version,
             row_attrs=LIST_ITEMS,
             required_front=[
-                'pipeline', 'input_type', 'input_fields', 'version', *PIPELINE_VERSION_FIELDS
+                'pipeline', 'input_type', 'input_fields', 'output_type', 'output_fields',
+                'version', *PIPELINE_VERSION_FIELDS
             ],
             optional=[
                 'creation_date', 'last_updated', 'objects name',
@@ -174,6 +184,8 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
 @VERSION_NAME_OVERRULE
 @VERSION_LABELS
 @VERSION_DESCRIPTION
+@RETENTION_MODE
+@RETENTION_TIME
 @VERSION_YAML_FILE
 @CREATE_FORMATS
 def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **kwargs):
@@ -190,6 +202,8 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
+    request_retention_mode: none
+    request_retention_time: 604800
     objects:
       - name: object1
         reference_name: my-deployment-name
@@ -255,6 +269,8 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
 @VERSION_NAME_UPDATE
 @VERSION_LABELS
 @VERSION_DESCRIPTION
+@RETENTION_MODE
+@RETENTION_TIME
 @VERSION_YAML_FILE
 @QUIET
 def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, quiet, **kwargs):
@@ -269,6 +285,8 @@ def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, q
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
+    request_retention_mode: none
+    request_retention_time: 604800
     objects:
       - name: object1
         reference_name: my-deployment-name
@@ -311,7 +329,8 @@ def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, q
         version_name=version_name,
         pipeline_name=pipeline_name,
         project_name=project_name,
-        pipeline_data=None,
+        pipeline_input_data=None,
+        pipeline_output_data=None,
         version_data=version_data,
         quiet=quiet
     )

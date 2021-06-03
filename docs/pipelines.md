@@ -79,6 +79,10 @@ input_type: structured
 input_fields:
   - name: my-pipeline-param1
     data_type: int
+output_type: structured
+output_fields:
+  - name: my-pipeline-output1
+    data_type: int
 ```
 
 Possible input/output types: [structured, plain].
@@ -109,10 +113,11 @@ Update a pipeline.
 
 If you only want to update the name of the pipeline or the default pipeline version,
 use the options `<new_name>` and `<default_version>`.
-If you want to update the pipeline input type and fields, please use a yaml file to define the new pipeline.
+If you want to update the pipeline input/output type and fields, please use a yaml file to define the new pipeline.
 
 Please note that it's only possible to update the input of a pipeline for pipelines that have no pipeline versions
-with a connected pipeline start
+with a connected pipeline start, that it's only possible to update the output of a pipeline for pipelines that have
+no pipeline versions with a connected pipeline end
 
 **Arguments:**
 
@@ -180,12 +185,18 @@ input_type: structured
 input_fields:
   - name: my-pipeline-param1
     data_type: int
+output_type: structured
+output_fields:
+  - name: my-pipeline-output1
+    data_type: int
 version_name: my-version-name
 version_name: my-pipeline-version
 version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
+request_retention_mode: none
+request_retention_time: 604800
 objects:
   - name: object1
     reference_name: my-deployment-name
@@ -206,6 +217,8 @@ All object references must exist. Connect the objects in the pipeline using atta
 Please, connect the start of the pipeline version to your first object. You can do this by creating an attachment
 with a source with 'source_name: pipeline_start' and the name of your first object as destination
 'destination_name: ...'.
+Connect the object output fields to destination_name 'pipeline_end', to retrieve the output as pipeline
+request result.
 
 **Arguments:**
 
@@ -226,13 +239,130 @@ with a source with 'source_name: pipeline_start' and the name of your first obje
 
 <br/>
 
+
+***
+<br/>
+
+### ubiops pipelines requests
+
+**Command:** `ubiops pipelines requests`
+
+
+<br/>
+
+#### ubiops pipelines requests create
+
+**Command:** `ubiops pipelines requests create`
+
+**Description:**
+
+Create a pipeline request.
+Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
+
+Use the version option to make a request to a specific pipeline version:
+`ubiops pipelines requests create <my-pipeline> -v <my-version> --data <input>`
+
+If not specified, a request is made to the default version:
+`ubiops pipelines requests create <my-pipeline> --data <input>`
+
+Use `--batch` to make an asynchronous batch request:
+`ubiops pipelines requests create <my-pipeline> --batch --data <input>`
+
+Multiple data inputs can be specified at ones and send as batch by using the '--data' options multiple times:
+`ubiops pipelines requests create <my-pipeline> --batch --data <input-1> --data <input-2> --data <input-3>`
+
+For structured input, specify each data input as JSON formatted string. For example:
+`ubiops pipelines requests create <my-pipeline> --data "{\"param1\": 1, \"param2\": \"two\"}"`
+
+**Arguments:**
+
+- [required] `pipeline_name`
+
+
+
+**Options:**
+
+- `-v`/`--version_name`<br/>The version name
+
+- `--batch`<br/>Whether you want to perform the request as batch request (async)
+
+- [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
+
+#### ubiops pipelines requests get
+
+**Command:** `ubiops pipelines requests get`
+
+**Description:**
+
+Get one or more pipeline requests.
+Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
+
+Use the version option to get a request for a specific pipeline version.
+If not specified, the request is retrieved for the default version.
+
+Multiple request ids can be specified at ones by using the '-id' options multiple times:
+`ubiops pipelines requests get <my-pipeline> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
+
+**Arguments:**
+
+- [required] `pipeline_name`
+
+
+
+**Options:**
+
+- `-v`/`--version_name`<br/>The version name
+
+- [required] `-id`/`--request_id`<br/>The ID of the request<br/>This option can be provided multiple times in a single command
+
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
+
+#### ubiops pipelines requests list
+
+**Command:** `ubiops pipelines requests list`
+
+**Description:**
+
+List pipeline requests.
+Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
+
+Use the version option to list the requests for a specific pipeline version.
+If not specified, the requests are listed for the default version.
+
+**Arguments:**
+
+- [required] `pipeline_name`
+
+
+
+**Options:**
+
+- `-v`/`--version_name`<br/>The version name
+
+- `--offset`
+
+- `--limit`<br/>Limit of the number of requests. The maximum value is 50.
+
+- `-fmt`/`--format`<br/>The output format
+
+
+<br/>
+
 ### ubiops pipelines request
 
 **Command:** `ubiops pipelines request`
 
 **Description:**
 
-Create a pipeline request and retrieve the result.
+[DEPRECATED] Create a pipeline request and retrieve the result.
 
 Use the version option to make a request to a specific pipeline version:
 `ubiops pipelines request <my-deployment> -v <my-version> --data <input>`
@@ -281,7 +411,8 @@ For structured input, specify the data as JSON formatted string. For example:
 
 **Description:**
 
-Create a pipeline batch request and retrieve request IDs to collect the results later.
+[DEPRECATED] Create a pipeline batch request and retrieve request IDs to collect the results later.
+Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
 
 Use the version option to make a batch request to a specific pipeline version:
 `ubiops pipelines batch_requests create <my-pipeline> -v <my-version> --data <input>`
@@ -318,7 +449,8 @@ For structured input, specify each data input as JSON formatted string. For exam
 
 **Description:**
 
-Get the results of one or more pipeline batch requests.
+[DEPRECATED] Get the results of one or more pipeline batch requests.
+Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
 
 Use the version option to get a batch request for a specific pipeline version.
 If not specified, the batch request is retrieved for the default version.
@@ -349,7 +481,8 @@ Multiple request ids can be specified at ones by using the '-id' options multipl
 
 **Description:**
 
-List pipeline batch requests.
+[DEPRECATED] List pipeline batch requests.
+Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
 
 Use the version option to list the batch requests for a specific pipeline version.
 If not specified, the batch requests are listed for the default version.

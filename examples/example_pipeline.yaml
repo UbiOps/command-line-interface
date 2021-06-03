@@ -4,8 +4,14 @@ input_type: structured
 input_fields:
 - name: input
   data_type: double
+output_type: structured
+output_fields:
+- name: output
+  data_type: double
 version_name: v1
 version_description: 'This is a pipeline version'
+request_retention_mode: full
+request_retention_time: 3600
 objects:
 - name: demo-example
   reference_name: demo-example
@@ -26,3 +32,9 @@ attachments:
     mapping:
     - source_field_name: output
       destination_field_name: input
+- destination_name: pipeline_end
+  sources:
+  - source_name: demo-example-2
+    mapping:
+    - source_field_name: output
+      destination_field_name: output

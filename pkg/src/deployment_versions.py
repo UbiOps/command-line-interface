@@ -83,6 +83,8 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     minimum_instances: 0
     maximum_instances: 5
     maximum_idle_time: 300
+    request_retention_mode: none
+    request_retention_time: 604800
     ```
     """
 
@@ -123,6 +125,8 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
+@RETENTION_MODE
+@RETENTION_TIME
 @VERSION_LABELS
 @VERSION_DESCRIPTION
 @VERSION_YAML_FILE
@@ -141,11 +145,13 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    language: python3.6
+    language: python3.7
     memory_allocation: 256
     minimum_instances: 0
     maximum_instances: 1
     maximum_idle_time: 300
+    request_retention_mode: none
+    request_retention_time: 604800
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
@@ -194,6 +200,8 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
+@RETENTION_MODE
+@RETENTION_TIME
 @VERSION_LABELS
 @VERSION_DESCRIPTION
 @QUIET
@@ -212,6 +220,8 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     minimum_instances: 0
     maximum_instances: 1
     maximum_idle_time: 300
+    request_retention_mode: none
+    request_retention_time: 604800
     ```
 
     You may want to change some deployment options, like, `<maximum_instances>` and

@@ -8,10 +8,11 @@ from pkg.src.helpers.helpers import strings_to_dict
 DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_FIELDS = [
     'description', 'labels', 'language', 'memory_allocation', 'minimum_instances', 'maximum_instances',
-    'maximum_idle_time'
+    'maximum_idle_time', 'request_retention_mode', 'request_retention_time'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
-    'description', 'labels', 'memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time'
+    'description', 'labels', 'memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time',
+    'request_retention_mode', 'request_retention_time'
 ]
 DEPLOYMENT_VERSION_FIELDS_WAIT = ['memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time']
 DEPLOYMENT_VERSION_FIELD_TYPES = {
@@ -21,7 +22,9 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     'maximum_instances': int,
     'maximum_idle_time': int,
     'description': str,
-    'labels': dict
+    'labels': dict,
+    'request_retention_mode': str,
+    'request_retention_time': int,
 }
 DEPLOYMENT_VERSION_FIELDS_RENAMED = {'description': 'version_description', 'labels': 'version_labels'}
 

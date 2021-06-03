@@ -57,6 +57,8 @@ memory_allocation: 2048
 minimum_instances: 0
 maximum_instances: 5
 maximum_idle_time: 300
+request_retention_mode: none
+request_retention_time: 604800
 ```
 
 **Arguments:**
@@ -96,11 +98,13 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-language: python3.6
+language: python3.7
 memory_allocation: 256
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 300
+request_retention_mode: none
+request_retention_time: 604800
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
@@ -126,6 +130,10 @@ The version name can either be passed as command argument or specified inside th
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
+
+- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+
+- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
@@ -160,6 +168,8 @@ memory_allocation: 256
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 300
+request_retention_mode: none
+request_retention_time: 604800
 ```
 
 You may want to change some deployment options, like, `<maximum_instances>` and
@@ -193,6 +203,10 @@ It's not possible to update the programming language of an existing deployment v
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
+
+- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+
+- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 

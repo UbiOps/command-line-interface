@@ -111,6 +111,11 @@ MAX_INSTANCES = click.option('-max', '--maximum_instances', required=False, defa
                              help="Maximum number of instances")
 MAX_IDLE_TIME = click.option('-t', '--maximum_idle_time', required=False, default=None, type=int, metavar='<int>',
                              help="Maximum idle time before shutting down instance (seconds)")
+RETENTION_MODE = click.option('-rtm', '--request_retention_mode', required=False, default=None,
+                              type=click.Choice(['none', 'metadata', 'full'], case_sensitive=False), show_default=True,
+                              help="Mode of request retention for requests to the version")
+RETENTION_TIME = click.option('-rtt', '--request_retention_time', required=False, default=None, type=int,
+                              metavar='<int>', help="Number of seconds to store requests to the version")
 
 VERSION_LABELS = click.option('-lb', '--labels', 'version_labels', required=False, default=None, multiple=True,
                               type=str, metavar='<key1:value,key2:value>', help="Labels defined as key/value pairs")
@@ -152,6 +157,8 @@ REQUEST_DATA_UPDATE = click.option('--data', required=False, help="The new input
                                    metavar='<string>')
 REQUEST_DATA_MULTI = click.option('--data', required=True, help="The input data of the request",
                                   metavar='<string>', multiple=True)
+REQUEST_BATCH = click.option('--batch', required=False, default=False, is_flag=True,
+                             help="Whether you want to perform the request as batch request (async)")
 REQUEST_ID_MULTI = click.option('-id', '--request_id', required=True, metavar='<id>', multiple=True,
                                 help="The ID of the request")
 REQUEST_ID_OPTIONAL = click.option('-id', '--request_id', required=False, default=None, metavar='<id>',

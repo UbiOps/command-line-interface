@@ -113,10 +113,12 @@ def init_client():
         else:
             raise Exception("No access or service token found.")
 
-        client = api.CoreApi(api.ApiClient(configuration))
+        client = api.ApiClient(configuration)
         client.user_agent = "UbiOps/cli/%s" % VERSION
-        assert client.service_status().status == 'ok'
-        return client
+
+        core_api = api.CoreApi(client)
+        assert core_api.service_status().status == 'ok'
+        return core_api
     except Exception:
         raise UnAuthorizedException("Unauthorized. Please, use 'ubiops signin' first.")
 

@@ -51,11 +51,17 @@ input_type: structured
 input_fields:
   - name: my-pipeline-param1
     data_type: int
+output_type: structured
+output_fields:
+  - name: my-pipeline-output1
+    data_type: int
 version_name: my-version-name
 version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
+request_retention_mode: none
+request_retention_time: 604800
 objects:
   - name: object1
     reference_name: my-deployment-name
@@ -106,6 +112,8 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
+request_retention_mode: none
+request_retention_time: 604800
 objects:
   - name: object1
     reference_name: my-deployment-name
@@ -137,6 +145,10 @@ The version name can either be passed as command argument or specified inside th
 
 - `-desc`/`--version_description`<br/>The version description
 
+- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+
+- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
+
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
 - `-fmt`/`--format`<br/>The output format
@@ -160,6 +172,8 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
+request_retention_mode: none
+request_retention_time: 604800
 objects:
   - name: object1
     reference_name: my-deployment-name
@@ -193,6 +207,10 @@ will be overwritten by the specified command options.
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
 - `-desc`/`--version_description`<br/>The version description
+
+- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+
+- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
