@@ -30,6 +30,10 @@ List request schedules in project.
 
 Create a new request schedule.
 
+- For express mode deployments, direct requests will be made
+- For batch mode deployments, batch requests will be made
+- For pipelines, batch requests will be made
+
 **Arguments:**
 
 - [required] `schedule_name`
@@ -48,9 +52,7 @@ Create a new request schedule.
 
 - [required] `-s`/`--schedule`<br/>Schedule in crontab format (in UTC)
 
-- `--batch`<br/>Boolean value indicating whether the request will be performed as batch request (true) or as direct request (false)
-
-- `--timeout`<br/>Timeout in seconds. This field is not used for batch requests.
+- `-t`/`--timeout`<br/>Timeout in seconds
 
 - `--enabled`<br/>Boolean value indicating whether the created schedule is enabled or disabled
 
@@ -81,9 +83,7 @@ Update a request schedule.
 
 - `-s`/`--schedule`<br/>New schedule in crontab format (in UTC)
 
-- `--batch`<br/>Boolean value indicating whether the request will be performed as batch request (true) or as direct request (false)
-
-- `--timeout`<br/>Timeout in seconds. This field is not used for batch requests.
+- `-t`/`--timeout`<br/>Timeout in seconds
 
 - `--enabled`<br/>Boolean value indicating whether the created schedule is enabled or disabled
 

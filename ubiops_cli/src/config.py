@@ -1,4 +1,4 @@
-from pkg.src.helpers.options import *
+from ubiops_cli.src.helpers.options import *
 
 
 @click.group("config", short_help="Manage your CLI configurations")

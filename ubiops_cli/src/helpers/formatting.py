@@ -4,7 +4,7 @@ import click
 import dateutil.parser
 from tabulate import tabulate
 from datetime import datetime, date
-from pkg.constants import SUCCESS_STATUSES, WARNING_STATUSES, ERROR_STATUSES
+from ubiops_cli.constants import SUCCESS_STATUSES, WARNING_STATUSES, ERROR_STATUSES
 
 
 def format_status(status, success_green=False):
@@ -96,6 +96,9 @@ def object_to_dict(obj):
     """
     Change object to dict
     """
+
+    if isinstance(obj, dict):
+        return obj
 
     attributes = [k[1:] for k in obj.__dict__.keys() if k.startswith('_')]
     dictionary = {}
@@ -283,7 +286,7 @@ def print_item(item, row_attrs, required_front=None, optional=None, required_end
 def format_logs_reference(logs, extended=None):
     overview = ''
     total = len(logs)
-    for i, log in enumerate(reversed(logs)):
+    for i, log in enumerate(logs):
         overview += "Log: %s\n" % click.style(log.id, fg='yellow')
         overview += 'Date: %s\n' % format_datetime(parse_datetime(log.date))
         if extended:
@@ -300,7 +303,7 @@ def format_logs_reference(logs, extended=None):
 def format_logs_oneline(logs):
     overview = ''
     total = len(logs)
-    for i, log in enumerate(reversed(logs)):
+    for i, log in enumerate(logs):
         overview += click.style(str(log.id), fg='yellow')
         overview += ' '
         overview += click.style(format_datetime(parse_datetime(log.date), '%H:%M:%S %Z'), fg='green')

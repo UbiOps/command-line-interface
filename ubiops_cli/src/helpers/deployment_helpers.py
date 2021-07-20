@@ -1,18 +1,18 @@
 import ubiops as api
-from pkg.utils import set_dict_default, set_object_default
-from pkg.constants import ML_MODEL_FILE_NAME_KEY, ML_MODEL_FILE_NAME_VALUE, SYS_DEPLOYMENT_FILE_NAME_KEY, \
+from ubiops_cli.utils import set_dict_default, set_object_default
+from ubiops_cli.constants import ML_MODEL_FILE_NAME_KEY, ML_MODEL_FILE_NAME_VALUE, SYS_DEPLOYMENT_FILE_NAME_KEY, \
     SYS_DEPLOYMENT_FILE_NAME_VALUE
-from pkg.src.helpers.helpers import strings_to_dict
+from ubiops_cli.src.helpers.helpers import strings_to_dict
 
 
 DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_FIELDS = [
     'description', 'labels', 'language', 'memory_allocation', 'minimum_instances', 'maximum_instances',
-    'maximum_idle_time', 'request_retention_mode', 'request_retention_time'
+    'maximum_idle_time', 'deployment_mode', 'request_retention_mode', 'request_retention_time'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
-    'description', 'labels', 'memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time',
-    'request_retention_mode', 'request_retention_time'
+    'version', 'description', 'labels', 'memory_allocation', 'minimum_instances', 'maximum_instances',
+    'maximum_idle_time', 'request_retention_mode', 'request_retention_time'
 ]
 DEPLOYMENT_VERSION_FIELDS_WAIT = ['memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time']
 DEPLOYMENT_VERSION_FIELD_TYPES = {
@@ -23,13 +23,16 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     'maximum_idle_time': int,
     'description': str,
     'labels': dict,
+    'deployment_mode': str,
     'request_retention_mode': str,
     'request_retention_time': int,
 }
-DEPLOYMENT_VERSION_FIELDS_RENAMED = {'description': 'version_description', 'labels': 'version_labels'}
+DEPLOYMENT_VERSION_FIELDS_RENAMED = {
+    'version': 'version_name', 'description': 'version_description', 'labels': 'version_labels'
+}
 
 
-def set_deployment_version_defaults(fields, yaml_content, existing_version, extra_yaml_fields):
+def define_deployment_version(fields, yaml_content, extra_yaml_fields):
     """
     Define deployment version fields
 
@@ -43,15 +46,13 @@ def set_deployment_version_defaults(fields, yaml_content, existing_version, extr
 
     :param dict fields: the command options
     :param dict yaml_content: the content of the yaml
-    :param ubiops.DeploymentVersion existing_version: the current deployment version if exists
     :param list(str) extra_yaml_fields: additional yaml fields that are not DeploymentVersion parameters,
         e.g., deployment_file
     :return dict: a dictionary containing all DeploymentVersion parameters (+extra yaml fields)
     """
 
-    for k, v in DEPLOYMENT_VERSION_FIELDS_RENAMED.items():
-        fields[k] = fields[v]
-        del fields[v]
+    for k, yaml_key in DEPLOYMENT_VERSION_FIELDS_RENAMED.items():
+        fields[k] = fields.pop(yaml_key, None)
 
     for k in [k for k, v in DEPLOYMENT_VERSION_FIELD_TYPES.items() if v == dict]:
         if k in fields and fields[k] is not None:
@@ -59,17 +60,12 @@ def set_deployment_version_defaults(fields, yaml_content, existing_version, extr
 
     if yaml_content:
         for p in [*DEPLOYMENT_VERSION_FIELDS, *extra_yaml_fields]:
-            input_field = DEPLOYMENT_VERSION_FIELDS_RENAMED[p] if p in DEPLOYMENT_VERSION_FIELDS_RENAMED else p
-            value = fields[input_field] if input_field in fields else None
+            yaml_key = DEPLOYMENT_VERSION_FIELDS_RENAMED[p] if p in DEPLOYMENT_VERSION_FIELDS_RENAMED else p
+            value = fields[p] if p in fields else None
             fields[p] = set_dict_default(
-                value, yaml_content, input_field,
+                value, yaml_content, yaml_key,
                 set_type=DEPLOYMENT_VERSION_FIELD_TYPES[p] if p in DEPLOYMENT_VERSION_FIELD_TYPES else str
             )
-
-    if existing_version:
-        for p in DEPLOYMENT_VERSION_FIELDS:
-            value = fields[p] if p in fields else None
-            fields[p] = set_object_default(value, existing_version, p)
 
     return fields
 
@@ -151,18 +147,25 @@ def update_existing_deployment_version(client, project_name, deployment_name, ve
     :param dict kwargs: the deployment version content to update to
     :return boolean: whether deployment version fields were changed or not
     """
+
+    update_fields = {k: kwargs[k] for k in kwargs if kwargs[k] is not None}
+
     version = api.DeploymentVersionUpdate(
-        version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE}
+        **{k: update_fields[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE if k in update_fields}
     )
 
-    if (hasattr(existing_version, 'language') and 'language' in kwargs
-            and existing_version.language != kwargs['language']):
+    if (hasattr(existing_version, 'language') and 'language' in update_fields
+            and existing_version.language != update_fields['language']):
         raise Exception("The programming language of an existing version cannot be changed")
+
+    if (hasattr(existing_version, 'deployment_mode') and 'deployment_mode' in update_fields
+            and existing_version.deployment_mode != update_fields['deployment_mode']):
+        raise Exception("The deployment mode of an existing version cannot be changed")
 
     has_changed_fields = False
     for field in DEPLOYMENT_VERSION_FIELDS_WAIT:
-        if (hasattr(existing_version, field) and hasattr(version, field)
-                and getattr(existing_version, field) != getattr(version, field)):
+        has_field = hasattr(existing_version, field) and field in update_fields
+        if has_field and getattr(existing_version, field) != update_fields[field]:
             has_changed_fields = True
 
     client.deployment_versions_update(

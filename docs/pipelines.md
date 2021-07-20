@@ -256,8 +256,15 @@ request result.
 
 **Description:**
 
-Create a pipeline request.
+Create a pipeline request. Use `--batch` to create a batch (asynchronous) request.
+It's only possible to create a direct (synchronous) request to pipelines without 'batch' mode deployments. In
+contrast, batch (asynchronous) requests can be made to any pipeline, independent on the deployment modes.
+
 Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
+
+Use the option `timeout` to specify the timeout of the pipeline request. The minimum value is 10 seconds.
+The maximum value is 7200 (2 hours) for direct requests and 172800 (48 hours) for batch requests. The default value
+is 3600 (1 hour) for direct requests and 14400 (4 hours) for batch requests.
 
 Use the version option to make a request to a specific pipeline version:
 `ubiops pipelines requests create <my-pipeline> -v <my-version> --data <input>`
@@ -285,6 +292,10 @@ For structured input, specify each data input as JSON formatted string. For exam
 - `-v`/`--version_name`<br/>The version name
 
 - `--batch`<br/>Whether you want to perform the request as batch request (async)
+
+- `-t`/`--timeout`<br/>Timeout in seconds
+
+- `-dt`/`--deployment_timeout`<br/>Timeout for each deployment request in the pipeline in seconds
 
 - [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
 
@@ -347,9 +358,21 @@ If not specified, the requests are listed for the default version.
 
 - `-v`/`--version_name`<br/>The version name
 
-- `--offset`
+- `--offset`<br/>The starting point: if offset equals 2, then the first 2 records will be omitted
 
 - `--limit`<br/>Limit of the number of requests. The maximum value is 50.
+
+- `--sort`<br/>Direction of sorting on creation date
+
+- `--status`<br/>Status of the request
+
+- `--success`<br/>A boolean value that indicates whether the request was successful
+
+- `--start_date`<br/>Start date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
+
+- `--end_date`<br/>End date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
+
+- `--search_id`<br/>A string to search inside request ids. It will filter all request ids that contain this string.
 
 - `-fmt`/`--format`<br/>The output format
 
@@ -497,7 +520,7 @@ If not specified, the batch requests are listed for the default version.
 
 - `-v`/`--version_name`<br/>The version name
 
-- `--offset`
+- `--offset`<br/>The starting point: if offset equals 2, then the first 2 records will be omitted
 
 - `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 

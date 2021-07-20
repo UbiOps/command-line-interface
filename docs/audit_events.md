@@ -27,7 +27,7 @@ Use the command options as filters.
 
 - `--limit`<br/>Limit of the audit events response. The maximum value is 100.
 
-- `--offset`<br/>The number which forms the starting point of the audit events given back. If offset equals 2, then the first 2 events will be omitted from the list.
+- `--offset`<br/>The starting point: if offset equals 2, then the first 2 records will be omitted
 
 - `--action`<br/>Type of action
 

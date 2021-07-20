@@ -59,6 +59,7 @@ maximum_instances: 5
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
+deployment_mode: express
 ```
 
 **Arguments:**
@@ -105,7 +106,10 @@ maximum_instances: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
+deployment_mode: express
 ```
+
+Provide either deployment mode 'express' or 'batch', default is 'express'.
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
 options are given, the options defined by `<yaml_file>` will be overwritten by the specified command options.
@@ -130,6 +134,8 @@ The version name can either be passed as command argument or specified inside th
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
+
+- `-dm`/`--deployment_mode`<br/>The type of the deployment version
 
 - `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 

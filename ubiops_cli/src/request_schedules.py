@@ -1,9 +1,9 @@
 import ubiops as api
 
-from pkg.utils import get_current_project, init_client, parse_json
-from pkg.src.helpers.formatting import print_list, print_item
-from pkg.src.helpers.options import *
-from pkg.constants import STRUCTURED_TYPE
+from ubiops_cli.utils import get_current_project, init_client, parse_json
+from ubiops_cli.src.helpers.formatting import print_list, print_item
+from ubiops_cli.src.helpers.options import *
+from ubiops_cli.constants import STRUCTURED_TYPE
 
 
 LIST_ITEMS = ['id', 'name', 'schedule', 'enabled']
@@ -46,12 +46,17 @@ def schedules_list(format_):
 @OBJECT_VERSION
 @REQUEST_DATA
 @SCHEDULE
-@IS_BATCH_REQUEST
-@SCHEDULE_TIMEOUT
+@REQUEST_TIMEOUT
 @IS_ENABLED
 @CREATE_FORMATS
 def schedules_create(schedule_name, object_type, object_name, object_version, data, format_, **kwargs):
-    """Create a new request schedule."""
+    """
+    Create a new request schedule.
+
+    - For express mode deployments, direct requests will be made
+    - For batch mode deployments, batch requests will be made
+    - For pipelines, batch requests will be made
+    """
 
     project_name = get_current_project(error=True)
 
@@ -74,8 +79,7 @@ def schedules_create(schedule_name, object_type, object_name, object_version, da
 @SCHEDULE_NAME_UPDATE
 @REQUEST_DATA_UPDATE
 @SCHEDULE_UPDATE
-@IS_BATCH_REQUEST_UPDATE
-@SCHEDULE_TIMEOUT_UPDATE
+@REQUEST_TIMEOUT
 @IS_ENABLED_UPDATE
 @CREATE_FORMATS
 def schedules_update(schedule_name, new_name, data, format_, **kwargs):

@@ -1,10 +1,10 @@
 import ubiops as api
 from datetime import datetime, timedelta
 
-from pkg.utils import init_client, get_current_project
-from pkg.src.helpers.formatting import print_item, format_logs_reference, format_logs_oneline, parse_datetime, \
-    print_list, format_json
-from pkg.src.helpers.options import *
+from ubiops_cli.utils import init_client, get_current_project
+from ubiops_cli.src.helpers.formatting import print_item, format_logs_reference, format_logs_oneline, parse_datetime, \
+    print_list, format_json, format_datetime
+from ubiops_cli.src.helpers.options import *
 
 
 @click.group("logs", short_help="View your logs")
@@ -59,7 +59,7 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
         filters['system'] = system
     if start_date is not None:
         try:
-            parse_datetime(start_date)
+            start_date = format_datetime(parse_datetime(start_date), fmt='%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
             raise Exception("Failed to parse start_date. Please use iso-format, "
                             "for example, '2020-01-01T00:00:00.000000Z'")
@@ -79,20 +79,20 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
         elif format_ == 'reference':
             lines = format_logs_reference(logs)
         elif format_ == 'extended':
-            lines = format_logs_reference(logs, extended=['deployment_request_id', 'pipeline_request_id',
-                                                          'deployment_name', 'deployment_version',
-                                                          'pipeline_name', 'pipeline_version',
-                                                          'pipeline_object_name', 'build_id'])
+            lines = format_logs_reference(
+                logs,
+                extended=['deployment_request_id', 'pipeline_request_id', 'deployment_name', 'deployment_version',
+                          'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id']
+            )
         else:
             lines = format_logs_reference(logs)
         click.echo_via_pager(lines)
     elif start_date:
         starting_point = parse_datetime(start_date).isoformat()
         if date_range > 0:
-            end_point = parse_datetime(start_date) + timedelta(seconds=date_range)
+            end_point = (parse_datetime(start_date) + timedelta(seconds=date_range)).isoformat()
         else:
-            end_point = (parse_datetime(start_date)
-                         - timedelta(seconds=abs(date_range))).isoformat()
+            end_point = (parse_datetime(start_date) - timedelta(seconds=abs(date_range))).isoformat()
         click.echo("No logs found between <%s> and <%s>" % (starting_point, end_point))
 
 
@@ -143,7 +143,7 @@ def audit_events():
 @DEPLOYMENT_NAME_OPTIONAL
 @PIPELINE_NAME_OPTIONAL
 @AUDIT_LIMIT
-@AUDIT_OFFSET
+@OFFSET
 @AUDIT_ACTION
 @LIST_FORMATS
 def audit_list(deployment_name, pipeline_name, format_, **kwargs):

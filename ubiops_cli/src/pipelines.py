@@ -1,15 +1,15 @@
 import ubiops as api
 
-from pkg.utils import get_current_project, init_client, set_dict_default, read_yaml, write_yaml, parse_json
-from pkg.src.helpers.pipeline_helpers import check_objects_requirements, check_attachments_requirements, \
+from ubiops_cli.utils import get_current_project, init_client, set_dict_default, read_yaml, write_yaml, parse_json
+from ubiops_cli.src.helpers.pipeline_helpers import check_objects_requirements, check_attachments_requirements, \
     get_pipeline_and_version_fields_from_yaml, pipeline_version_exists, get_pipeline_if_exists, \
     check_pipeline_can_be_updated, patch_pipeline_version, define_pipeline, \
     create_objects_and_attachments, get_changed_pipeline_structure
-from pkg.src.helpers.helpers import get_label_filter
-from pkg.src.helpers.formatting import print_list, print_item, format_yaml, format_pipeline_requests_reference, \
-    format_pipeline_requests_oneline, format_json
-from pkg.src.helpers.options import *
-from pkg.constants import STRUCTURED_TYPE
+from ubiops_cli.src.helpers.helpers import get_label_filter
+from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_pipeline_requests_reference, \
+    format_pipeline_requests_oneline, format_json, format_datetime, parse_datetime
+from ubiops_cli.src.helpers.options import *
+from ubiops_cli.constants import STRUCTURED_TYPE
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
@@ -442,12 +442,21 @@ def requests():
 @PIPELINE_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_BATCH
+@REQUEST_TIMEOUT
+@REQUEST_OBJECT_TIMEOUT
 @REQUEST_DATA_MULTI
 @REQUESTS_FORMATS
-def requests_create(pipeline_name, version_name, batch, data, format_):
+def requests_create(pipeline_name, version_name, batch, timeout, deployment_timeout, data, format_):
     """
-    Create a pipeline request.
+    Create a pipeline request. Use `--batch` to create a batch (asynchronous) request.
+    It's only possible to create a direct (synchronous) request to pipelines without 'batch' mode deployments. In
+    contrast, batch (asynchronous) requests can be made to any pipeline, independent on the deployment modes.
+
     Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
+
+    Use the option `timeout` to specify the timeout of the pipeline request. The minimum value is 10 seconds.
+    The maximum value is 7200 (2 hours) for direct requests and 172800 (48 hours) for batch requests. The default value
+    is 3600 (1 hour) for direct requests and 14400 (4 hours) for batch requests.
 
     Use the version option to make a request to a specific pipeline version:
     `ubiops pipelines requests create <my-pipeline> -v <my-version> --data <input>`
@@ -472,6 +481,9 @@ def requests_create(pipeline_name, version_name, batch, data, format_):
     client = init_client()
     pipeline = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name)
 
+    if batch and deployment_timeout is not None:
+        raise Exception("It's not possible to pass a deployment timeout for a batch pipeline request")
+
     if pipeline.input_type == STRUCTURED_TYPE:
         input_data = []
         for d in data:
@@ -482,20 +494,23 @@ def requests_create(pipeline_name, version_name, batch, data, format_):
     if version_name is not None:
         if batch:
             response = client.batch_pipeline_version_requests_create(
-                project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=input_data
+                project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=input_data,
+                timeout=timeout
             )
         else:
             response = [client.pipeline_version_requests_create(
-                project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=input_data[0]
+                project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=input_data,
+                pipeline_timeout=timeout, deployment_timeout=deployment_timeout
             )]
     else:
         if batch:
             response = client.batch_pipeline_requests_create(
-                project_name=project_name, pipeline_name=pipeline_name, data=input_data
+                project_name=project_name, pipeline_name=pipeline_name, data=input_data, timeout=timeout
             )
         else:
             response = [client.pipeline_requests_create(
-                project_name=project_name, pipeline_name=pipeline_name, data=input_data[0]
+                project_name=project_name, pipeline_name=pipeline_name, data=input_data,
+                pipeline_timeout=timeout, deployment_timeout=deployment_timeout
             )]
 
     client.api_client.close()
@@ -562,8 +577,14 @@ def requests_get(pipeline_name, version_name, request_id, format_):
 @VERSION_NAME_OPTIONAL
 @OFFSET
 @REQUEST_LIMIT
+@REQUEST_SORT
+@REQUEST_FILTER_PIPELINE_STATUS
+@REQUEST_FILTER_SUCCESS
+@REQUEST_FILTER_START_DATE
+@REQUEST_FILTER_END_DATE
+@REQUEST_FILTER_SEARCH_ID
 @LIST_FORMATS
-def requests_list(pipeline_name, version_name, offset, limit, format_):
+def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
     """
     List pipeline requests.
     Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
@@ -574,15 +595,29 @@ def requests_list(pipeline_name, version_name, offset, limit, format_):
 
     project_name = get_current_project(error=True)
 
+    if 'start_date' in kwargs and kwargs['start_date']:
+        try:
+            kwargs['start_date'] = format_datetime(parse_datetime(kwargs['start_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
+        except ValueError:
+            raise Exception("Failed to parse start_date. Please use iso-format, "
+                            "for example, '2020-01-01T00:00:00.000000Z'")
+
+    if 'end_date' in kwargs and kwargs['end_date']:
+        try:
+            kwargs['end_date'] = format_datetime(parse_datetime(kwargs['end_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
+        except ValueError:
+            raise Exception("Failed to parse end_date. Please use iso-format, "
+                            "for example, '2020-01-01T00:00:00.000000Z'")
+
     client = init_client()
     if version_name is not None:
         response = client.pipeline_version_requests_list(
-            project_name=project_name, pipeline_name=pipeline_name, version=version_name, limit=limit, offset=offset
+            project_name=project_name, pipeline_name=pipeline_name, version=version_name, limit=limit, **kwargs
         )
 
     else:
         response = client.pipeline_requests_list(
-            project_name=project_name, pipeline_name=pipeline_name, limit=limit, offset=offset
+            project_name=project_name, pipeline_name=pipeline_name, limit=limit, **kwargs
         )
 
     client.api_client.close()
@@ -595,7 +630,7 @@ def requests_list(pipeline_name, version_name, offset, limit, format_):
 @PIPELINE_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_DATA
-@REQUEST_PIPELINE_TIMEOUT
+@REQUEST_PIPELINE_TIMEOUT_DEPRECATED
 @REQUEST_OBJECT_TIMEOUT
 @REQUESTS_FORMATS
 def deprecated_pipelines_request(pipeline_name, version_name, data, pipeline_timeout, deployment_timeout, format_):

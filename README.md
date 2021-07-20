@@ -123,5 +123,5 @@ Schedules | [docs/schedules.md](docs/schedules.md)
 
 
 ### Attribution
-This software uses the library [ignorance](https://github.com/snark/ignorance) by Steve Cook - see [license](https://github.com/UbiOps/command-line-interface/blob/master/pkg/ignore/LICENSE).
+This software uses the library [ignorance](https://github.com/snark/ignorance) by Steve Cook - see [license](https://github.com/UbiOps/command-line-interface/blob/master/ubiops_cli/ignore/LICENSE).
 

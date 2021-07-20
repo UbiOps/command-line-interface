@@ -39,11 +39,15 @@ def strings_to_dict(input_labels):
     :return list(dict): labels formatted, like,  [{key1:value1}, {key2:value2}]
     """
 
-    if input_labels is None:
-        return {}
+    if not input_labels:
+        return None
 
     label_dict = {}
     for label in input_labels:
+        # Make it possible to remove labels by passing an empty string
+        if label == "":
+            continue
+
         for sub_label in label.split(","):
             key_value = [kv.strip() for kv in sub_label.split(":")]
             assert len(key_value) == 2, "Expected format key:value, but found: %s" % str(sub_label)

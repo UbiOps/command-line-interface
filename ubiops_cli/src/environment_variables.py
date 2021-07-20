@@ -1,8 +1,8 @@
 import ubiops as api
 
-from pkg.utils import get_current_project, init_client, read_yaml, check_required_fields
-from pkg.src.helpers.formatting import print_list, print_item
-from pkg.src.helpers.options import *
+from ubiops_cli.utils import get_current_project, init_client, read_yaml, check_required_fields
+from ubiops_cli.src.helpers.formatting import print_list, print_item
+from ubiops_cli.src.helpers.options import *
 
 
 LIST_ITEMS = ['id', 'name', 'value', 'secret', 'inheritance_type', 'inheritance_name']

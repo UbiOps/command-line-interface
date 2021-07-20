@@ -1,11 +1,11 @@
 import ubiops as api
-from pkg.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
-from pkg.src.helpers.pipeline_helpers import check_objects_requirements, check_attachments_requirements, \
+from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
+from ubiops_cli.src.helpers.pipeline_helpers import check_objects_requirements, check_attachments_requirements, \
     create_objects_and_attachments, patch_pipeline_version, set_pipeline_version_defaults, PIPELINE_VERSION_FIELDS, \
     PIPELINE_VERSION_FIELDS_RENAMED
-from pkg.src.helpers.helpers import get_label_filter
-from pkg.src.helpers.formatting import print_list, print_item, format_yaml
-from pkg.src.helpers.options import *
+from ubiops_cli.src.helpers.helpers import get_label_filter
+from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
+from ubiops_cli.src.helpers.options import *
 
 
 LIST_ITEMS = ['last_updated', 'version', 'labels']

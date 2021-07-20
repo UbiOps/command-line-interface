@@ -1,9 +1,9 @@
 import os
 import ubiops as api
 import configparser
-from pkg.exceptions import UnAuthorizedException
-from pkg.ignore.ignore import walk
-from pkg.version import VERSION
+from ubiops_cli.exceptions import UnAuthorizedException
+from ubiops_cli.ignore.ignore import walk
+from ubiops_cli.version import VERSION
 from datetime import datetime
 
 import yaml
@@ -169,6 +169,10 @@ def read_yaml(yaml_file, required_fields=None):
 
     with open(yaml_file) as f:
         content = yaml.safe_load(f)
+
+    if content is None:
+        content = {}
+
     if required_fields:
         for field_name in required_fields:
             assert (field_name in content), "Missing field name '%s' in given file." % field_name
@@ -219,7 +223,7 @@ def write_blob(blob, output_path, filename=None):
 
 
 def set_dict_default(value, defaults_dict, default_key, set_type=str):
-    if not value and default_key in defaults_dict:
+    if not value and default_key in defaults_dict and defaults_dict[default_key] is not None:
         value = set_type(defaults_dict[default_key])
     return value
 

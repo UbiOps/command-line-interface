@@ -6,7 +6,7 @@
 
 
 from setuptools import setup, find_packages  # noqa: H301
-from pkg.version import VERSION
+from ubiops_cli.version import VERSION
 
 NAME = "ubiops-cli"
 
@@ -30,7 +30,7 @@ UbiOps-cli is compatible with Python 3.5+ and is distributed under the Apache 2.
 """
 
 
-ubiops_version = "3.3.0"
+ubiops_version = "3.4.0"
 REQUIRES = ["urllib3>=1.15", "six>=1.10", "certifi", "requests>=2.17.3", "tabulate==0.8.7",
             "python-dateutil", "click>=7.0", "ConfigParser==4.0.2", "colorama==0.4.3", "pyyaml",
             "ubiops==%s" % ubiops_version]
@@ -55,7 +55,7 @@ setup(
     include_package_data=True,
     entry_points='''
         [console_scripts]
-        ubiops=pkg.main:main
+        ubiops=ubiops_cli.main:main
     ''',
     project_urls={'Documentation': 'https://ubiops.com/docs',
                   'Source': 'https://github.com/UbiOps/command-line-interface.git', }

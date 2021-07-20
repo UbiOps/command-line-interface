@@ -1,13 +1,13 @@
 import ubiops as api
-from pkg.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
-from pkg.src.helpers.deployment_helpers import set_deployment_version_defaults, update_deployment_file, \
+from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
+from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
     DEPLOYMENT_VERSION_FIELDS, DEPLOYMENT_VERSION_FIELDS_UPDATE, DEPLOYMENT_VERSION_FIELDS_RENAMED
-from pkg.src.helpers.helpers import get_label_filter
-from pkg.src.helpers.formatting import print_list, print_item, format_yaml
-from pkg.src.helpers.options import *
+from ubiops_cli.src.helpers.helpers import get_label_filter
+from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
+from ubiops_cli.src.helpers.options import *
 
 
-LIST_ITEMS = ['last_updated', 'version', 'status', 'labels']
+LIST_ITEMS = ['last_updated', 'version', 'deployment_mode', 'status', 'labels']
 
 
 @click.group(["deployment_versions", "versions"], short_help="Manage your deployment versions")
@@ -85,6 +85,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
+    deployment_mode: express
     ```
     """
 
@@ -125,6 +126,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
+@DEPLOYMENT_MODE
 @RETENTION_MODE
 @RETENTION_TIME
 @VERSION_LABELS
@@ -152,7 +154,10 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
+    deployment_mode: express
     ```
+
+    Provide either deployment mode 'express' or 'batch', default is 'express'.
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
     options are given, the options defined by `<yaml_file>` will be overwritten by the specified command options.
@@ -169,7 +174,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either ' \
                                                            'the yaml file or as a command argument'
 
-    kwargs = set_deployment_version_defaults(kwargs, yaml_content, None, extra_yaml_fields=['deployment_file'])
+    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
 
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
@@ -238,17 +243,14 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     client = init_client()
 
     yaml_content = read_yaml(yaml_file, required_fields=[])
-    existing_version = client.deployment_versions_get(
-        project_name=project_name, deployment_name=deployment_name, version=version_name
+
+    kwargs['version_name'] = new_name
+    kwargs = define_deployment_version(
+        kwargs, yaml_content, extra_yaml_fields=['deployment_file']
     )
 
-    kwargs = set_deployment_version_defaults(
-        kwargs, yaml_content, existing_version, extra_yaml_fields=['deployment_file']
-    )
-
-    new_version_name = version_name if new_name is None else new_name
     version = api.DeploymentVersionUpdate(
-        version=new_version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE}
+        **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE if kwargs[k] is not None}
     )
     client.deployment_versions_update(
         project_name=project_name, deployment_name=deployment_name, version=version_name, data=version

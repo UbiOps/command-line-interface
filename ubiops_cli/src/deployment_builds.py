@@ -1,6 +1,6 @@
-from pkg.utils import init_client, get_current_project
-from pkg.src.helpers.formatting import print_list, print_item
-from pkg.src.helpers.options import *
+from ubiops_cli.utils import init_client, get_current_project
+from ubiops_cli.src.helpers.formatting import print_list, print_item
+from ubiops_cli.src.helpers.options import *
 
 
 LIST_ITEMS = ['creation_date', 'id', 'revision', 'status']

@@ -2,15 +2,15 @@ import ubiops as api
 import os
 from time import sleep
 
-from pkg.utils import init_client, read_yaml, write_yaml, zip_dir, get_current_project, \
+from ubiops_cli.utils import init_client, read_yaml, write_yaml, zip_dir, get_current_project, \
     set_dict_default, write_blob, default_version_zip_name, parse_json
-from pkg.src.helpers.deployment_helpers import set_deployment_version_defaults, update_deployment_file, \
+from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
     update_existing_deployment_version, DEPLOYMENT_VERSION_FIELDS
-from pkg.src.helpers.helpers import get_label_filter
-from pkg.src.helpers.formatting import print_list, print_item, format_yaml, format_requests_reference, \
-    format_requests_oneline, format_json
-from pkg.src.helpers.options import *
-from pkg.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME
+from ubiops_cli.src.helpers.helpers import get_label_filter
+from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_requests_reference, \
+    format_requests_oneline, format_json, parse_datetime, format_datetime
+from ubiops_cli.src.helpers.options import *
+from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
@@ -326,6 +326,7 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
+@DEPLOYMENT_MODE
 @RETENTION_MODE
 @RETENTION_TIME
 @VERSION_LABELS
@@ -348,6 +349,8 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     directory, the zip will be saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
     the `<assume_yes>` option to overwrite without confirmation if file specified in `<output_path>` already exists.
 
+    Provide either deployment mode 'express' or 'batch', default is 'express'.
+
     \b
     It is possible to define the parameters using a yaml file.
     For example:
@@ -365,13 +368,14 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
+    deployment_mode: express
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
     the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
     either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
 
-    It's not possible to update the programming language of an existing deployment version.
+    It's not possible to update the programming language and deployment mode of an existing deployment version.
     """
 
     if output_path is None:
@@ -402,8 +406,8 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             # Do nothing if version doesn't exist
             pass
 
-    kwargs = set_deployment_version_defaults(
-        kwargs, yaml_content, existing_version, extra_yaml_fields=['deployment_file', 'ignore_file']
+    kwargs = define_deployment_version(
+        kwargs, yaml_content, extra_yaml_fields=['deployment_file', 'ignore_file']
     )
     kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
     zip_path = zip_dir(
@@ -478,10 +482,14 @@ def requests():
 @VERSION_NAME_OPTIONAL
 @REQUEST_BATCH
 @REQUEST_DATA_MULTI
+@REQUEST_TIMEOUT
 @REQUESTS_FORMATS
-def requests_create(deployment_name, version_name, batch, data, format_):
+def requests_create(deployment_name, version_name, batch, data, timeout, format_):
     """
     Create a deployment request and retrieve request IDs to collect the results later.
+    Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
+    is 3600 (1 hour) for express deployments and 172800 (48 hours) for batch deployments. The default value is 300
+    (5 minutes) for express deployments and 14400 (4 hours) for batch deployments.
 
     Use the version option to make a request to a specific deployment version:
     `ubiops deployments requests create <my-deployment> -v <my-version> --data <input>`
@@ -516,20 +524,22 @@ def requests_create(deployment_name, version_name, batch, data, format_):
     if version_name is not None:
         if batch:
             response = client.batch_deployment_version_requests_create(
-                project_name=project_name, deployment_name=deployment_name, version=version_name, data=input_data
+                project_name=project_name, deployment_name=deployment_name,
+                version=version_name, data=input_data, timeout=timeout
             )
         else:
             response = [client.deployment_version_requests_create(
-                project_name=project_name, deployment_name=deployment_name, version=version_name, data=input_data[0]
+                project_name=project_name, deployment_name=deployment_name,
+                version=version_name, data=input_data, timeout=timeout
             )]
     else:
         if batch:
             response = client.batch_deployment_requests_create(
-                project_name=project_name, deployment_name=deployment_name, data=input_data
+                project_name=project_name, deployment_name=deployment_name, data=input_data, timeout=timeout
             )
         else:
             response = [client.deployment_requests_create(
-                project_name=project_name, deployment_name=deployment_name, data=input_data[0]
+                project_name=project_name, deployment_name=deployment_name, data=input_data, timeout=timeout
             )]
 
     client.api_client.close()
@@ -591,8 +601,15 @@ def requests_get(deployment_name, version_name, request_id, format_):
 @VERSION_NAME_OPTIONAL
 @OFFSET
 @REQUEST_LIMIT
+@REQUEST_SORT
+@REQUEST_FILTER_DEPLOYMENT_STATUS
+@REQUEST_FILTER_SUCCESS
+@REQUEST_FILTER_START_DATE
+@REQUEST_FILTER_END_DATE
+@REQUEST_FILTER_SEARCH_ID
+@REQUEST_FILTER_IN_PIPELINE
 @LIST_FORMATS
-def requests_list(deployment_name, version_name, offset, limit, format_):
+def requests_list(deployment_name, version_name, limit, format_, **kwargs):
     """
     List stored deployment requests.
     Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
@@ -603,14 +620,28 @@ def requests_list(deployment_name, version_name, offset, limit, format_):
 
     project_name = get_current_project(error=True)
 
+    if 'start_date' in kwargs and kwargs['start_date']:
+        try:
+            kwargs['start_date'] = format_datetime(parse_datetime(kwargs['start_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
+        except ValueError:
+            raise Exception("Failed to parse start_date. Please use iso-format, "
+                            "for example, '2020-01-01T00:00:00.000000Z'")
+
+    if 'end_date' in kwargs and kwargs['end_date']:
+        try:
+            kwargs['end_date'] = format_datetime(parse_datetime(kwargs['end_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
+        except ValueError:
+            raise Exception("Failed to parse end_date. Please use iso-format, "
+                            "for example, '2020-01-01T00:00:00.000000Z'")
+
     client = init_client()
     if version_name is not None:
         response = client.deployment_version_requests_list(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, limit=limit, offset=offset
+            project_name=project_name, deployment_name=deployment_name, version=version_name, limit=limit, **kwargs
         )
     else:
         response = client.deployment_requests_list(
-            project_name=project_name, deployment_name=deployment_name, limit=limit, offset=offset
+            project_name=project_name, deployment_name=deployment_name, limit=limit, **kwargs
         )
     client.api_client.close()
 
@@ -623,7 +654,7 @@ def requests_list(deployment_name, version_name, offset, limit, format_):
 @DEPLOYMENT_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_DATA
-@REQUEST_DEPLOYMENT_TIMEOUT
+@REQUEST_DEPLOYMENT_TIMEOUT_DEPRECATED
 @REQUESTS_FORMATS
 def deprecated_deployments_request(deployment_name, version_name, data, timeout, format_):
     """
@@ -686,11 +717,15 @@ def deprecated_batch_requests():
 @DEPLOYMENT_NAME_ARGUMENT
 @VERSION_NAME_OPTIONAL
 @REQUEST_DATA_MULTI
+@REQUEST_TIMEOUT
 @REQUESTS_FORMATS
-def deprecated_batch_requests_create(deployment_name, version_name, data, format_):
+def deprecated_batch_requests_create(deployment_name, version_name, data, timeout, format_):
     """
     [DEPRECATED] Create a deployment batch request and retrieve request IDs to collect the results later.
     Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
+
+    Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
+    is 172800 (48 hours). The default value is 14400 (4 hours).
 
     Use the version option to make a batch request to a specific deployment version:
     `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input>`
@@ -727,11 +762,12 @@ def deprecated_batch_requests_create(deployment_name, version_name, data, format
 
     if version_name is not None:
         response = client.batch_deployment_version_requests_create(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, data=input_data
+            project_name=project_name, deployment_name=deployment_name, version=version_name, data=input_data,
+            timeout=timeout
         )
     else:
         response = client.batch_deployment_requests_create(
-            project_name=project_name, deployment_name=deployment_name, data=input_data
+            project_name=project_name, deployment_name=deployment_name, data=input_data, timeout=timeout
         )
     client.api_client.close()
 

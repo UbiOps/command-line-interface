@@ -3,8 +3,8 @@ import requests
 import json
 from json import JSONDecodeError
 
-from pkg.version import VERSION
-from pkg.utils import Config
+from ubiops_cli.version import VERSION
+from ubiops_cli.utils import Config
 
 
 def do_call(_type, api_endpoint, path, data=None, headers=None):

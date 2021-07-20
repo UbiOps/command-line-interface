@@ -1,6 +1,6 @@
-from pkg.utils import get_current_project, init_client, write_blob, abs_path
-from pkg.src.helpers.formatting import print_list, print_item
-from pkg.src.helpers.options import *
+from ubiops_cli.utils import get_current_project, init_client, write_blob, abs_path
+from ubiops_cli.src.helpers.formatting import print_list, print_item
+from ubiops_cli.src.helpers.options import *
 
 
 LIST_ITEMS = ['last_updated', 'id', 'filename', 'size', 'ttl']

@@ -1,8 +1,8 @@
 import click
-from pkg.utils import Config
-from pkg.constants import SYS_DEPLOYMENT_FILE_NAME_VALUE
-from pkg.src.helpers.deployment_helpers import DEPLOYMENT_REQUIRED_FIELDS
-from pkg.src.helpers.pipeline_helpers import PIPELINE_REQUIRED_FIELDS
+from ubiops_cli.utils import Config
+from ubiops_cli.constants import SYS_DEPLOYMENT_FILE_NAME_VALUE
+from ubiops_cli.src.helpers.deployment_helpers import DEPLOYMENT_REQUIRED_FIELDS
+from ubiops_cli.src.helpers.pipeline_helpers import PIPELINE_REQUIRED_FIELDS
 
 
 # General
@@ -12,7 +12,8 @@ QUIET = click.option('-q', '--quiet', default=False, required=False, is_flag=Tru
                      help="Suppress informational messages")
 OVERWRITE = click.option('--overwrite', required=False, default=False, is_flag=True,
                          help="Whether you want to overwrite if exists")
-OFFSET = click.option('--offset', required=False, default=None, type=int, metavar='<int>')
+OFFSET = click.option('--offset', required=False, default=None, type=int, metavar='<int>',
+                      help="The starting point: if offset equals 2, then the first 2 records will be omitted")
 
 # Formatting output
 LOGS_FORMATS = click.option('-fmt', '--format', 'format_',  default='reference', help="The output format",
@@ -111,6 +112,9 @@ MAX_INSTANCES = click.option('-max', '--maximum_instances', required=False, defa
                              help="Maximum number of instances")
 MAX_IDLE_TIME = click.option('-t', '--maximum_idle_time', required=False, default=None, type=int, metavar='<int>',
                              help="Maximum idle time before shutting down instance (seconds)")
+DEPLOYMENT_MODE = click.option('-dm', '--deployment_mode', required=False, default=None,
+                               type=click.Choice(['express', 'batch'], case_sensitive=False),
+                               help="The type of the deployment version")
 RETENTION_MODE = click.option('-rtm', '--request_retention_mode', required=False, default=None,
                               type=click.Choice(['none', 'metadata', 'full'], case_sensitive=False), show_default=True,
                               help="Mode of request retention for requests to the version")
@@ -165,16 +169,63 @@ REQUEST_ID_OPTIONAL = click.option('-id', '--request_id', required=False, defaul
                                    help="The ID of the deployment request")
 PIPELINE_REQUEST_ID_OPTIONAL = click.option('-pid', '--pipeline_request_id', required=False, default=None,
                                             metavar='<id>', help="The ID of the pipeline request")
+REQUEST_TIMEOUT = click.option(
+    '-t', '--timeout', required=False, default=None, metavar='[10-172800]', type=click.IntRange(10, 172800),
+    help="Timeout in seconds"
+)
+REQUEST_DEPLOYMENT_TIMEOUT_DEPRECATED = click.option(
+    '-t', '--timeout', required=False, default=300, type=click.IntRange(10, 3600), metavar='[10-3600]',
+    show_default=True, help="Timeout in seconds"
+)
+REQUEST_PIPELINE_TIMEOUT_DEPRECATED = click.option(
+    '-pt', '--pipeline_timeout', required=False, default=3600, type=click.IntRange(10, 7200), metavar='[10-7200]',
+    show_default=True, help="Timeout for the entire pipeline request in seconds"
+)
+REQUEST_OBJECT_TIMEOUT = click.option(
+    '-dt', '--deployment_timeout', required=False, default=None, type=click.IntRange(10, 3600), metavar='[10-3600]',
+    help="Timeout for each deployment request in the pipeline in seconds"
+)
+
+# Requests list filters
 REQUEST_LIMIT = click.option('--limit', required=False, default=10, type=click.IntRange(1, 50), show_default=True,
                              help="Limit of the number of requests. The maximum value is 50.", metavar='[1-50]')
-REQUEST_DEPLOYMENT_TIMEOUT = click.option('-t', '--timeout', required=False, default=300, type=click.IntRange(10, 3600),
-                                          metavar='[10-3600]', show_default=True, help="Timeout in seconds")
-REQUEST_PIPELINE_TIMEOUT = click.option('-pt', '--pipeline_timeout', required=False, default=3600,
-                                        type=click.IntRange(10, 7200), metavar='[10-7200]', show_default=True,
-                                        help="Timeout for the entire pipeline request in seconds")
-REQUEST_OBJECT_TIMEOUT = click.option('-dt', '--deployment_timeout', required=False, default=300,
-                                      type=click.IntRange(10, 3600), metavar='[10-3600]', show_default=True,
-                                      help="Timeout for each deployment request in the pipeline in seconds")
+REQUEST_SORT = click.option(
+    '--sort', required=False, help="Direction of sorting on creation date", default='desc', show_default=True,
+    type=click.Choice(['asc', 'desc'], case_sensitive=False)
+)
+REQUEST_FILTER_DEPLOYMENT_STATUS = click.option(
+    '--status', required=False, help="Status of the request",
+    type=click.Choice(
+        ['pending', 'processing', 'failed', 'completed', 'cancelled_pending', 'cancelled'],
+        case_sensitive=False
+    )
+)
+REQUEST_FILTER_PIPELINE_STATUS = click.option(
+    '--status', required=False, help="Status of the request", default=None,
+    type=click.Choice(['pending', 'processing', 'failed', 'completed'], case_sensitive=False)
+)
+REQUEST_FILTER_SUCCESS = click.option(
+    '--success', required=False, default=None, type=click.BOOL, metavar='[True|False]',
+    help="A boolean value that indicates whether the request was successful"
+)
+REQUEST_FILTER_START_DATE = click.option(
+    '--start_date', required=False, default=None, metavar='<datetime in iso-format>',
+    help="Start date of the interval for which the requests are retrieved, "
+         "looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'."
+)
+REQUEST_FILTER_END_DATE = click.option(
+    '--end_date', required=False, default=None, metavar='<datetime in iso-format>',
+    help="End date of the interval for which the requests are retrieved, "
+         "looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'."
+)
+REQUEST_FILTER_SEARCH_ID = click.option(
+    '--search_id', required=False, default=None, metavar='<name>',
+    help="A string to search inside request ids. It will filter all request ids that contain this string."
+)
+REQUEST_FILTER_IN_PIPELINE = click.option(
+    '--pipeline', required=False, default=None, type=click.BOOL, metavar='[True|False]',
+    help="A boolean value that indicates whether the deployment request was part of a pipeline request"
+)
 
 # Blobs
 BLOB_ID = click.argument('blob_id', required=True, metavar="<id>", nargs=1)
@@ -237,8 +288,8 @@ START_LOG = click.option('--start_log', required=False, default=None, metavar='<
                               "interval in which to query the logs. This can be useful when making multiple queries "
                               "to obtain consecutive logs. It will include the log having the log ID equal to the "
                               "ID value in the response, regardless of whether the date_range is positive or negative.")
-LIMIT = click.option('--limit', required=False, default=500, type=click.IntRange(1, 500), show_default=True,
-                     help="Limit of the logs response. The maximum value is 500.")
+LIMIT = click.option('--limit', required=False, default=500, type=click.IntRange(1, 500), metavar='[1-500]',
+                     show_default=True, help="Limit of the logs response. The maximum value is 500.")
 DATE_RANGE = click.option('--date_range', required=False, default=-86400, type=click.IntRange(-86400, 86400),
                           show_default=True,
                           help="Duration (seconds) of the interval for which the logs are retrieved. If it is "
@@ -249,11 +300,8 @@ DATE_RANGE = click.option('--date_range', required=False, default=-86400, type=c
 LOG_ID = click.argument('log_id', required=True, metavar='<id>', nargs=1)
 
 # Audit events
-AUDIT_LIMIT = click.option('--limit', required=False, default=10, type=click.IntRange(1, 100), show_default=True,
-                           help="Limit of the audit events response. The maximum value is 100.")
-AUDIT_OFFSET = click.option('--offset', required=False, default=0, type=int,
-                            help="The number which forms the starting point of the audit events given back. If offset "
-                                 "equals 2, then the first 2 events will be omitted from the list.")
+AUDIT_LIMIT = click.option('--limit', required=False, default=10, type=click.IntRange(1, 100), metavar='[1-100]',
+                           show_default=True, help="Limit of the audit events response. The maximum value is 100.")
 AUDIT_ACTION = click.option('--action', required=False, default=None, show_default=True,
                             type=click.Choice(['create', 'update', 'delete', 'info'], case_sensitive=False),
                             help="Type of action")
@@ -273,20 +321,8 @@ SCHEDULE = click.option('-s', '--schedule', required=True, metavar="<0 0 1 * *>"
                         help="Schedule in crontab format (in UTC)")
 SCHEDULE_UPDATE = click.option('-s', '--schedule', required=False, default=None, metavar="<0 0 1 * *>",
                                help="New schedule in crontab format (in UTC)")
-IS_BATCH_REQUEST = click.option('--batch', required=False, default=True, type=click.BOOL, metavar='[True|False]',
-                                help="Boolean value indicating whether the request will be performed as "
-                                     "batch request (true) or as direct request (false)", show_default=True)
-IS_BATCH_REQUEST_UPDATE = click.option('--batch', required=False, default=None, type=click.BOOL, metavar='[True|False]',
-                                       help="Boolean value indicating whether the request will be performed as "
-                                            "batch request (true) or as direct request (false)")
 IS_ENABLED = click.option('--enabled', required=False, default=True, type=click.BOOL, metavar='[True|False]',
                           help="Boolean value indicating whether the created schedule is enabled or disabled",
                           show_default=True)
 IS_ENABLED_UPDATE = click.option('--enabled', required=False, default=None, type=click.BOOL, metavar='[True|False]',
                                  help="Boolean value indicating whether the created schedule is enabled or disabled")
-SCHEDULE_TIMEOUT = click.option('--timeout', required=False, default=300, type=click.IntRange(10, 3600),
-                                metavar='[10-3600]', show_default=True,
-                                help="Timeout in seconds. This field is not used for batch requests.")
-SCHEDULE_TIMEOUT_UPDATE = click.option('--timeout', required=False, default=None, type=click.IntRange(10, 3600),
-                                       metavar='[10-3600]',
-                                       help="Timeout in seconds. This field is not used for batch requests.")

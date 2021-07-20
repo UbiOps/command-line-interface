@@ -270,6 +270,8 @@ The `<output_path>` option will be used as output location of the zip file. If t
 directory, the zip will be saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
 the `<assume_yes>` option to overwrite without confirmation if file specified in `<output_path>` already exists.
 
+Provide either deployment mode 'express' or 'batch', default is 'express'.
+
 
 It is possible to define the parameters using a yaml file.
 For example:
@@ -287,13 +289,14 @@ maximum_instances: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
+deployment_mode: express
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
 the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
 either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
 
-It's not possible to update the programming language of an existing deployment version.
+It's not possible to update the programming language and deployment mode of an existing deployment version.
 
 **Arguments:**
 
@@ -324,6 +327,8 @@ It's not possible to update the programming language of an existing deployment v
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
+
+- `-dm`/`--deployment_mode`<br/>The type of the deployment version
 
 - `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 
@@ -360,6 +365,9 @@ It's not possible to update the programming language of an existing deployment v
 **Description:**
 
 Create a deployment request and retrieve request IDs to collect the results later.
+Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
+is 3600 (1 hour) for express deployments and 172800 (48 hours) for batch deployments. The default value is 300
+(5 minutes) for express deployments and 14400 (4 hours) for batch deployments.
 
 Use the version option to make a request to a specific deployment version:
 `ubiops deployments requests create <my-deployment> -v <my-version> --data <input>`
@@ -389,6 +397,8 @@ For structured input, specify data input as JSON formatted string. For example:
 - `--batch`<br/>Whether you want to perform the request as batch request (async)
 
 - [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+
+- `-t`/`--timeout`<br/>Timeout in seconds
 
 - `-fmt`/`--format`<br/>The output format
 
@@ -449,9 +459,23 @@ If not specified, the requests are listed for the default version.
 
 - `-v`/`--version_name`<br/>The version name
 
-- `--offset`
+- `--offset`<br/>The starting point: if offset equals 2, then the first 2 records will be omitted
 
 - `--limit`<br/>Limit of the number of requests. The maximum value is 50.
+
+- `--sort`<br/>Direction of sorting on creation date
+
+- `--status`<br/>Status of the request
+
+- `--success`<br/>A boolean value that indicates whether the request was successful
+
+- `--start_date`<br/>Start date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
+
+- `--end_date`<br/>End date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
+
+- `--search_id`<br/>A string to search inside request ids. It will filter all request ids that contain this string.
+
+- `--pipeline`<br/>A boolean value that indicates whether the deployment request was part of a pipeline request
 
 - `-fmt`/`--format`<br/>The output format
 
@@ -514,6 +538,9 @@ For structured input, specify the data as JSON formatted string. For example:
 [DEPRECATED] Create a deployment batch request and retrieve request IDs to collect the results later.
 Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
+Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
+is 172800 (48 hours). The default value is 14400 (4 hours).
+
 Use the version option to make a batch request to a specific deployment version:
 `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input>`
 
@@ -537,6 +564,8 @@ For structured input, specify each data input as JSON formatted string. For exam
 - `-v`/`--version_name`<br/>The version name
 
 - [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+
+- `-t`/`--timeout`<br/>Timeout in seconds
 
 - `-fmt`/`--format`<br/>The output format
 
@@ -597,7 +626,7 @@ If not specified, the batch requests are listed for the default version.
 
 - `-v`/`--version_name`<br/>The version name
 
-- `--offset`
+- `--offset`<br/>The starting point: if offset equals 2, then the first 2 records will be omitted
 
 - `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 

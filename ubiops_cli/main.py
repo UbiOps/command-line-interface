@@ -3,21 +3,21 @@ import ubiops as api
 import click
 import json
 
-from pkg.version import VERSION
-import pkg.src.projects as projects
-import pkg.src.deployments as deployments
-import pkg.src.deployment_versions as deployment_versions
-import pkg.src.deployment_revisions as deployment_revisions
-import pkg.src.deployment_builds as deployment_builds
-import pkg.src.pipelines as pipelines
-import pkg.src.pipeline_versions as pipeline_versions
-import pkg.src.blobs as blobs
-import pkg.src.logs as logs
-import pkg.src.config as config
-import pkg.src.auth as auth
-import pkg.src.environment_variables as env_vars
-import pkg.src.request_schedules as schedules
-from pkg.src.helpers.click_helpers import CustomGroup
+from ubiops_cli.version import VERSION
+import ubiops_cli.src.projects as projects
+import ubiops_cli.src.deployments as deployments
+import ubiops_cli.src.deployment_versions as deployment_versions
+import ubiops_cli.src.deployment_revisions as deployment_revisions
+import ubiops_cli.src.deployment_builds as deployment_builds
+import ubiops_cli.src.pipelines as pipelines
+import ubiops_cli.src.pipeline_versions as pipeline_versions
+import ubiops_cli.src.blobs as blobs
+import ubiops_cli.src.logs as logs
+import ubiops_cli.src.config as config
+import ubiops_cli.src.auth as auth
+import ubiops_cli.src.environment_variables as env_vars
+import ubiops_cli.src.request_schedules as schedules
+from ubiops_cli.src.helpers.click_helpers import CustomGroup
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 

@@ -1,6 +1,6 @@
-from pkg.utils import init_client, get_current_project, default_version_zip_name, write_blob
-from pkg.src.helpers.formatting import print_list, print_item
-from pkg.src.helpers.options import *
+from ubiops_cli.utils import init_client, get_current_project, default_version_zip_name, write_blob
+from ubiops_cli.src.helpers.formatting import print_list, print_item
+from ubiops_cli.src.helpers.options import *
 
 
 LIST_ITEMS = ['creation_date', 'id', 'created_by']
