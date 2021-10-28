@@ -326,3 +326,48 @@ IS_ENABLED = click.option('--enabled', required=False, default=True, type=click.
                           show_default=True)
 IS_ENABLED_UPDATE = click.option('--enabled', required=False, default=None, type=click.BOOL, metavar='[True|False]',
                                  help="Boolean value indicating whether the created schedule is enabled or disabled")
+
+# Imports/exports
+EXPORT_ID = click.argument('export_id', required=True, metavar='<export_id>', nargs=1)
+EXPORT_DETAILS_YAML_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default=None, metavar='<path>',
+    help="Path to file or directory to store export yaml file"
+)
+EXPORT_DETAILS_YAML_FILE = click.option(
+    "-f", "--yaml_file", required=True, type=click.Path(), metavar='<path>',
+    help="Path to a yaml file that contains the export details"
+)
+EXPORT_ZIP_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default='', metavar='<path>',
+    help="Path to file or directory to store export zip"
+)
+EXPORT_STATUS_FILTER = click.option(
+    '--status', required=False, default=None, type=str,  metavar='[pending|processing|completed|failed]',
+    help="Status of the export"
+)
+
+IMPORT_ID = click.argument('import_id', required=True, metavar='<import_id>', nargs=1)
+IMPORT_ZIP_FILE = click.option(
+    '-z', '--zip_path', required=True, type=click.Path(), metavar='<path>', help="Path to import zip file"
+)
+IMPORT_SKIP_CONFIRMATION = click.option(
+    '--skip_confirmation', required=False, default=False, is_flag=True,
+    help="Whether you want to skip the confirmation step"
+)
+IMPORT_ZIP_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default='', metavar='<path>',
+    help="Path to file or directory to store import zip"
+)
+IMPORT_CONFIRM_YAML_FILE = click.option(
+    "-f", "--yaml_file", required=True, type=click.Path(), metavar='<path>',
+    help="Path to a yaml file that contains the object selection for the import confirmation"
+)
+IMPORT_DETAILS_YAML_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default=None, metavar='<path>',
+    help="Path to file or directory to store import yaml file"
+)
+IMPORT_STATUS_FILTER = click.option(
+    '--status', required=False, default=None, type=str,
+    metavar='[pending|scanning|confirmation|confirmation_pending|processing|completed|failed]',
+    help="Status of the import"
+)

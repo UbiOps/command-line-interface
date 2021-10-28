@@ -118,6 +118,8 @@ Environment Variables | [docs/environment_variables.md](docs/environment_variabl
 Logs | [docs/logs.md](docs/logs.md)
 Audit Events | [docs/audit_events.md](docs/audit_events.md)
 Schedules | [docs/schedules.md](docs/schedules.md)
+Exports | [docs/exports.md](docs/exports.md)
+Imports | [docs/imports.md](docs/imports.md)
 
 
 

@@ -225,11 +225,14 @@ def format_datetime_attrs(items, prettify=True):
     return formatted
 
 
-def print_list(items, attrs, rename_cols=None, sorting_col=None, fmt='table', pager=False):
+def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse=False, fmt='table', pager=False):
     rename_cols = {} if rename_cols is None else rename_cols
     if fmt == 'json':
         click.echo(format_json(items))
     else:  # fmt == 'table'
+        if sorting_col is not None:
+            items = sorted(items, key=lambda x: getattr(x, attrs[sorting_col], ''), reverse=sorting_reverse)
+
         items = format_datetime_attrs(items)
 
         if len(items) > 0:
@@ -254,9 +257,6 @@ def print_list(items, attrs, rename_cols=None, sorting_col=None, fmt='table', pa
                     else:
                         row.append(getattr(i, attr))
             table.append(row)
-
-        if sorting_col is not None:
-            table = sorted(table, key=lambda x: x[sorting_col])
 
         if pager:
             click.echo_via_pager(tabulate(table, headers=header))

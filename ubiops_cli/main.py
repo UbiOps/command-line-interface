@@ -9,6 +9,8 @@ import ubiops_cli.src.deployments as deployments
 import ubiops_cli.src.deployment_versions as deployment_versions
 import ubiops_cli.src.deployment_revisions as deployment_revisions
 import ubiops_cli.src.deployment_builds as deployment_builds
+import ubiops_cli.src.exports as exports
+import ubiops_cli.src.imports as imports
 import ubiops_cli.src.pipelines as pipelines
 import ubiops_cli.src.pipeline_versions as pipeline_versions
 import ubiops_cli.src.blobs as blobs
@@ -47,6 +49,8 @@ cli.add_command(env_vars.commands)
 cli.add_command(logs.commands)
 cli.add_command(logs.audit_events)
 cli.add_command(schedules.commands)
+cli.add_command(exports.commands)
+cli.add_command(imports.commands)
 
 
 def print_error(msg, status=None):

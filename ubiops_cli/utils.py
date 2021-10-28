@@ -260,3 +260,12 @@ def parse_json(data):
         return json.loads(data)
     except json.JSONDecodeError:
         raise Exception("Failed to parse request data. JSON format expected. Input: %s" % str(data))
+
+
+def import_export_zip_name(object_id, object_type):
+    """
+    Get the name of the zip file to store import/export depending on the object id and type
+    """
+
+    datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
+    return "%s_%s_%s.zip" % (object_type, object_id, datetime_str)
