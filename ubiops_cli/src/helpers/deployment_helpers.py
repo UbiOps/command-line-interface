@@ -1,5 +1,5 @@
 import ubiops as api
-from ubiops_cli.utils import set_dict_default, set_object_default
+from ubiops_cli.utils import set_dict_default
 from ubiops_cli.constants import ML_MODEL_FILE_NAME_KEY, ML_MODEL_FILE_NAME_VALUE, SYS_DEPLOYMENT_FILE_NAME_KEY, \
     SYS_DEPLOYMENT_FILE_NAME_VALUE
 from ubiops_cli.src.helpers.helpers import strings_to_dict
@@ -7,16 +7,19 @@ from ubiops_cli.src.helpers.helpers import strings_to_dict
 
 DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_FIELDS = [
-    'description', 'labels', 'language', 'memory_allocation', 'minimum_instances', 'maximum_instances',
+    'description', 'labels', 'language', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'deployment_mode', 'request_retention_mode', 'request_retention_time'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
-    'version', 'description', 'labels', 'memory_allocation', 'minimum_instances', 'maximum_instances',
+    'version', 'description', 'labels', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time'
 ]
-DEPLOYMENT_VERSION_FIELDS_WAIT = ['memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time']
+DEPLOYMENT_VERSION_FIELDS_WAIT = [
+    'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time'
+]
 DEPLOYMENT_VERSION_FIELD_TYPES = {
     'language': str,
+    'instance_type': str,
     'memory_allocation': int,
     'minimum_instances': int,
     'maximum_instances': int,

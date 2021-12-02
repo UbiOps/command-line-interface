@@ -53,7 +53,7 @@ version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
 language: python3.7
-memory_allocation: 2048
+instance_type: 2048mb
 minimum_instances: 0
 maximum_instances: 5
 maximum_idle_time: 300
@@ -100,7 +100,7 @@ version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
 language: python3.7
-memory_allocation: 256
+instance_type: 2048mb
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 300
@@ -127,7 +127,9 @@ The version name can either be passed as command argument or specified inside th
 
 - `-l`/`--language`<br/>Programming language of code
 
-- `-mem`/`--memory_allocation`<br/>Memory allocation for deployment
+- `-inst`/`--instance_type`<br/>Reserved instance type for the version
+
+- `-mem`/`--memory_allocation`<br/>[DEPRECATED] The reserved memory allocation for the version - deprecated and will be overruled by `instance_type`
 
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 
@@ -170,7 +172,7 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-memory_allocation: 256
+instance_type: 2048mb
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 300
@@ -202,7 +204,9 @@ It's not possible to update the programming language of an existing deployment v
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
-- `-mem`/`--memory_allocation`<br/>Memory allocation for deployment
+- `-inst`/`--instance_type`<br/>Reserved instance type for the version
+
+- `-mem`/`--memory_allocation`<br/>[DEPRECATED] The reserved memory allocation for the version - deprecated and will be overruled by `instance_type`
 
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 

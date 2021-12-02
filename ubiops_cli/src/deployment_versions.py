@@ -79,7 +79,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
       my-key-1: my-label-1
       my-key-2: my-label-2
     language: python3.7
-    memory_allocation: 2048
+    instance_type: 2048mb
     minimum_instances: 0
     maximum_instances: 5
     maximum_idle_time: 300
@@ -122,6 +122,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @DEPLOYMENT_NAME_OPTIONAL
 @VERSION_NAME_OVERRULE
 @LANGUAGE
+@INSTANCE_TYPE
 @MEMORY_ALLOCATION
 @MIN_INSTANCES
 @MAX_INSTANCES
@@ -148,7 +149,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
       my-key-1: my-label-1
       my-key-2: my-label-2
     language: python3.7
-    memory_allocation: 256
+    instance_type: 2048mb
     minimum_instances: 0
     maximum_instances: 1
     maximum_idle_time: 300
@@ -176,6 +177,12 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
 
+    if format_ != 'json' and kwargs['memory_allocation'] and not kwargs['instance_type']:
+        click.secho(
+            "Deprecation warning: parameter 'memory_allocation' is deprecated, use 'instance_type' instead",
+            fg='red'
+        )
+
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
@@ -201,6 +208,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @VERSION_NAME_UPDATE
 @DEPLOYMENT_FILE
 @VERSION_YAML_FILE
+@INSTANCE_TYPE
 @MEMORY_ALLOCATION
 @MIN_INSTANCES
 @MAX_INSTANCES
@@ -221,7 +229,7 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    memory_allocation: 256
+    instance_type: 2048mb
     minimum_instances: 0
     maximum_instances: 1
     maximum_idle_time: 300
@@ -245,9 +253,13 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     yaml_content = read_yaml(yaml_file, required_fields=[])
 
     kwargs['version_name'] = new_name
-    kwargs = define_deployment_version(
-        kwargs, yaml_content, extra_yaml_fields=['deployment_file']
-    )
+    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
+
+    if not quiet and kwargs['memory_allocation'] and not kwargs['instance_type']:
+        click.secho(
+            "Deprecation warning: parameter 'memory_allocation' is deprecated, use 'instance_type' instead",
+            fg='red'
+        )
 
     version = api.DeploymentVersionUpdate(
         **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE if kwargs[k] is not None}

@@ -70,6 +70,8 @@ DEPLOYMENT_NAME_UPDATE = click.option('-n', '--new_name', required=False, defaul
 DEPLOYMENT_YAML_FILE = click.option("-f", "--yaml_file", required=True, type=click.Path(), metavar='<path>',
                                     help="Path to a yaml file that contains at least the following fields: "
                                     "[%s]" % ", ".join(DEPLOYMENT_REQUIRED_FIELDS))
+DEPLOYMENT_YAML_FILE_OPTIONAL = click.option("-f", "--yaml_file", required=False, default=None, type=click.Path(),
+                                             help="Path to a yaml file containing deployment details", metavar='<path>')
 DEPLOYMENT_YAML_OUTPUT = click.option('-o', '--output_path', required=False, default=None, metavar='<path>',
                                       help="Path to file or directory to store deployment yaml file")
 DEPLOYMENT_LABELS_OPTIONAL = click.option('-lb', '--labels', 'deployment_labels', required=False, default=None,
@@ -105,7 +107,10 @@ VERSION_YAML_OUTPUT = click.option('-o', '--output_path', required=False, defaul
 LANGUAGE = click.option('-l', '--language', required=False, default=None, type=click.STRING, metavar='<string>',
                         help="Programming language of code")
 MEMORY_ALLOCATION = click.option('-mem', '--memory_allocation', required=False, default=None, type=int, metavar='<int>',
-                                 help="Memory allocation for deployment")
+                                 help="[DEPRECATED] The reserved memory allocation for the version - deprecated and "
+                                      "will be overruled by `instance_type`")
+INSTANCE_TYPE = click.option('-inst', '--instance_type', required=False, default=None, type=click.STRING,
+                             metavar='<string>', help="Reserved instance type for the version")
 MIN_INSTANCES = click.option('-min', '--minimum_instances', required=False, default=None, type=int, metavar='<int>',
                              help="Minimum number of instances")
 MAX_INSTANCES = click.option('-max', '--maximum_instances', required=False, default=None, type=int, metavar='<int>',
@@ -170,7 +175,7 @@ REQUEST_ID_OPTIONAL = click.option('-id', '--request_id', required=False, defaul
 PIPELINE_REQUEST_ID_OPTIONAL = click.option('-pid', '--pipeline_request_id', required=False, default=None,
                                             metavar='<id>', help="The ID of the pipeline request")
 REQUEST_TIMEOUT = click.option(
-    '-t', '--timeout', required=False, default=None, metavar='[10-172800]', type=click.IntRange(10, 172800),
+    '-t', '--timeout', required=False, default=None, metavar='[10-345600]', type=click.IntRange(10, 345600),
     help="Timeout in seconds"
 )
 REQUEST_DEPLOYMENT_TIMEOUT_DEPRECATED = click.option(

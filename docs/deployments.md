@@ -114,6 +114,30 @@ string, double, bool, array_string, array_int, array_double].
 
 Update a deployment.
 
+If you only want to update the name of the deployment or the default deployment version,
+use the options `<new_name>` and `<default_version>`.
+If you want to update the deployment input/output fields, description or labels, please use a yaml file to define
+the new deployment.
+
+
+For example:
+```
+deployment_description: Deployment created via command line.
+deployment_labels:
+  my-key-1: my-label-1
+  my-key-2: my-label-2
+input_fields:
+  - name: param1
+    data_type: int
+  - name: param2
+    data_type: string
+output_fields:
+  - name: param1
+    data_type: int
+  - name: param2
+    data_type: string
+```
+
 **Arguments:**
 
 - [required] `deployment_name`
@@ -125,6 +149,8 @@ Update a deployment.
 - `-n`/`--new_name`<br/>The new deployment name
 
 - `-default`/`--default_version`<br/>The name of the version that should become the default
+
+- `-f`/`--yaml_file`<br/>Path to a yaml file containing deployment details
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
@@ -283,7 +309,7 @@ version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
 language: python3.7
-memory_allocation: 256
+instance_type: 2048mb
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 300
@@ -320,7 +346,9 @@ It's not possible to update the programming language and deployment mode of an e
 
 - `-l`/`--language`<br/>Programming language of code
 
-- `-mem`/`--memory_allocation`<br/>Memory allocation for deployment
+- `-inst`/`--instance_type`<br/>Reserved instance type for the version
+
+- `-mem`/`--memory_allocation`<br/>[DEPRECATED] The reserved memory allocation for the version - deprecated and will be overruled by `instance_type`
 
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 
@@ -366,7 +394,7 @@ It's not possible to update the programming language and deployment mode of an e
 
 Create a deployment request and retrieve request IDs to collect the results later.
 Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
-is 3600 (1 hour) for express deployments and 172800 (48 hours) for batch deployments. The default value is 300
+is 3600 (1 hour) for express deployments and 345600 (96 hours) for batch deployments. The default value is 300
 (5 minutes) for express deployments and 14400 (4 hours) for batch deployments.
 
 Use the version option to make a request to a specific deployment version:
@@ -539,7 +567,7 @@ For structured input, specify the data as JSON formatted string. For example:
 Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
 Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
-is 172800 (48 hours). The default value is 14400 (4 hours).
+is 345600 (96 hours). The default value is 14400 (4 hours).
 
 Use the version option to make a batch request to a specific deployment version:
 `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input>`

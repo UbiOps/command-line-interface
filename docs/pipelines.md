@@ -117,7 +117,7 @@ If you want to update the pipeline input/output type and fields, please use a ya
 
 Please note that it's only possible to update the input of a pipeline for pipelines that have no pipeline versions
 with a connected pipeline start, that it's only possible to update the output of a pipeline for pipelines that have
-no pipeline versions with a connected pipeline end
+no pipeline versions with a connected pipeline end.
 
 **Arguments:**
 
@@ -263,7 +263,7 @@ contrast, batch (asynchronous) requests can be made to any pipeline, independent
 Pipeline requests are only stored for pipeline versions with `request_retention_mode` 'full' or 'metadata'.
 
 Use the option `timeout` to specify the timeout of the pipeline request. The minimum value is 10 seconds.
-The maximum value is 7200 (2 hours) for direct requests and 172800 (48 hours) for batch requests. The default value
+The maximum value is 7200 (2 hours) for direct requests and 345600 (96 hours) for batch requests. The default value
 is 3600 (1 hour) for direct requests and 14400 (4 hours) for batch requests.
 
 Use the version option to make a request to a specific pipeline version:

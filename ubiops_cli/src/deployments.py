@@ -172,16 +172,58 @@ def deployments_create(deployment_name, yaml_file, format_):
 @DEPLOYMENT_NAME_ARGUMENT
 @DEPLOYMENT_NAME_UPDATE
 @VERSION_DEFAULT_UPDATE
+@DEPLOYMENT_YAML_FILE_OPTIONAL
 @QUIET
-def deployments_update(deployment_name, new_name, default_version, quiet):
+def deployments_update(deployment_name, new_name, default_version, yaml_file, quiet):
     """
     Update a deployment.
+
+    If you only want to update the name of the deployment or the default deployment version,
+    use the options `<new_name>` and `<default_version>`.
+    If you want to update the deployment input/output fields, description or labels, please use a yaml file to define
+    the new deployment.
+
+    \b
+    For example:
+    ```
+    deployment_description: Deployment created via command line.
+    deployment_labels:
+      my-key-1: my-label-1
+      my-key-2: my-label-2
+    input_fields:
+      - name: param1
+        data_type: int
+      - name: param2
+        data_type: string
+    output_fields:
+      - name: param1
+        data_type: int
+      - name: param2
+        data_type: string
+    ```
     """
 
     project_name = get_current_project(error=True)
 
-    client = init_client()
+    yaml_content = read_yaml(yaml_file)
+
     deployment = api.DeploymentUpdate(name=new_name, default_version=default_version)
+    if 'deployment_description' in yaml_content:
+        deployment.description = yaml_content['deployment_description']
+    if 'deployment_labels' in yaml_content:
+        deployment.labels = yaml_content['deployment_labels']
+    if 'input_fields' in yaml_content and isinstance(yaml_content['input_fields'], list):
+        deployment.input_fields = [
+            api.DeploymentInputFieldCreate(name=item['name'], data_type=item['data_type'])
+            for item in yaml_content['input_fields']
+        ]
+    if 'output_fields' in yaml_content and isinstance(yaml_content['output_fields'], list):
+        deployment.output_fields = [
+            api.DeploymentInputFieldCreate(name=item['name'], data_type=item['data_type'])
+            for item in yaml_content['output_fields']
+        ]
+
+    client = init_client()
     client.deployments_update(project_name=project_name, deployment_name=deployment_name, data=deployment)
     client.api_client.close()
 
@@ -322,6 +364,7 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @ZIP_OUTPUT_STORE
 @VERSION_YAML_FILE
 @LANGUAGE
+@INSTANCE_TYPE
 @MEMORY_ALLOCATION
 @MIN_INSTANCES
 @MAX_INSTANCES
@@ -362,7 +405,7 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
       my-key-1: my-label-1
       my-key-2: my-label-2
     language: python3.7
-    memory_allocation: 256
+    instance_type: 2048mb
     minimum_instances: 0
     maximum_instances: 1
     maximum_idle_time: 300
@@ -410,6 +453,13 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
         kwargs, yaml_content, extra_yaml_fields=['deployment_file', 'ignore_file']
     )
     kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
+
+    if not quiet and kwargs['memory_allocation'] and not kwargs['instance_type']:
+        click.secho(
+            "Deprecation warning: parameter 'memory_allocation' is deprecated, use 'instance_type' instead",
+            fg='red'
+        )
+
     zip_path = zip_dir(
         directory=directory,
         output_path=output_path,
@@ -488,7 +538,7 @@ def requests_create(deployment_name, version_name, batch, data, timeout, format_
     """
     Create a deployment request and retrieve request IDs to collect the results later.
     Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
-    is 3600 (1 hour) for express deployments and 172800 (48 hours) for batch deployments. The default value is 300
+    is 3600 (1 hour) for express deployments and 345600 (96 hours) for batch deployments. The default value is 300
     (5 minutes) for express deployments and 14400 (4 hours) for batch deployments.
 
     Use the version option to make a request to a specific deployment version:
@@ -725,7 +775,7 @@ def deprecated_batch_requests_create(deployment_name, version_name, data, timeou
     Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
-    is 172800 (48 hours). The default value is 14400 (4 hours).
+    is 345600 (96 hours). The default value is 14400 (4 hours).
 
     Use the version option to make a batch request to a specific deployment version:
     `ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input>`
