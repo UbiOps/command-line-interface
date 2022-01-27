@@ -111,7 +111,11 @@ def object_to_dict(obj):
             dictionary[attr] = str(value)
 
         else:
-            dictionary[attr] = value
+            # Do not add values that are class instances
+            try:
+                value.__dict__.keys()
+            except AttributeError:
+                dictionary[attr] = value
 
     return dictionary
 
@@ -127,9 +131,20 @@ def format_json(items):
 
 
 def format_yaml(item, required_front=None, optional=None, required_end=None, rename=None, as_str=True):
-    """Change object to dict in such a way that it can be used as yaml output.
+    """
+    Change object to dict in such a way that it can be used as yaml output.
     If as_str = True: print in yaml structure.
-    If as_str = False: return dictionary, which can be used to write to yaml file."""
+    If as_str = False: return dictionary, which can be used to write to yaml file.
+
+    :param object item: object to format as yaml, e.g., deployment object
+    :param list required_front: object attributes to show first. If the value is none, it will still be shown
+    :param list optional: object attributes to show after the required_front. If the value is none, the attribute is
+        ignored
+    :param list required_end: object attributes to show after the optional attributes. If the value is none, it will
+    still be shown
+    :param dict rename: dictionary to rename object attributes
+    :param bool as_str: whether to format the yaml dict as string
+    """
 
     if required_front is None and optional is None and required_end is None:
         required_front = [k[1:] for k in item.__dict__.keys() if k.startswith('_')]
@@ -143,8 +158,11 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
         rename = {}
 
     def split_lower_level_attributes(attrs):
-        """If a space is used in the attribute lists, the first part is the current attribute
-        and after the space is a lower level attribute. This is useful when the item contains inner-items."""
+        """
+        If a space is used in the attribute lists, the first part is the current attribute
+        and after the space is a lower level attribute. This is useful when the item contains inner-items.
+        """
+
         splitted = [(a.split(" ")[0], " ".join(a.split(" ")[1:]))
                     if len(a.split(" ")) > 1 else (a, None) for a in attrs]
         grouped = {}
@@ -165,8 +183,10 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
     required_end = split_lower_level_attributes(required_end)
 
     def set_value_in_dict(k, v, results_dict):
-        """Set key k (possibly renamed by 'rename') in results_dict to value v.
-        If value v is of type list, format each item in list as dictionary too."""
+        """
+        Set key k (possibly renamed by 'rename') in results_dict to value v.
+        If value v is of type list, format each item in list as dictionary too.
+        """
 
         key_name = rename[k] if k in rename else k
         if key_name in results_dict:
@@ -193,7 +213,8 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
         set_value_in_dict(i, getattr(item, i), dictionary)
 
     if as_str:
-        return yaml.dump(dictionary, sort_keys=False)
+        # Convert dictionary to yaml string, and remove last empty line
+        return yaml.dump(dictionary, sort_keys=False).rstrip("\n")
     else:
         return dictionary
 

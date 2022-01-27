@@ -2,7 +2,7 @@ import ubiops as api
 import os
 from time import sleep
 
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, zip_dir, get_current_project, \
+from ubiops_cli.utils import init_client, read_json, read_yaml, write_yaml, zip_dir, get_current_project, \
     set_dict_default, write_blob, default_version_zip_name, parse_json
 from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
     update_existing_deployment_version, DEPLOYMENT_VERSION_FIELDS
@@ -70,7 +70,7 @@ def deployments_get(deployment_name, output_path, quiet, format_):
         dictionary = format_yaml(
             item=deployment,
             required_front=['name', 'description', 'labels', 'input_type', 'output_type'],
-            optional=['input_fields', 'output_fields'],
+            optional=['input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'],
             rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
             as_str=False
         )
@@ -81,6 +81,9 @@ def deployments_get(deployment_name, output_path, quiet, format_):
         print_item(
             item=deployment,
             row_attrs=LIST_ITEMS,
+            required_front=['id', 'name', 'project', 'description', 'labels', 'input_type', 'output_type'],
+            optional=['input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'],
+            required_end=['creation_date', 'last_updated', 'default_version'],
             rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
             fmt=format_
         )
@@ -163,6 +166,9 @@ def deployments_create(deployment_name, yaml_file, format_):
     print_item(
         item=response,
         row_attrs=LIST_ITEMS,
+        required_front=['id', 'name', 'project', 'description', 'labels', 'input_type', 'output_type'],
+        optional=['input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'],
+        required_end=['creation_date', 'last_updated'],
         rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
         fmt=format_
     )
@@ -532,9 +538,10 @@ def requests():
 @VERSION_NAME_OPTIONAL
 @REQUEST_BATCH
 @REQUEST_DATA_MULTI
+@REQUEST_DATA_FILE
 @REQUEST_TIMEOUT
 @REQUESTS_FORMATS
-def requests_create(deployment_name, version_name, batch, data, timeout, format_):
+def requests_create(deployment_name, version_name, batch, data, json_file, timeout, format_):
     """
     Create a deployment request and retrieve request IDs to collect the results later.
     Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
@@ -564,12 +571,24 @@ def requests_create(deployment_name, version_name, batch, data, timeout, format_
     client = init_client()
     deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)
 
-    if deployment.input_type == STRUCTURED_TYPE:
-        input_data = []
-        for d in data:
-            input_data.append(parse_json(d))
+    if json_file and data:
+        raise Exception("Specify data either using the <data> or <json_file> option, not both")
+
+    if json_file:
+        input_data = read_json(json_file)
+        if not isinstance(input_data, list):
+            input_data = [input_data]
+
+    elif data:
+        if deployment.input_type == STRUCTURED_TYPE:
+            input_data = []
+            for d in data:
+                input_data.append(parse_json(d))
+        else:
+            input_data = data
+
     else:
-        input_data = data
+        raise Exception("Missing option <data> or <json_file>")
 
     if version_name is not None:
         if batch:

@@ -161,84 +161,6 @@ Delete a pipeline.
 
 <br/>
 
-### ubiops pipelines complete
-
-**Command:** `ubiops pipelines complete`
-
-**Description:**
-
-Create/Update a pipeline, version, and structure.
-
-Use the <overwrite> option to update an existing pipeline or version.
-Without <overwrite>, a new pipeline will be created if it doesn't exist, and a new pipeline version will be created.
-
-
-Define the pipeline parameters using a yaml file.
-For example:
-```
-pipeline_name: my-pipeline-name
-pipeline_description: Pipeline created via command line.
-pipeline_labels:
-  my-key-1: my-label-1
-  my-key-2: my-label-2
-input_type: structured
-input_fields:
-  - name: my-pipeline-param1
-    data_type: int
-output_type: structured
-output_fields:
-  - name: my-pipeline-output1
-    data_type: int
-version_name: my-version-name
-version_name: my-pipeline-version
-version_description: Version created via command line.
-version_labels:
-  my-key-1: my-label-1
-  my-key-2: my-label-2
-request_retention_mode: none
-request_retention_time: 604800
-objects:
-  - name: object1
-    reference_name: my-deployment-name
-    reference_version: my-deployment-version
-attachments:
-  - destination_name: object1
-    sources:
-      - source_name: pipeline_start
-        mapping:
-          - source_field_name: my-pipeline-param1
-            destination_field_name: my-deployment-param1
-```
-
-Possible input/output types: [structured, plain].
-Possible data_types: [blob, int, string, double, bool, array_string, array_int, array_double].
-
-All object references must exist. Connect the objects in the pipeline using attachments.
-Please, connect the start of the pipeline version to your first object. You can do this by creating an attachment
-with a source with 'source_name: pipeline_start' and the name of your first object as destination
-'destination_name: ...'.
-Connect the object output fields to destination_name 'pipeline_end', to retrieve the output as pipeline
-request result.
-
-**Arguments:**
-
-- `pipeline_name`
-
-
-
-**Options:**
-
-- `-v`/`--version_name`<br/>The version name
-
-- [required] `-f`/`--yaml_file`<br/>Path to a yaml file that contains at least the following fields: [input_type]
-
-- `--overwrite`<br/>Whether you want to overwrite if exists
-
-- `-q`/`--quiet`<br/>Suppress informational messages
-
-
-<br/>
-
 
 ***
 <br/>
@@ -297,7 +219,9 @@ For structured input, specify each data input as JSON formatted string. For exam
 
 - `-dt`/`--deployment_timeout`<br/>Timeout for each deployment request in the pipeline in seconds
 
-- [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+- `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+
+- `-f`/`--json_file`<br/>Path to json file containing the input data of the request
 
 - `-fmt`/`--format`<br/>The output format
 
@@ -459,7 +383,7 @@ For structured input, specify each data input as JSON formatted string. For exam
 
 - `-v`/`--version_name`<br/>The version name
 
-- [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+- `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
 
 - `-fmt`/`--format`<br/>The output format
 

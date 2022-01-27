@@ -224,7 +224,10 @@ def write_blob(blob, output_path, filename=None):
 
 def set_dict_default(value, defaults_dict, default_key, set_type=str):
     if not value and default_key in defaults_dict and defaults_dict[default_key] is not None:
-        value = set_type(defaults_dict[default_key])
+        if set_type is not None:
+            value = set_type(defaults_dict[default_key])
+        else:
+            value = defaults_dict[default_key]
     return value
 
 
@@ -250,6 +253,22 @@ def check_required_fields(input_dict, list_name, required_fields):
         for requirement in required_fields:
             assert requirement in list_item, "No key '%s' found for one of the %s." \
                                              "\nFound: %s" % (requirement, list_name, str(list_item))
+
+
+def read_json(json_file):
+    if json_file is None:
+        return {}
+
+    try:
+        with open(json_file, 'rb') as f:
+            content = json.load(f)
+    except ValueError:
+        raise Exception("Failed to parse json file")
+
+    if content is None:
+        content = {}
+
+    return content
 
 
 def parse_json(data):

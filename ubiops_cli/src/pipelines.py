@@ -1,10 +1,7 @@
 import ubiops as api
 
-from ubiops_cli.utils import get_current_project, init_client, set_dict_default, read_yaml, write_yaml, parse_json
-from ubiops_cli.src.helpers.pipeline_helpers import check_objects_requirements, check_attachments_requirements, \
-    get_pipeline_and_version_fields_from_yaml, pipeline_version_exists, get_pipeline_if_exists, \
-    check_pipeline_can_be_updated, patch_pipeline_version, define_pipeline, \
-    create_objects_and_attachments, get_changed_pipeline_structure
+from ubiops_cli.utils import get_current_project, init_client, read_json, read_yaml, write_yaml, parse_json
+from ubiops_cli.src.helpers.pipeline_helpers import define_pipeline, get_changed_pipeline_structure
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_pipeline_requests_reference, \
     format_pipeline_requests_oneline, format_json, format_datetime, parse_datetime
@@ -70,11 +67,11 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
         dictionary = format_yaml(
             pipeline,
             required_front=['name', 'description', 'input_type'],
-            optional=['input_fields', 'output_type', 'output_fields'],
-            rename={
-                'name': 'pipeline_name',
-                'description': 'pipeline_description'
-            },
+            optional=[
+                'input_fields name', 'input_fields data_type', 'output_type', 'output_fields name',
+                'output_fields data_type'
+            ],
+            rename={'name': 'pipeline_name', 'description': 'pipeline_description'},
             as_str=False
         )
 
@@ -87,12 +84,11 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
             pipeline,
             row_attrs=LIST_ITEMS,
             required_front=['name', 'description', 'input_type'],
-            optional=['input_fields', 'output_type', 'output_fields',
-                      'creation_date', 'last_updated', 'default_version'],
-            rename={
-                'name': 'pipeline_name',
-                'description': 'pipeline_description'
-            },
+            optional=[
+                'input_fields name', 'input_fields data_type', 'output_type', 'output_fields name',
+                'output_fields data_type', 'creation_date', 'last_updated', 'default_version'
+            ],
+            rename={'name': 'pipeline_name', 'description': 'pipeline_description'},
             fmt=format_
         )
 
@@ -143,6 +139,11 @@ def pipelines_create(pipeline_name, yaml_file, format_):
     print_item(
         pipeline_response,
         row_attrs=LIST_ITEMS,
+        required_front=['name', 'description', 'input_type'],
+        optional=[
+            'input_fields name', 'input_fields data_type', 'output_type', 'output_fields name',
+            'output_fields data_type', 'creation_date', 'last_updated'
+        ],
         rename={'name': 'pipeline_name', 'description': 'pipeline_description'},
         fmt=format_
     )
@@ -258,178 +259,6 @@ def pipelines_delete(pipeline_name, assume_yes, quiet):
             click.echo("Pipeline was successfully deleted")
 
 
-@commands.command("complete", short_help="Create a pipeline, version, and structure")
-@PIPELINE_NAME_OVERRULE
-@VERSION_NAME_OPTIONAL
-@PIPELINE_YAML_FILE
-@OVERWRITE
-@QUIET
-def pipelines_complete(pipeline_name, version_name, yaml_file, overwrite, quiet):
-    """
-    Create/Update a pipeline, version, and structure.
-
-    Use the <overwrite> option to update an existing pipeline or version.
-    Without <overwrite>, a new pipeline will be created if it doesn't exist, and a new pipeline version will be created.
-
-    \b
-    Define the pipeline parameters using a yaml file.
-    For example:
-    ```
-    pipeline_name: my-pipeline-name
-    pipeline_description: Pipeline created via command line.
-    pipeline_labels:
-      my-key-1: my-label-1
-      my-key-2: my-label-2
-    input_type: structured
-    input_fields:
-      - name: my-pipeline-param1
-        data_type: int
-    output_type: structured
-    output_fields:
-      - name: my-pipeline-output1
-        data_type: int
-    version_name: my-version-name
-    version_name: my-pipeline-version
-    version_description: Version created via command line.
-    version_labels:
-      my-key-1: my-label-1
-      my-key-2: my-label-2
-    request_retention_mode: none
-    request_retention_time: 604800
-    objects:
-      - name: object1
-        reference_name: my-deployment-name
-        reference_version: my-deployment-version
-    attachments:
-      - destination_name: object1
-        sources:
-          - source_name: pipeline_start
-            mapping:
-              - source_field_name: my-pipeline-param1
-                destination_field_name: my-deployment-param1
-    ```
-
-    Possible input/output types: [structured, plain].
-    Possible data_types: [blob, int, string, double, bool, array_string, array_int, array_double].
-
-    All object references must exist. Connect the objects in the pipeline using attachments.
-    Please, connect the start of the pipeline version to your first object. You can do this by creating an attachment
-    with a source with 'source_name: pipeline_start' and the name of your first object as destination
-    'destination_name: ...'.
-    Connect the object output fields to destination_name 'pipeline_end', to retrieve the output as pipeline
-    request result.
-    """
-
-    client = init_client()
-    project_name = get_current_project(error=True)
-
-    yaml_content = read_yaml(yaml_file)
-
-    assert 'pipeline_name' in yaml_content or pipeline_name, \
-        'Please, specify the pipeline name in either the yaml file or as a command argument'
-
-    assert 'version_name' in yaml_content or version_name, \
-        'Please, specify the version name in either the yaml file or as a command option'
-
-    # Get the pipeline and version names
-    pipeline_name = set_dict_default(pipeline_name, yaml_content, 'pipeline_name')
-    version_name = set_dict_default(version_name, yaml_content, 'version_name')
-    pipeline_fields, input_fields, output_fields, version_fields = get_pipeline_and_version_fields_from_yaml(
-        yaml_content=yaml_content
-    )
-
-    # Check the objects and attachments
-    object_deployment_names = check_objects_requirements(yaml_content)
-    check_attachments_requirements(yaml_content, object_deployment_names)
-
-    # Check if the given pipeline exists
-    existing_pipeline = get_pipeline_if_exists(client, pipeline_name, project_name)
-
-    if overwrite and existing_pipeline is not None:
-        # Check if input of pipeline needs to be updated
-        changed_input_data = get_changed_pipeline_structure(existing_pipeline, input_fields)
-        check_pipeline_can_be_updated(
-            client=client,
-            version_name=version_name,
-            pipeline_name=pipeline_name,
-            project_name=project_name,
-            data=changed_input_data
-        )
-
-        # Check if output of pipeline needs to be updated
-        changed_output_data = get_changed_pipeline_structure(existing_pipeline, output_fields, is_input=False)
-        check_pipeline_can_be_updated(
-            client=client,
-            version_name=version_name,
-            pipeline_name=pipeline_name,
-            project_name=project_name,
-            data=changed_output_data
-        )
-
-        # Check if given pipeline version exists
-        if pipeline_version_exists(client, version_name, pipeline_name, project_name):
-            patch_pipeline_version(
-                client=client,
-                yaml_content=yaml_content,
-                version_name=version_name,
-                pipeline_name=pipeline_name,
-                project_name=project_name,
-                pipeline_input_data=changed_input_data,
-                pipeline_output_data=changed_output_data,
-                version_data=version_fields,
-                quiet=quiet
-            )
-
-            data = api.PipelineUpdate(**pipeline_fields)
-            client.pipelines_update(project_name=project_name, pipeline_name=pipeline_name, data=data)
-
-            client.api_client.close()
-            if not quiet:
-                click.echo("Pipeline was successfully updated")
-
-            return
-
-        # Update the pipeline
-        data = api.PipelineUpdate(**pipeline_fields, **changed_input_data, **changed_output_data)
-        client.pipelines_update(project_name=project_name, pipeline_name=pipeline_name, data=data)
-
-    # Pipeline exists, but don't want to change it
-    elif existing_pipeline is not None:
-        # Check if input of pipeline is the same
-        if get_changed_pipeline_structure(existing_pipeline, input_fields):
-            raise Exception(f"The input of existing pipeline '{pipeline_name}' does not match the input fields "
-                            f"provided in the yaml. Please, use --overwrite option to update the pipeline input.")
-        # Check if output of pipeline is the same
-        if get_changed_pipeline_structure(existing_pipeline, output_fields):
-            raise Exception(f"The output of existing pipeline '{pipeline_name}' does not match the output fields "
-                            f"provided in the yaml. Please, use --overwrite option to update the pipeline output.")
-
-    if existing_pipeline is None:
-        # Create the pipeline
-        pipeline_data = api.PipelineCreate(**pipeline_fields, **input_fields, **output_fields)
-        client.pipelines_create(project_name=project_name, data=pipeline_data)
-
-    # Create the pipeline version
-    version_data = api.PipelineVersionCreate(version=version_name, **version_fields)
-    client.pipeline_versions_create(
-        project_name=project_name,
-        pipeline_name=pipeline_name,
-        data=version_data
-    )
-
-    create_objects_and_attachments(
-        client=client,
-        yaml_content=yaml_content,
-        version_name=version_name,
-        pipeline_name=pipeline_name,
-        project_name=project_name
-    )
-
-    client.api_client.close()
-    if not quiet:
-        click.echo("Pipeline was successfully created")
-
-
 @commands.group("requests", short_help="Manage your pipeline requests")
 def requests():
     """
@@ -445,8 +274,9 @@ def requests():
 @REQUEST_TIMEOUT
 @REQUEST_OBJECT_TIMEOUT
 @REQUEST_DATA_MULTI
+@REQUEST_DATA_FILE
 @REQUESTS_FORMATS
-def requests_create(pipeline_name, version_name, batch, timeout, deployment_timeout, data, format_):
+def requests_create(pipeline_name, version_name, batch, timeout, deployment_timeout, data, json_file, format_):
     """
     Create a pipeline request. Use `--batch` to create a batch (asynchronous) request.
     It's only possible to create a direct (synchronous) request to pipelines without 'batch' mode deployments. In
@@ -484,12 +314,24 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
     if batch and deployment_timeout is not None:
         raise Exception("It's not possible to pass a deployment timeout for a batch pipeline request")
 
-    if pipeline.input_type == STRUCTURED_TYPE:
-        input_data = []
-        for d in data:
-            input_data.append(parse_json(d))
+    if json_file and data:
+        raise Exception("Specify data either using the <data> or <json_file> option, not both")
+
+    if json_file:
+        input_data = read_json(json_file)
+        if not isinstance(input_data, list):
+            input_data = [input_data]
+
+    elif data:
+        if pipeline.input_type == STRUCTURED_TYPE:
+            input_data = []
+            for d in data:
+                input_data.append(parse_json(d))
+        else:
+            input_data = data
+
     else:
-        input_data = data
+        raise Exception("Missing option <data> or <json_file>")
 
     if version_name is not None:
         if batch:

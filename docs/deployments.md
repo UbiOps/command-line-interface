@@ -424,7 +424,9 @@ For structured input, specify data input as JSON formatted string. For example:
 
 - `--batch`<br/>Whether you want to perform the request as batch request (async)
 
-- [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+- `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+
+- `-f`/`--json_file`<br/>Path to json file containing the input data of the request
 
 - `-t`/`--timeout`<br/>Timeout in seconds
 
@@ -591,7 +593,7 @@ For structured input, specify each data input as JSON formatted string. For exam
 
 - `-v`/`--version_name`<br/>The version name
 
-- [required] `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
+- `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
 
 - `-t`/`--timeout`<br/>Timeout in seconds
 

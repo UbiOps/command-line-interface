@@ -1,8 +1,8 @@
 import ubiops as api
+
 from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
-from ubiops_cli.src.helpers.pipeline_helpers import check_objects_requirements, check_attachments_requirements, \
-    create_objects_and_attachments, patch_pipeline_version, set_pipeline_version_defaults, PIPELINE_VERSION_FIELDS, \
-    PIPELINE_VERSION_FIELDS_RENAMED
+from ubiops_cli.src.helpers.pipeline_helpers import rename_pipeline_object_reference_version, \
+    set_pipeline_version_defaults, PIPELINE_VERSION_FIELDS, PIPELINE_VERSION_FIELDS_RENAMED
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers.options import *
@@ -113,20 +113,12 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
     client = init_client()
     version = client.pipeline_versions_get(project_name=project_name, pipeline_name=pipeline_name, version=version_name)
     pipeline = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name)
-    objects = client.pipeline_version_objects_list(
-        project_name=project_name, pipeline_name=pipeline_name, version=version_name
-    )
-    attachments = client.pipeline_version_object_attachments_list(
-        project_name=project_name, pipeline_name=pipeline_name, version=version_name
-    )
     client.api_client.close()
 
     setattr(version, 'input_type', pipeline.input_type)
     setattr(version, 'input_fields', pipeline.input_fields)
     setattr(version, 'output_type', pipeline.output_type)
     setattr(version, 'output_fields', pipeline.output_fields)
-    setattr(version, 'objects', objects)
-    setattr(version, 'attachments', attachments)
 
     if output_path is not None:
         # Store only reusable settings
@@ -138,7 +130,8 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
             ],
             optional=[
                 'objects name', 'objects reference_name', 'objects version', 'attachments destination_name',
-                'attachments sources source_name', 'attachments sources mapping'
+                'attachments sources source_name', 'attachments sources mapping', 'input_fields name',
+                'input_fields data_type', 'output_fields name', 'output_fields data_type'
             ],
             rename={
                 'pipeline': 'pipeline_name',
@@ -165,7 +158,8 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
             optional=[
                 'creation_date', 'last_updated', 'objects name',
                 'objects reference_name', 'objects version', 'attachments destination_name',
-                'attachments sources source_name', 'attachments sources mapping'
+                'attachments sources source_name', 'attachments sources mapping', 'input_fields name',
+                'input_fields data_type', 'output_fields name', 'output_fields data_type'
             ],
             rename={
                 'creation_date': 'version_creation_date',
@@ -236,23 +230,14 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
     pipeline_name = set_dict_default(pipeline_name, yaml_content, 'pipeline_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
-    # Check the objects and attachments
-    object_deployment_names = check_objects_requirements(yaml_content)
-    check_attachments_requirements(yaml_content, object_deployment_names)
-
     # Define the pipeline version
     kwargs = set_pipeline_version_defaults(kwargs, yaml_content, None)
+
+    # Rename objects reference version
+    kwargs = rename_pipeline_object_reference_version(content=kwargs)
+
     version = api.PipelineVersionCreate(version=version_name, **{k: kwargs[k] for k in PIPELINE_VERSION_FIELDS})
     response = client.pipeline_versions_create(project_name=project_name, pipeline_name=pipeline_name, data=version)
-
-    create_objects_and_attachments(
-        client=client,
-        yaml_content=yaml_content,
-        version_name=version_name,
-        pipeline_name=pipeline_name,
-        project_name=project_name
-    )
-
     client.api_client.close()
 
     print_item(
@@ -315,24 +300,18 @@ def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, q
         project_name=project_name, pipeline_name=pipeline_name, version=version_name
     )
 
-    # Check the objects and attachments
-    object_deployment_names = check_objects_requirements(yaml_content)
-    check_attachments_requirements(yaml_content, object_deployment_names)
-
     # Define the pipeline version
     kwargs = set_pipeline_version_defaults(kwargs, yaml_content, existing_version)
-    version_data = {'version': new_name, **{k: kwargs[k] for k in PIPELINE_VERSION_FIELDS}}
 
-    patch_pipeline_version(
-        client=client,
-        yaml_content=yaml_content,
-        version_name=version_name,
-        pipeline_name=pipeline_name,
+    # Rename objects reference version
+    kwargs = rename_pipeline_object_reference_version(content=kwargs)
+
+    version_data = api.PipelineVersionUpdate(**{'version': new_name, **{k: kwargs[k] for k in PIPELINE_VERSION_FIELDS}})
+    client.pipeline_versions_update(
         project_name=project_name,
-        pipeline_input_data=None,
-        pipeline_output_data=None,
-        version_data=version_data,
-        quiet=quiet
+        pipeline_name=pipeline_name,
+        version=version_name,
+        data=version_data
     )
     client.api_client.close()
 
