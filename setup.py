@@ -26,11 +26,11 @@ Read the documentation at: https://github.com/UbiOps/command-line-interface
 
 More information about UbiOps: https://ubiops.com/
 
-UbiOps-cli is compatible with Python 3.5+ and is distributed under the Apache 2.0 License.
+UbiOps-cli is compatible with Python 3.6+ and is distributed under the Apache 2.0 License.
 """
 
 
-ubiops_version = "3.7.0"
+ubiops_version = "3.8.0"
 REQUIRES = ["urllib3>=1.15", "six>=1.10", "certifi", "requests>=2.17.3", "tabulate==0.8.7",
             "python-dateutil", "click>=7.0", "ConfigParser==4.0.2", "colorama==0.4.3", "pyyaml",
             "ubiops==%s" % ubiops_version]
@@ -50,7 +50,7 @@ setup(
     long_description_content_type='text/markdown',
     long_description=readme(),
     install_requires=REQUIRES,
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     packages=find_packages(where='.', exclude=['tests', 'tests.*']),
     include_package_data=True,
     entry_points='''

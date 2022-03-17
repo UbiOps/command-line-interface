@@ -10,7 +10,7 @@ from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_requests_reference, \
     format_requests_oneline, format_json, parse_datetime, format_datetime
 from ubiops_cli.src.helpers.options import *
-from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME
+from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, PLAIN_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
@@ -590,26 +590,21 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
     else:
         raise Exception("Missing option <data> or <json_file>")
 
+    method = "deployment_requests_create"
+    params = {'project_name': project_name, 'deployment_name': deployment_name, 'timeout': timeout}
     if version_name is not None:
-        if batch:
-            response = client.batch_deployment_version_requests_create(
-                project_name=project_name, deployment_name=deployment_name,
-                version=version_name, data=input_data, timeout=timeout
-            )
-        else:
-            response = [client.deployment_version_requests_create(
-                project_name=project_name, deployment_name=deployment_name,
-                version=version_name, data=input_data, timeout=timeout
-            )]
+        method = "deployment_version_requests_create"
+        params['version'] = version_name
+
+    if batch:
+        response = getattr(client, f"batch_{method}")(**params, data=input_data)
+
+    elif deployment.input_type == PLAIN_TYPE:
+        # We don't support list input for plain type, create the requests one by one
+        response = [getattr(client, method)(**params, data=data) for data in input_data]
+
     else:
-        if batch:
-            response = client.batch_deployment_requests_create(
-                project_name=project_name, deployment_name=deployment_name, data=input_data, timeout=timeout
-            )
-        else:
-            response = [client.deployment_requests_create(
-                project_name=project_name, deployment_name=deployment_name, data=input_data, timeout=timeout
-            )]
+        response = [getattr(client, method)(**params, data=input_data)]
 
     client.api_client.close()
 

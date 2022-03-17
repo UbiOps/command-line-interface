@@ -92,6 +92,16 @@ def format_datetime(dt, fmt='%a %b %d %Y %H:%M:%S %Z'):
     return str(dt)
 
 
+def format_log(log, log_level):
+    """
+    Format log line with color depending on the log level (info or error)
+    """
+
+    if log_level == 'error':
+        return click.style(log, fg='red')
+    return log
+
+
 def object_to_dict(obj):
     """
     Change object to dict
@@ -275,6 +285,11 @@ def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse
                         row.append(format_action(getattr(i, attr)))
                     elif attr.endswith('labels'):
                         row.append(format_labels(getattr(i, attr)))
+                    elif attr == 'log':
+                        row.append(format_log(log=getattr(i, attr), log_level=getattr(i, 'level')))
+                    # Do not show log level in the output
+                    elif attr == 'level':
+                        continue
                     else:
                         row.append(getattr(i, attr))
             table.append(row)
@@ -315,7 +330,16 @@ def format_logs_reference(logs, extended=None):
                 if getattr(log, attr) is not None:
                     overview += '%s: %s\n' % (attr, getattr(log, attr))
         overview += '\n'
-        overview += log.log
+
+        # Change the color of the log depending on the log level
+        if log.level == 'error':
+            # Change the color of all lines if the log contains multiple lines
+            log_lines = log.log.split('\n')
+            log_line = '\n'.join([click.style(item, fg='red') for item in log_lines])
+            overview += log_line
+        else:
+            overview += log.log
+
         if i + 1 < total:
             overview += '\n\n'
     return overview
@@ -329,9 +353,18 @@ def format_logs_oneline(logs):
         overview += ' '
         overview += click.style(format_datetime(parse_datetime(log.date), '%H:%M:%S %Z'), fg='green')
         overview += ' '
-        overview += log.log
+
+        # Change the color of the log depending on the log level
+        if log.level == 'error':
+            # Change the color of all lines if the log contains multiple lines
+            log_lines = log.log.split('\n')
+            log_line = '\n'.join([click.style(item, fg='red') for item in log_lines])
+            overview += log_line
+        else:
+            overview += log.log
         if i + 1 < total:
             overview += '\n'
+
     return overview
 
 

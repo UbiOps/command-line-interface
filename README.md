@@ -26,7 +26,7 @@ An example notebook can be found <a target="_blank" href="https://github.com/Ubi
 
 ## Requirements
 
-Python 3.5+
+Python 3.6+
 
 
 ## Installation & Usage

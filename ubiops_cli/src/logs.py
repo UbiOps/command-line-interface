@@ -23,13 +23,15 @@ def commands():
 @REQUEST_ID_OPTIONAL
 @PIPELINE_REQUEST_ID_OPTIONAL
 @SYSTEM
+@LEVEL
 @START_DATE
 @START_LOG
 @DATE_RANGE
 @LIMIT
 @LOGS_FORMATS
 def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_version_name, pipeline_object_name,
-              request_id, pipeline_request_id, build_id, system, start_date, start_log, date_range, limit, format_):
+              request_id, pipeline_request_id, build_id, system, level, start_date, start_log, date_range, limit,
+              format_):
     """Get the logs of your project.
 
     Use the command options as filters.
@@ -57,12 +59,15 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
         filters['pipeline_request_id'] = pipeline_request_id
     if system is not None:
         filters['system'] = system
+    if level:
+        filters['level'] = level
     if start_date is not None:
         try:
             start_date = format_datetime(parse_datetime(start_date), fmt='%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
-            raise Exception("Failed to parse start_date. Please use iso-format, "
-                            "for example, '2020-01-01T00:00:00.000000Z'")
+            raise Exception(
+                "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
+            )
     elif start_date is None and start_log is None:
         start_date = str(datetime.now())
     log_filters = api.LogsCreate(filters=filters, date=start_date, id=start_log, date_range=date_range, limit=limit)
@@ -82,7 +87,7 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
             lines = format_logs_reference(
                 logs,
                 extended=['deployment_request_id', 'pipeline_request_id', 'deployment_name', 'deployment_version',
-                          'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id']
+                          'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id', 'level']
             )
         else:
             lines = format_logs_reference(logs)
@@ -109,9 +114,11 @@ def logs_get(log_id, format_):
     - pipeline_name
     - pipeline_version_name
     - pipeline_object_name
-    - request_id
+    - deployment_request_id
     - pipeline_request_id
     - system (boolean)
+    - level
+    - build_id
     """
 
     project_name = get_current_project(error=True)
@@ -123,10 +130,10 @@ def logs_get(log_id, format_):
 
     print_item(
         log,
-        row_attrs=['id', 'date', 'log'],
+        row_attrs=['id', 'date', 'log', 'level'],
         required_front=['id', 'date', 'system'],
         optional=['deployment_request_id', 'pipeline_request_id', 'deployment_name', 'deployment_version',
-                  'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id'],
+                  'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id', 'level'],
         required_end=['log'],
         rename={'deployment_version': 'deployment_version_name', 'pipeline_version': 'pipeline_version_name'},
         fmt=format_
