@@ -351,7 +351,7 @@ def format_logs_oneline(logs):
     for i, log in enumerate(logs):
         overview += click.style(str(log.id), fg='yellow')
         overview += ' '
-        overview += click.style(format_datetime(parse_datetime(log.date), '%H:%M:%S %Z'), fg='green')
+        overview += click.style(format_datetime(parse_datetime(log.date), '%Y-%m-%d %H:%M:%S %Z'), fg='green')
         overview += ' '
 
         # Change the color of the log depending on the log level

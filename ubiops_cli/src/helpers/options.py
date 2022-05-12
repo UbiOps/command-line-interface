@@ -23,7 +23,7 @@ OFFSET = click.option(
 
 # Formatting output
 LOGS_FORMATS = click.option(
-    '-fmt', '--format', 'format_',  default='reference', help="The output format",
+    '-fmt', '--format', 'format_',  default='oneline', help="The output format",
     type=click.Choice(['oneline', 'reference', 'extended', 'json'], case_sensitive=False), show_default=True
 )
 REQUESTS_FORMATS = click.option(
@@ -178,10 +178,10 @@ MAX_IDLE_TIME = click.option(
     '-t', '--maximum_idle_time', required=False, default=None, type=int, metavar='<int>',
     help="Maximum idle time before shutting down instance (seconds)"
 )
-DEPLOYMENT_MODE = click.option(
+DEPLOYMENT_MODE_DEPRECATED = click.option(
     '-dm', '--deployment_mode', required=False, default=None,
     type=click.Choice(['express', 'batch'], case_sensitive=False),
-    help="The type of the deployment version"
+    help="[DEPRECATED] The type of the deployment version"
 )
 RETENTION_MODE = click.option(
     '-rtm', '--request_retention_mode', required=False, default=None,

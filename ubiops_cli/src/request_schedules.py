@@ -52,10 +52,7 @@ def schedules_list(format_):
 def schedules_create(schedule_name, object_type, object_name, object_version, data, format_, **kwargs):
     """
     Create a new request schedule.
-
-    - For express mode deployments, direct requests will be made
-    - For batch mode deployments, batch requests will be made
-    - For pipelines, batch requests will be made
+    A batch request will be created to your deployment/pipeline according to the defined schedule.
     """
 
     project_name = get_current_project(error=True)

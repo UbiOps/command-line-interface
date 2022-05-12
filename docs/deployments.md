@@ -296,8 +296,6 @@ The `<output_path>` option will be used as output location of the zip file. If t
 directory, the zip will be saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
 the `<assume_yes>` option to overwrite without confirmation if file specified in `<output_path>` already exists.
 
-Provide either deployment mode 'express' or 'batch', default is 'express'.
-
 
 It is possible to define the parameters using a yaml file.
 For example:
@@ -315,7 +313,6 @@ maximum_instances: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
-deployment_mode: express
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
@@ -356,7 +353,7 @@ It's not possible to update the programming language and deployment mode of an e
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
-- `-dm`/`--deployment_mode`<br/>The type of the deployment version
+- `-dm`/`--deployment_mode`<br/>[DEPRECATED] The type of the deployment version
 
 - `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 
@@ -394,8 +391,8 @@ It's not possible to update the programming language and deployment mode of an e
 
 Create a deployment request and retrieve request IDs to collect the results later.
 Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
-is 3600 (1 hour) for express deployments and 345600 (96 hours) for batch deployments. The default value is 300
-(5 minutes) for express deployments and 14400 (4 hours) for batch deployments.
+is 3600 (1 hour) for direct (synchronous) requests and 345600 (96 hours) for batch (asynchronous) requests.
+The default value is 300 (5 minutes) for direct requests and 14400 (4 hours) for batch requests.
 
 Use the version option to make a request to a specific deployment version:
 `ubiops deployments requests create <my-deployment> -v <my-version> --data <input>`

@@ -61,6 +61,7 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
         filters['system'] = system
     if level:
         filters['level'] = level
+
     if start_date is not None:
         try:
             start_date = format_datetime(parse_datetime(start_date), fmt='%Y-%m-%dT%H:%M:%SZ')
@@ -70,6 +71,7 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
             )
     elif start_date is None and start_log is None:
         start_date = str(datetime.now())
+
     log_filters = api.LogsCreate(filters=filters, date=start_date, id=start_log, date_range=date_range, limit=limit)
     logs = client.projects_log_list(project_name=project_name, data=log_filters)
     client.api_client.close()
@@ -80,18 +82,24 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
 
     if len(logs) > 0:
         if format_ == 'oneline':
+            # Make sure logs are sorted old to new
+            logs = list(reversed(logs)) if date_range < 0 else logs
             lines = format_logs_oneline(logs)
+            click.echo(lines)
         elif format_ == 'reference':
             lines = format_logs_reference(logs)
+            click.echo_via_pager(lines)
         elif format_ == 'extended':
             lines = format_logs_reference(
                 logs,
                 extended=['deployment_request_id', 'pipeline_request_id', 'deployment_name', 'deployment_version',
                           'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id', 'level']
             )
+            click.echo_via_pager(lines)
         else:
             lines = format_logs_reference(logs)
-        click.echo_via_pager(lines)
+            click.echo_via_pager(lines)
+
     elif start_date:
         starting_point = parse_datetime(start_date).isoformat()
         if date_range > 0:

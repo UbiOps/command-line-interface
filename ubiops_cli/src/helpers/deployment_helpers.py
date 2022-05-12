@@ -8,7 +8,7 @@ from ubiops_cli.src.helpers.helpers import strings_to_dict
 DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_FIELDS = [
     'description', 'labels', 'language', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
-    'maximum_idle_time', 'deployment_mode', 'request_retention_mode', 'request_retention_time'
+    'maximum_idle_time', 'request_retention_mode', 'request_retention_time'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
     'version', 'description', 'labels', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
@@ -26,7 +26,6 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     'maximum_idle_time': int,
     'description': str,
     'labels': dict,
-    'deployment_mode': str,
     'request_retention_mode': str,
     'request_retention_time': int,
 }
@@ -160,10 +159,6 @@ def update_existing_deployment_version(client, project_name, deployment_name, ve
     if (hasattr(existing_version, 'language') and 'language' in update_fields
             and existing_version.language != update_fields['language']):
         raise Exception("The programming language of an existing version cannot be changed")
-
-    if (hasattr(existing_version, 'deployment_mode') and 'deployment_mode' in update_fields
-            and existing_version.deployment_mode != update_fields['deployment_mode']):
-        raise Exception("The deployment mode of an existing version cannot be changed")
 
     has_changed_fields = False
     for field in DEPLOYMENT_VERSION_FIELDS_WAIT:

@@ -375,7 +375,7 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
-@DEPLOYMENT_MODE
+@DEPLOYMENT_MODE_DEPRECATED
 @RETENTION_MODE
 @RETENTION_TIME
 @VERSION_LABELS
@@ -398,8 +398,6 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     directory, the zip will be saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
     the `<assume_yes>` option to overwrite without confirmation if file specified in `<output_path>` already exists.
 
-    Provide either deployment mode 'express' or 'batch', default is 'express'.
-
     \b
     It is possible to define the parameters using a yaml file.
     For example:
@@ -417,7 +415,6 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
-    deployment_mode: express
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
@@ -442,6 +439,12 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either the yaml ' \
                                                            'file or as a command option'
 
+    if not quiet and ('deployment_mode' in yaml_content or kwargs['deployment_mode']):
+        click.secho(
+            "Deprecation warning: 'deployment_mode' is deprecated. From now on, both direct and batch requests can be "
+            "made to the same deployment version.", fg='red'
+        )
+
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
@@ -455,9 +458,7 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             # Do nothing if version doesn't exist
             pass
 
-    kwargs = define_deployment_version(
-        kwargs, yaml_content, extra_yaml_fields=['deployment_file', 'ignore_file']
-    )
+    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file', 'ignore_file'])
     kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
 
     if not quiet and kwargs['memory_allocation'] and not kwargs['instance_type']:
@@ -545,8 +546,8 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
     """
     Create a deployment request and retrieve request IDs to collect the results later.
     Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
-    is 3600 (1 hour) for express deployments and 345600 (96 hours) for batch deployments. The default value is 300
-    (5 minutes) for express deployments and 14400 (4 hours) for batch deployments.
+    is 3600 (1 hour) for direct (synchronous) requests and 345600 (96 hours) for batch (asynchronous) requests.
+    The default value is 300 (5 minutes) for direct requests and 14400 (4 hours) for batch requests.
 
     Use the version option to make a request to a specific deployment version:
     `ubiops deployments requests create <my-deployment> -v <my-version> --data <input>`

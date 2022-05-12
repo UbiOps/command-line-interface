@@ -29,10 +29,7 @@ List request schedules in project.
 **Description:**
 
 Create a new request schedule.
-
-- For express mode deployments, direct requests will be made
-- For batch mode deployments, batch requests will be made
-- For pipelines, batch requests will be made
+A batch request will be created to your deployment/pipeline according to the defined schedule.
 
 **Arguments:**
 

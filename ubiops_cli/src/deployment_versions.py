@@ -7,7 +7,7 @@ from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yam
 from ubiops_cli.src.helpers.options import *
 
 
-LIST_ITEMS = ['last_updated', 'version', 'deployment_mode', 'status', 'labels']
+LIST_ITEMS = ['last_updated', 'version', 'status', 'labels']
 
 
 @click.group(["deployment_versions", "versions"], short_help="Manage your deployment versions")
@@ -85,7 +85,6 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
-    deployment_mode: express
     ```
     """
 
@@ -127,7 +126,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
-@DEPLOYMENT_MODE
+@DEPLOYMENT_MODE_DEPRECATED
 @RETENTION_MODE
 @RETENTION_TIME
 @VERSION_LABELS
@@ -155,10 +154,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
-    deployment_mode: express
     ```
-
-    Provide either deployment mode 'express' or 'batch', default is 'express'.
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
     options are given, the options defined by `<yaml_file>` will be overwritten by the specified command options.
@@ -174,6 +170,12 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
                                                                  'the yaml file or as a command argument'
     assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either ' \
                                                            'the yaml file or as a command argument'
+
+    if format_ != 'json' and ('deployment_mode' in yaml_content or kwargs['deployment_mode']):
+        click.secho(
+            "Deprecation warning: 'deployment_mode' is deprecated. From now on, both direct and batch requests can be "
+            "made to the same deployment version.", fg='red'
+        )
 
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
 
