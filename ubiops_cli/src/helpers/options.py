@@ -192,6 +192,14 @@ RETENTION_TIME = click.option(
     '-rtt', '--request_retention_time', required=False, default=None, type=int, metavar='<int>',
     help="Number of seconds to store requests to the version"
 )
+MAX_QUEUE_SIZE_EXPRESS = click.option(
+    '-qse', '--maximum_queue_size_express', required=False, default=None, type=int, metavar='<int>',
+    help="Maximum number of queued express requests to the version"
+)
+MAX_QUEUE_SIZE_BATCH = click.option(
+    '-qsb', '--maximum_queue_size_batch', required=False, default=None, type=int, metavar='<int>',
+    help="Maximum number of queued batch requests to the version"
+)
 
 VERSION_LABELS = click.option(
     '-lb', '--labels', 'version_labels', required=False, default=None, multiple=True, type=str,

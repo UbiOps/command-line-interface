@@ -8,11 +8,13 @@ from ubiops_cli.src.helpers.helpers import strings_to_dict
 DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_FIELDS = [
     'description', 'labels', 'language', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
-    'maximum_idle_time', 'request_retention_mode', 'request_retention_time'
+    'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
+    'maximum_queue_size_batch'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
     'version', 'description', 'labels', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
-    'maximum_idle_time', 'request_retention_mode', 'request_retention_time'
+    'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
+    'maximum_queue_size_batch'
 ]
 DEPLOYMENT_VERSION_FIELDS_WAIT = [
     'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time'
@@ -28,6 +30,8 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     'labels': dict,
     'request_retention_mode': str,
     'request_retention_time': int,
+    'maximum_queue_size_express': int,
+    'maximum_queue_size_batch': int
 }
 DEPLOYMENT_VERSION_FIELDS_RENAMED = {
     'version': 'version_name', 'description': 'version_description', 'labels': 'version_labels'
