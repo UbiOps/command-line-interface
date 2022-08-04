@@ -378,6 +378,9 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @DEPLOYMENT_MODE_DEPRECATED
 @RETENTION_MODE
 @RETENTION_TIME
+@MAX_QUEUE_SIZE_EXPRESS
+@MAX_QUEUE_SIZE_BATCH
+@VERSION_STATIC_IP
 @VERSION_LABELS
 @VERSION_DESCRIPTION
 @OVERWRITE
@@ -481,9 +484,13 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
         has_changed_fields = False
 
         if not (overwrite and existing_version):
-            version = api.DeploymentVersionCreate(
-                version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS}
-            )
+            # Only use the fields given in keyword arguments when creating the deployment version
+            version_fields = {}
+            for k in DEPLOYMENT_VERSION_FIELDS:
+                if k in kwargs:
+                    version_fields[k] = kwargs[k]
+
+            version = api.DeploymentVersionCreate(version=version_name, **version_fields)
             client.deployment_versions_create(project_name=project_name, deployment_name=deployment_name, data=version)
         else:
             revisions = client.revisions_list(

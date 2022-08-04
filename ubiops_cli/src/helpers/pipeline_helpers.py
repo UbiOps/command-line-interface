@@ -1,3 +1,4 @@
+import ast
 import ubiops as api
 
 from ubiops_cli.utils import set_dict_default, set_object_default
@@ -122,6 +123,11 @@ def set_pipeline_version_defaults(fields, yaml_content, existing_version=None):
     if existing_version:
         for p in PIPELINE_VERSION_FIELDS:
             value = fields[p] if p in fields else None
+
+            # If objects or attachments are given as an empty list, let them be removed from the pipeline
+            if p in ["objects", "attachments"] and value == []:
+                continue
+
             fields[p] = set_object_default(value, existing_version, p)
 
     return fields
@@ -170,6 +176,10 @@ def rename_pipeline_object_reference_version(content):
                     obj['reference_name'] = item['reference_name']
                 if 'reference_version' in item:
                     obj['version'] = item['reference_version']
+                if 'reference_type' in item:
+                    obj['reference_type'] = item['reference_type']
+                if 'configuration' in item:
+                    obj['configuration'] = item['configuration']
                 objects.append(obj)
             else:
                 objects.append(item)
@@ -210,3 +220,29 @@ def get_changed_pipeline_structure(existing_pipeline, data, is_input=True):
             changed_data[type_fields] = data[type_fields]
 
     return changed_data
+
+
+def format_pipeline_object_configuration(objects):
+    """
+    Format the configuration field of pipeline objects. We need to cast the in/output fields to lists and batch_size
+    to integer. This way, the configuration field will be shown with correct data types.
+    """
+
+    for obj in objects:
+        if hasattr(obj, 'configuration'):
+            # If the configuration is None, default to empty dictionary
+            if obj.configuration is None:
+                obj.configuration = {}
+                continue
+
+            # Cast input_fields, output_fields, output_values and batch_size to correct type
+            if 'input_fields' in obj.configuration and not isinstance(obj.configuration['input_fields'], list):
+                obj.configuration['input_fields'] = ast.literal_eval(obj.configuration['input_fields'])
+            if 'output_fields' in obj.configuration and not isinstance(obj.configuration['output_fields'], list):
+                obj.configuration['output_fields'] = ast.literal_eval(obj.configuration['output_fields'])
+            if 'output_values' in obj.configuration and not isinstance(obj.configuration['output_values'], list):
+                obj.configuration['output_values'] = ast.literal_eval(obj.configuration['output_values'])
+            if 'batch_size' in obj.configuration:
+                obj.configuration['batch_size'] = int(obj.configuration['batch_size'])
+
+    return list(filter(lambda item: item.name != 'pipeline_variables', objects))

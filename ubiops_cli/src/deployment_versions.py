@@ -87,6 +87,9 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     request_retention_time: 604800
     maximum_queue_size_express: 100
     maximum_queue_size_batch: 100000
+    has_request_method: true
+    has_requests_method: false
+    static_ip: false
     ```
     """
 
@@ -133,6 +136,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @RETENTION_TIME
 @MAX_QUEUE_SIZE_EXPRESS
 @MAX_QUEUE_SIZE_BATCH
+@VERSION_STATIC_IP
 @VERSION_LABELS
 @VERSION_DESCRIPTION
 @VERSION_YAML_FILE
@@ -160,6 +164,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     request_retention_time: 604800
     maximum_queue_size_express: 100
     maximum_queue_size_batch: 100000
+    static_ip: false
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
@@ -225,6 +230,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @RETENTION_TIME
 @MAX_QUEUE_SIZE_EXPRESS
 @MAX_QUEUE_SIZE_BATCH
+@VERSION_STATIC_IP
 @VERSION_LABELS
 @VERSION_DESCRIPTION
 @QUIET
@@ -247,6 +253,7 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     request_retention_time: 604800
     maximum_queue_size_express: 100
     maximum_queue_size_batch: 100000
+    static_ip: false
     ```
 
     You may want to change some deployment options, like, `<maximum_instances>` and

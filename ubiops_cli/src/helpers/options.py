@@ -200,6 +200,10 @@ MAX_QUEUE_SIZE_BATCH = click.option(
     '-qsb', '--maximum_queue_size_batch', required=False, default=None, type=int, metavar='<int>',
     help="Maximum number of queued batch requests to the version"
 )
+VERSION_STATIC_IP = click.option(
+    '--static-ip', required=False, metavar='<bool>', default=False,
+    help="Whether the deployment version should get a static IP"
+)
 
 VERSION_LABELS = click.option(
     '-lb', '--labels', 'version_labels', required=False, default=None, multiple=True, type=str,

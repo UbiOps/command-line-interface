@@ -359,6 +359,12 @@ It's not possible to update the programming language and deployment mode of an e
 
 - `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
+- `-qse`/`--maximum_queue_size_express`<br/>Maximum number of queued express requests to the version
+
+- `-qsb`/`--maximum_queue_size_batch`<br/>Maximum number of queued batch requests to the version
+
+- `--static-ip`<br/>Whether the deployment version should get a static IP
+
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
 - `-desc`/`--version_description`<br/>The version description

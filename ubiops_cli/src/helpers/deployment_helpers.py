@@ -9,12 +9,12 @@ DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_FIELDS = [
     'description', 'labels', 'language', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
-    'maximum_queue_size_batch'
+    'maximum_queue_size_batch', 'has_request_method', 'has_requests_method', 'static_ip'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
     'version', 'description', 'labels', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
-    'maximum_queue_size_batch'
+    'maximum_queue_size_batch', 'static_ip'
 ]
 DEPLOYMENT_VERSION_FIELDS_WAIT = [
     'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time'
@@ -31,7 +31,10 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     'request_retention_mode': str,
     'request_retention_time': int,
     'maximum_queue_size_express': int,
-    'maximum_queue_size_batch': int
+    'maximum_queue_size_batch': int,
+    'has_request_method': bool,
+    'has_requests_method': bool,
+    'static_ip': bool
 }
 DEPLOYMENT_VERSION_FIELDS_RENAMED = {
     'version': 'version_name', 'description': 'version_description', 'labels': 'version_labels'

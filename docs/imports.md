@@ -149,6 +149,7 @@ pipelines:
         objects:
           - name: obj-1
             reference_name: deployment-1
+            reference_type: deployment
             reference_version: v1
         attachments:
           - sources:

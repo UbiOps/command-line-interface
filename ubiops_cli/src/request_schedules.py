@@ -2,6 +2,7 @@ import ubiops as api
 
 from ubiops_cli.utils import get_current_project, init_client, parse_json
 from ubiops_cli.src.helpers.formatting import print_list, print_item
+from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.options import *
 from ubiops_cli.constants import STRUCTURED_TYPE
 
@@ -27,13 +28,15 @@ def commands():
 
 @commands.command("list", short_help="List schedules")
 @LIST_FORMATS
-def schedules_list(format_):
+@LABELS_FILTER
+def schedules_list(labels, format_):
     """List request schedules in project."""
 
+    label_filter = get_label_filter(labels)
     project_name = get_current_project(error=True)
 
     client = init_client()
-    response = client.request_schedules_list(project_name=project_name)
+    response = client.request_schedules_list(project_name=project_name, labels=label_filter)
     client.api_client.close()
 
     print_list(response, LIST_ITEMS, rename_cols=RENAME_COLUMNS, sorting_col=1, fmt=format_)

@@ -15,9 +15,11 @@ request_retention_time: 3600
 objects:
 - name: demo-example
   reference_name: demo-example
+  reference_type: deployment
   reference_version: v1
 - name: demo-example-2
   reference_name: demo-example-2
+  reference_type: deployment
   reference_version: v1
 attachments:
 - destination_name: demo-example

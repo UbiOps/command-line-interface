@@ -65,6 +65,7 @@ request_retention_time: 604800
 objects:
   - name: object1
     reference_name: my-deployment-name
+    reference_type: deployment
     reference_version: my-deployment-version
 attachments:
   - destination_name: object1
@@ -117,6 +118,7 @@ request_retention_time: 604800
 objects:
   - name: object1
     reference_name: my-deployment-name
+    reference_type: deployment
     reference_version: my-deployment-version
 attachments:
   - destination_name: object1
@@ -177,6 +179,7 @@ request_retention_time: 604800
 objects:
   - name: object1
     reference_name: my-deployment-name
+    reference_type: deployment
     reference_version: my-deployment-version
 attachments:
   - destination_name: object1

@@ -61,6 +61,9 @@ request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size_express: 100
 maximum_queue_size_batch: 100000
+has_request_method: true
+has_requests_method: false
+static_ip: false
 ```
 
 **Arguments:**
@@ -109,6 +112,7 @@ request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size_express: 100
 maximum_queue_size_batch: 100000
+static_ip: false
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
@@ -147,6 +151,8 @@ The version name can either be passed as command argument or specified inside th
 
 - `-qsb`/`--maximum_queue_size_batch`<br/>Maximum number of queued batch requests to the version
 
+- `--static-ip`<br/>Whether the deployment version should get a static IP
+
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
 - `-desc`/`--version_description`<br/>The version description
@@ -184,6 +190,7 @@ request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size_express: 100
 maximum_queue_size_batch: 100000
+static_ip: false
 ```
 
 You may want to change some deployment options, like, `<maximum_instances>` and
@@ -227,6 +234,8 @@ It's not possible to update the programming language of an existing deployment v
 - `-qse`/`--maximum_queue_size_express`<br/>Maximum number of queued express requests to the version
 
 - `-qsb`/`--maximum_queue_size_batch`<br/>Maximum number of queued batch requests to the version
+
+- `--static-ip`<br/>Whether the deployment version should get a static IP
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 

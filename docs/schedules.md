@@ -19,6 +19,8 @@ List request schedules in project.
 
 - `-fmt`/`--format`<br/>The output format
 
+- `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
+
 
 <br/>
 
