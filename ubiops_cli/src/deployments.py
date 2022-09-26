@@ -418,6 +418,9 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
+    maximum_queue_size_express: 100
+    maximum_queue_size_batch: 100000
+    static_ip: false
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
