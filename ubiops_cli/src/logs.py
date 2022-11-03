@@ -27,7 +27,7 @@ def commands():
 @START_DATE
 @START_LOG
 @DATE_RANGE
-@LIMIT
+@LOGS_LIMIT
 @LOGS_FORMATS
 def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_version_name, pipeline_object_name,
               request_id, pipeline_request_id, build_id, system, level, start_date, start_log, date_range, limit,

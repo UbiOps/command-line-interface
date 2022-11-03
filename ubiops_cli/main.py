@@ -14,6 +14,8 @@ import ubiops_cli.src.imports as imports
 import ubiops_cli.src.pipelines as pipelines
 import ubiops_cli.src.pipeline_versions as pipeline_versions
 import ubiops_cli.src.blobs as blobs
+import ubiops_cli.src.buckets as buckets
+import ubiops_cli.src.files as files
 import ubiops_cli.src.logs as logs
 import ubiops_cli.src.config as config
 import ubiops_cli.src.auth as auth
@@ -45,6 +47,8 @@ cli.add_command(deployment_builds.commands)
 cli.add_command(pipelines.commands)
 cli.add_command(pipeline_versions.commands)
 cli.add_command(blobs.commands)
+cli.add_command(buckets.commands)
+cli.add_command(files.commands)
 cli.add_command(env_vars.commands)
 cli.add_command(logs.commands)
 cli.add_command(logs.audit_events)
@@ -65,7 +69,7 @@ def main():
     try:
         cli()
     except api.exceptions.ApiException as e:
-        if hasattr(e, 'body'):
+        if hasattr(e, 'body') and e.body is not None:
             try:
                 message = json.loads(e.body)
                 if 'error' in message:

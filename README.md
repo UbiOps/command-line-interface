@@ -9,6 +9,7 @@ Includes:
 - Managing versions
 - Managing pipelines
 - Managing schedules
+- Managing buckets and files
 - Managing environment variables
 - ZIP folder and deploy
 - Making requests
@@ -114,6 +115,8 @@ Version Builds | [docs/version_builds.md](docs/version_builds.md)
 Pipelines | [docs/pipelines.md](docs/pipelines.md)
 Pipeline Versions | [docs/pipeline_versions.md](docs/pipeline_versions.md)
 Blobs | [docs/blobs.md](docs/blobs.md)
+Buckets | [docs/buckets.md](docs/buckets.md)
+Files | [docs/files.md](docs/files.md)
 Environment Variables | [docs/environment_variables.md](docs/environment_variables.md)
 Logs | [docs/logs.md](docs/logs.md)
 Audit Events | [docs/audit_events.md](docs/audit_events.md)

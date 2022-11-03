@@ -107,7 +107,7 @@ def object_to_dict(obj):
     Change object to dict
     """
 
-    if isinstance(obj, dict):
+    if isinstance(obj, (str, dict)):
         return obj
 
     attributes = [k[1:] for k in obj.__dict__.keys() if k.startswith('_')]

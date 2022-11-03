@@ -1,3 +1,5 @@
+import sys
+
 import click
 from ubiops_cli.utils import Config
 from ubiops_cli.constants import SYS_DEPLOYMENT_FILE_NAME_VALUE
@@ -349,6 +351,76 @@ BLOB_TTL = click.option(
     metavar="<seconds>", help="The time to live of the blob in seconds (default = 259200 seconds, 3 days)"
 )
 
+# Buckets
+BUCKET_NAME_ARGUMENT = click.argument('bucket_name', required=True, metavar='<bucket_name>', nargs=1)
+BUCKET_NAME_OVERRULE = click.argument('bucket_name', required=False, default=None, metavar='<bucket_name>', nargs=1)
+BUCKET_NAME_OPTION = click.option(
+    '-b', '--bucket_name', 'bucket_name', required=False, default='default', type=click.STRING, metavar='<string>',
+    help="The bucket name", show_default=True
+)
+BUCKET_YAML_FILE = click.option(
+    '-f', '--yaml_file', required=False, type=click.Path(), metavar='<path>', help="Path to a yaml file"
+)
+BUCKET_YAML_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default=None, metavar='<path>',
+    help="Path to file or directory to store bucket yaml file"
+)
+BUCKET_PROVIDER = click.option(
+    '-p', '--provider', 'provider', required=False, default=None, type=click.STRING, metavar='<string>',
+    help="Provider of the bucket"
+)
+BUCKET_CREDENTIALS = click.option(
+    '--credentials', 'credentials', required=False, default=None, type=click.STRING, metavar='<string>',
+    help="A JSON string for credentials to connect to the bucket"
+)
+BUCKET_CONFIGURATION = click.option(
+    '--configuration', 'configuration', required=False, default=None, type=click.STRING, metavar='<string>',
+    help="A JSON string for additional configuration details for the bucket"
+)
+BUCKET_LABELS = click.option(
+    '-lb', '--labels', 'bucket_labels', required=False, default=None, multiple=True, type=click.STRING,
+    metavar='<key1:value,key2:value>', help="Labels defined as key/value pairs"
+)
+BUCKET_DESCRIPTION = click.option(
+    '-desc', '--bucket_description', 'bucket_description', required=False, metavar='<string>',
+    help="The bucket description"
+)
+BUCKET_TTL = click.option(
+    '-ttl', '--time_to_live', 'ttl', required=False, default=None, type=click.IntRange(0, sys.maxsize),
+    metavar="<seconds>", help="The time to live of the file in seconds (default = None)"
+)
+
+# Files
+FILE_PREFIX = click.option(
+    '-p', '--prefix', required=False, default=None, metavar='<prefix>', help="Prefix to filter files"
+)
+FILE_DELIMITER = click.option(
+    "-d", '--delimiter', required=False, default=None, metavar='<delimiter>',
+    help="Delimiter used with prefix to emulate hierarchy to filter files. "
+         "If not provided shows all files including prefix. If provided only shows current level of hierarchy"
+)
+FILE_LIMIT = click.option(
+    '--limit', required=False, default=100, type=click.IntRange(1, 1000), metavar='[1-1000]',
+    show_default=True, help="The maximum number of files returned, default is 100"
+)
+FILE_CONTINUATION_TOKEN = click.option(
+    '--continuation-token', required=False, default=None, metavar='<token>',
+    help="A token that indicates the start point of the returned the files"
+)
+
+FILE_NAME_ARGUMENT = click.argument('file_name', required=True, metavar='<file_name>', nargs=1)
+FILE_NAME_OVERRULE = click.argument('file_name', required=False, default=None, metavar='<file_name>', nargs=1)
+FILE_URI_OPTION = click.option(
+    '-u', '--uri', 'file_uri', required=False, metavar='<string>', help="UbiOps URI of the file to download, e.g. 'ubiops-file://default/my-file.jpg'")
+FILE_SOURCE_PATH_OPTION = click.option(
+    '-f', '--source_file', 'source_file', required=True, type=click.Path(), metavar='<path>',
+    help="Path of file to upload"
+)
+FILE_DESTINATION_PATH_OPTION = click.option(
+    '-o', '--output_path', 'output_path', required=False, type=click.Path(), default=None, metavar='<path>',
+    help="Path to file or directory to store downloaded file"
+)
+
 # Pipelines
 PIPELINE_NAME_ARGUMENT = click.argument('pipeline_name', required=True, metavar='<pipeline_name>', nargs=1)
 PIPELINE_NAME_OPTION = click.option('-p', '--pipeline_name', required=True, metavar='<name>', help="The pipeline name")
@@ -431,7 +503,7 @@ START_LOG = click.option(
          "log having the log ID equal to the ID value in the response, regardless of whether the date_range is "
          "positive or negative."
 )
-LIMIT = click.option(
+LOGS_LIMIT = click.option(
     '--limit', required=False, default=500, type=click.IntRange(1, 500), metavar='[1-500]',
     show_default=True, help="Limit of the logs response. The maximum value is 500."
 )
