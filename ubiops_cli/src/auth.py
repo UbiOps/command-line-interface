@@ -30,7 +30,7 @@ def signin(type_, api_endpoint, email, password):
                 password = click.prompt('Password', hide_input=True)
             success = authorize(api_endpoint, email, password)
             if not success:
-                token2fa = click.prompt('Two factor authentication token', hide_input=True)
+                token2fa = click.prompt('Two factor authentication token')
                 authorize2fa(api_endpoint, email, password, token2fa)
 
         else:

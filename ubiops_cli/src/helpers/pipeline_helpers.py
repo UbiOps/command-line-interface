@@ -245,4 +245,4 @@ def format_pipeline_object_configuration(objects):
             if 'batch_size' in obj.configuration:
                 obj.configuration['batch_size'] = int(obj.configuration['batch_size'])
 
-    return list(filter(lambda item: item.name != 'pipeline_variables', objects))
+    return objects

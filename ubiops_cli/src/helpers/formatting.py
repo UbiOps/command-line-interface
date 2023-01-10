@@ -392,23 +392,23 @@ def format_requests_reference(requests, split_requests='\n\n'):
         if hasattr(request, 'time_completed'):
             overview += 'Completion date: %s\n' % format_datetime(request.time_completed)
 
+        if hasattr(request, 'operator'):
+            overview += 'Operator: %s\n' % request.operator
+
         if hasattr(request, 'deployment'):
             overview += 'Deployment: %s\n' % request.deployment
 
         if hasattr(request, 'version'):
-            overview += 'Version: %s' % request.version
-
-        if hasattr(request, 'request_data') or hasattr(request, 'result'):
-            overview += '\n'
+            overview += 'Version: %s\n' % request.version
 
         if hasattr(request, 'status') and request.status != 'completed':
-            overview += '\nStatus: %s' % format_status(request.status, success_green=True)
+            overview += 'Status: %s' % format_status(request.status, success_green=True)
 
         elif hasattr(request, 'success'):
             if request.success:
-                overview += '\nStatus: %s' % click.style('completed', fg='green')
+                overview += 'Status: %s' % click.style('completed', fg='green')
             else:
-                overview += '\nStatus: %s' % click.style('failed', fg='red')
+                overview += 'Status: %s' % click.style('failed', fg='red')
 
         if hasattr(request, 'error_message') and request.error_message:
             overview += '\nError message: %s' % click.style(str(request.error_message), fg='red')
@@ -528,6 +528,18 @@ def format_pipeline_requests_reference(pipeline_requests):
             )
             overview += deployment_requests
 
+        if hasattr(pipeline_request, 'operator_requests') and isinstance(pipeline_request.operator_requests, list) \
+                and len(pipeline_request.operator_requests) > 0:
+            overview += '\n'
+            operator_requests = format_requests_reference(
+                pipeline_request.operator_requests, split_requests='\n'
+            )
+            operator_requests = "\n".join(
+                ["\n - %s" % line if line.startswith('Object') else "   %s" % line
+                 for line in operator_requests.split("\n")]
+            )
+            overview += operator_requests
+
         if j + 1 < total:
             overview += '\n\n'
 
@@ -545,14 +557,6 @@ def format_pipeline_requests_oneline(pipeline_requests):
 
         if hasattr(pipeline_request, 'id') and pipeline_request.id is not None:
             overview += click.style(str(pipeline_request.id), fg='yellow')
-            overview += ' '
-
-        if hasattr(pipeline_request, 'pipeline'):
-            overview += pipeline_request.pipeline
-            overview += ' '
-
-        if hasattr(pipeline_request, 'version'):
-            overview += pipeline_request.version
             overview += ' '
 
         if hasattr(pipeline_request, 'status') and pipeline_request.status != 'completed':
