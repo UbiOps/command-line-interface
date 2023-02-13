@@ -203,7 +203,7 @@ MAX_QUEUE_SIZE_BATCH = click.option(
     help="Maximum number of queued batch requests to the version"
 )
 VERSION_STATIC_IP = click.option(
-    '--static-ip', required=False, metavar='<bool>', default=False,
+    '--static-ip', required=False, metavar='<bool>', default=False, type=click.BOOL,
     help="Whether the deployment version should get a static IP"
 )
 
