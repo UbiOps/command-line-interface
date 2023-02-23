@@ -7,22 +7,19 @@ from ubiops_cli.src.helpers.helpers import strings_to_dict
 
 DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_FIELDS = [
-    'description', 'labels', 'language', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
+    'description', 'labels', 'language', 'instance_type', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
     'maximum_queue_size_batch', 'has_request_method', 'has_requests_method', 'static_ip'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
-    'version', 'description', 'labels', 'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances',
+    'version', 'description', 'labels', 'instance_type', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
     'maximum_queue_size_batch', 'static_ip'
 ]
-DEPLOYMENT_VERSION_FIELDS_WAIT = [
-    'instance_type', 'memory_allocation', 'minimum_instances', 'maximum_instances', 'maximum_idle_time'
-]
+DEPLOYMENT_VERSION_FIELDS_WAIT = ['instance_type', 'minimum_instances', 'maximum_instances', 'maximum_idle_time']
 DEPLOYMENT_VERSION_FIELD_TYPES = {
     'language': str,
     'instance_type': str,
-    'memory_allocation': int,
     'minimum_instances': int,
     'maximum_instances': int,
     'maximum_idle_time': int,

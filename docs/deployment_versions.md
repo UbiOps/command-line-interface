@@ -133,8 +133,6 @@ The version name can either be passed as command argument or specified inside th
 
 - `-inst`/`--instance_type`<br/>Reserved instance type for the version
 
-- `-mem`/`--memory_allocation`<br/>[DEPRECATED] The reserved memory allocation for the version - deprecated and will be overruled by `instance_type`
-
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
@@ -194,7 +192,7 @@ static_ip: false
 ```
 
 You may want to change some deployment options, like, `<maximum_instances>` and
-`<memory_allocation>`. You can do this by either providing the options in a yaml file
+`<instance_Type>`. You can do this by either providing the options in a yaml file
 and passing the file path as `<yaml_file>`, or passing the options as command options.
 If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
 will be overwritten by the specified command options.
@@ -218,8 +216,6 @@ It's not possible to update the programming language of an existing deployment v
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
 - `-inst`/`--instance_type`<br/>Reserved instance type for the version
-
-- `-mem`/`--memory_allocation`<br/>[DEPRECATED] The reserved memory allocation for the version - deprecated and will be overruled by `instance_type`
 
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 

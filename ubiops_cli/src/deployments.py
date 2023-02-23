@@ -371,7 +371,6 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @VERSION_YAML_FILE
 @LANGUAGE
 @INSTANCE_TYPE
-@MEMORY_ALLOCATION
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
@@ -466,12 +465,6 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
 
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file', 'ignore_file'])
     kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
-
-    if not quiet and kwargs['memory_allocation'] and not kwargs['instance_type']:
-        click.secho(
-            "Deprecation warning: parameter 'memory_allocation' is deprecated, use 'instance_type' instead",
-            fg='red'
-        )
 
     zip_path = zip_dir(
         directory=directory,

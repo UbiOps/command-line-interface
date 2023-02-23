@@ -348,8 +348,6 @@ It's not possible to update the programming language and deployment mode of an e
 
 - `-inst`/`--instance_type`<br/>Reserved instance type for the version
 
-- `-mem`/`--memory_allocation`<br/>[DEPRECATED] The reserved memory allocation for the version - deprecated and will be overruled by `instance_type`
-
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 
 - `-max`/`--maximum_instances`<br/>Maximum number of instances

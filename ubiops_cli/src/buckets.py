@@ -6,9 +6,6 @@ from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yam
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.options import *
 
-import logging
-logging.basicConfig(format='%(levelname)s %(message)s', level=logging.DEBUG)
-
 
 LIST_ITEMS = ['name', 'provider', 'labels']
 

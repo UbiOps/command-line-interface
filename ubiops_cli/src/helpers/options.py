@@ -159,11 +159,6 @@ LANGUAGE = click.option(
     '-l', '--language', required=False, default=None, type=click.STRING, metavar='<string>',
     help="Programming language of code"
 )
-MEMORY_ALLOCATION = click.option(
-    '-mem', '--memory_allocation', required=False, default=None, type=int, metavar='<int>',
-    help="[DEPRECATED] The reserved memory allocation for the version - deprecated and will be overruled by "
-         "`instance_type`"
-)
 INSTANCE_TYPE = click.option(
     '-inst', '--instance_type', required=False, default=None, type=click.STRING, metavar='<string>',
     help="Reserved instance type for the version"

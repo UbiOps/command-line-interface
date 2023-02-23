@@ -69,7 +69,10 @@ def main():
     try:
         cli()
     except api.exceptions.ApiException as e:
-        if hasattr(e, 'body') and e.body is not None:
+        if hasattr(e, 'get_body_message'):
+            print_error(e.get_body_message(), status=getattr(e, "status", None))
+
+        elif hasattr(e, 'body') and e.body is not None:
             try:
                 message = json.loads(e.body)
                 if 'error' in message:

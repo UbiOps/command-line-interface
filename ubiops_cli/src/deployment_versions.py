@@ -127,7 +127,6 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @VERSION_NAME_OVERRULE
 @LANGUAGE
 @INSTANCE_TYPE
-@MEMORY_ALLOCATION
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
@@ -190,12 +189,6 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
 
-    if format_ != 'json' and kwargs['memory_allocation'] and not kwargs['instance_type']:
-        click.secho(
-            "Deprecation warning: parameter 'memory_allocation' is deprecated, use 'instance_type' instead",
-            fg='red'
-        )
-
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
@@ -222,7 +215,6 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @DEPLOYMENT_FILE
 @VERSION_YAML_FILE
 @INSTANCE_TYPE
-@MEMORY_ALLOCATION
 @MIN_INSTANCES
 @MAX_INSTANCES
 @MAX_IDLE_TIME
@@ -257,7 +249,7 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     ```
 
     You may want to change some deployment options, like, `<maximum_instances>` and
-    `<memory_allocation>`. You can do this by either providing the options in a yaml file
+    `<instance_Type>`. You can do this by either providing the options in a yaml file
     and passing the file path as `<yaml_file>`, or passing the options as command options.
     If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
     will be overwritten by the specified command options.
@@ -273,12 +265,6 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
 
     kwargs['version_name'] = new_name
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
-
-    if not quiet and kwargs['memory_allocation'] and not kwargs['instance_type']:
-        click.secho(
-            "Deprecation warning: parameter 'memory_allocation' is deprecated, use 'instance_type' instead",
-            fg='red'
-        )
 
     version = api.DeploymentVersionUpdate(
         **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE if kwargs[k] is not None}
