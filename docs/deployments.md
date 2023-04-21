@@ -306,7 +306,7 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-language: python3.7
+environment: python3-8
 instance_type: 2048mb
 minimum_instances: 0
 maximum_instances: 1
@@ -321,8 +321,6 @@ static_ip: false
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
 the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
 either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
-
-It's not possible to update the programming language and deployment mode of an existing deployment version.
 
 **Arguments:**
 
@@ -344,7 +342,9 @@ It's not possible to update the programming language and deployment mode of an e
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
-- `-l`/`--language`<br/>Programming language of code
+- `-l`/`--language`<br/>[DEPRECATED] Programming language of code
+
+- `-e`/`--environment`<br/>Environment for the version
 
 - `-inst`/`--instance_type`<br/>Reserved instance type for the version
 

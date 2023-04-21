@@ -5,12 +5,13 @@ from time import sleep
 from ubiops_cli.utils import init_client, read_json, read_yaml, write_yaml, zip_dir, get_current_project, \
     set_dict_default, write_blob, default_version_zip_name, parse_json
 from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
-    update_existing_deployment_version, DEPLOYMENT_VERSION_FIELDS
+    update_existing_deployment_version, DEPLOYMENT_VERSION_CREATE_FIELDS
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_requests_reference, \
     format_requests_oneline, format_json, parse_datetime, format_datetime
 from ubiops_cli.src.helpers.options import *
-from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, PLAIN_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME
+from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, PLAIN_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME, \
+    IMPLICIT_ENVIRONMENT_FILES
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
@@ -282,7 +283,7 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
     """
 
     ignore_file = DEFAULT_IGNORE_FILE if ignore_file is None else ignore_file
-    zip_path = zip_dir(
+    zip_path, _ = zip_dir(
         directory=directory,
         output_path=output_path,
         ignore_filename=ignore_file,
@@ -370,6 +371,7 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @ZIP_OUTPUT_STORE
 @VERSION_YAML_FILE
 @LANGUAGE
+@ENVIRONMENT
 @INSTANCE_TYPE
 @MIN_INSTANCES
 @MAX_INSTANCES
@@ -410,7 +412,7 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    language: python3.7
+    environment: python3-8
     instance_type: 2048mb
     minimum_instances: 0
     maximum_instances: 1
@@ -425,8 +427,6 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
     the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
     either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
-
-    It's not possible to update the programming language and deployment mode of an existing deployment version.
     """
 
     if output_path is None:
@@ -450,6 +450,9 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             "made to the same deployment version.", fg='red'
         )
 
+    if not quiet and ('language' in yaml_content or kwargs['language']):
+        click.secho("Deprecation warning: 'language' is deprecated. Use 'environment' instead.", fg='red')
+
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
@@ -466,7 +469,7 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file', 'ignore_file'])
     kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
 
-    zip_path = zip_dir(
+    zip_path, implicit_environment = zip_dir(
         directory=directory,
         output_path=output_path,
         ignore_filename=kwargs['ignore_file'],
@@ -482,7 +485,7 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
         if not (overwrite and existing_version):
             # Only use the fields given in keyword arguments when creating the deployment version
             version_fields = {}
-            for k in DEPLOYMENT_VERSION_FIELDS:
+            for k in DEPLOYMENT_VERSION_CREATE_FIELDS:
                 if k in kwargs:
                     version_fields[k] = kwargs[k]
 
@@ -493,6 +496,24 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
                 project_name=project_name, deployment_name=deployment_name, version=version_name
             )
             has_uploaded_zips = len(revisions) > 0
+
+        if implicit_environment and not has_uploaded_zips:
+            # We don't show a warning on re-uploads
+            try:
+                environment = client.environments_get(
+                    project_name=project_name, environment_name=kwargs.get('environment', None)
+                )
+                if environment.base_environment is not None:
+                    # A custom environment is used
+                    click.secho(
+                        "Warning: You are trying to upload a deployment file containing at least one environment file "
+                        "(e.g. %s). It's not possible to use a custom environment in combination with an implicitly "
+                        "created environment.\nConsider adding the environment files to %s so no implicit environment "
+                        "is created on revision file upload." % (IMPLICIT_ENVIRONMENT_FILES[0], kwargs['ignore_file']),
+                        fg='yellow'
+                    )
+            except api.exceptions.ApiException:
+                pass
 
         if overwrite and existing_version:
             has_changed_fields = update_existing_deployment_version(

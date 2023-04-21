@@ -9,6 +9,9 @@ import ubiops_cli.src.deployments as deployments
 import ubiops_cli.src.deployment_versions as deployment_versions
 import ubiops_cli.src.deployment_revisions as deployment_revisions
 import ubiops_cli.src.deployment_builds as deployment_builds
+import ubiops_cli.src.environments as environments
+import ubiops_cli.src.environment_revisions as environment_revisions
+import ubiops_cli.src.environment_builds as environment_builds
 import ubiops_cli.src.exports as exports
 import ubiops_cli.src.imports as imports
 import ubiops_cli.src.pipelines as pipelines
@@ -44,6 +47,9 @@ cli.add_command(deployments.commands)
 cli.add_command(deployment_versions.commands)
 cli.add_command(deployment_revisions.commands)
 cli.add_command(deployment_builds.commands)
+cli.add_command(environments.commands)
+cli.add_command(environment_revisions.commands)
+cli.add_command(environment_builds.commands)
 cli.add_command(pipelines.commands)
 cli.add_command(pipeline_versions.commands)
 cli.add_command(blobs.commands)

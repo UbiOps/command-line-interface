@@ -6,19 +6,25 @@ from ubiops_cli.src.helpers.helpers import strings_to_dict
 
 
 DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
-DEPLOYMENT_VERSION_FIELDS = [
-    'description', 'labels', 'language', 'instance_type', 'minimum_instances', 'maximum_instances',
+DEPLOYMENT_VERSION_CREATE_FIELDS = [
+    'description', 'labels', 'language', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
+    'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
+    'maximum_queue_size_batch', 'static_ip'
+]
+DEPLOYMENT_VERSION_GET_FIELDS = [
+    'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
     'maximum_queue_size_batch', 'has_request_method', 'has_requests_method', 'static_ip'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
-    'version', 'description', 'labels', 'instance_type', 'minimum_instances', 'maximum_instances',
+    'version', 'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
     'maximum_queue_size_batch', 'static_ip'
 ]
 DEPLOYMENT_VERSION_FIELDS_WAIT = ['instance_type', 'minimum_instances', 'maximum_instances', 'maximum_idle_time']
 DEPLOYMENT_VERSION_FIELD_TYPES = {
     'language': str,
+    'environment': str,
     'instance_type': str,
     'minimum_instances': int,
     'maximum_instances': int,
@@ -65,7 +71,7 @@ def define_deployment_version(fields, yaml_content, extra_yaml_fields):
             fields[k] = strings_to_dict(fields[k])
 
     if yaml_content:
-        for p in [*DEPLOYMENT_VERSION_FIELDS, *extra_yaml_fields]:
+        for p in [*DEPLOYMENT_VERSION_CREATE_FIELDS, *extra_yaml_fields]:
             yaml_key = DEPLOYMENT_VERSION_FIELDS_RENAMED[p] if p in DEPLOYMENT_VERSION_FIELDS_RENAMED else p
             value = fields[p] if p in fields else None
             fields[p] = set_dict_default(
@@ -159,10 +165,6 @@ def update_existing_deployment_version(client, project_name, deployment_name, ve
     version = api.DeploymentVersionUpdate(
         **{k: update_fields[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE if k in update_fields}
     )
-
-    if (hasattr(existing_version, 'language') and 'language' in update_fields
-            and existing_version.language != update_fields['language']):
-        raise Exception("The programming language of an existing version cannot be changed")
 
     has_changed_fields = False
     for field in DEPLOYMENT_VERSION_FIELDS_WAIT:

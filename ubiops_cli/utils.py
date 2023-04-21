@@ -1,6 +1,7 @@
 import os
 import ubiops as api
 import configparser
+from ubiops_cli.constants import IMPLICIT_ENVIRONMENT_FILES
 from ubiops_cli.exceptions import UnAuthorizedException
 from ubiops_cli.ignore.ignore import walk
 from ubiops_cli.version import VERSION
@@ -201,6 +202,8 @@ def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", deployment
     if not force and os.path.isfile(output_path):
         click.confirm("File %s already exists. Do you want to overwrite it?" % output_path, abort=True)
 
+    implicit_environment = False
+
     package_path = str(os.path.join(path_dir, ""))
     with zipfile.ZipFile(output_path, "w") as zf:
         for r, d, files in walk(path_dir, filename=ignore_filename) if has_ignore_file else os.walk(path_dir):
@@ -208,8 +211,11 @@ def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", deployment
             package_subdir = os.path.join('deployment_package', root_subdir)
             for filename in files:
                 if os.path.join(r, filename) != output_path:
+                    if len(root_subdir.split()) == 0 and filename in IMPLICIT_ENVIRONMENT_FILES:
+                        implicit_environment = True
                     zf.write(os.path.join(r, filename), os.path.join(package_subdir, filename))
-    return output_path
+
+    return output_path, implicit_environment
 
 
 def write_blob(blob, output_path, filename=None):
@@ -243,6 +249,18 @@ def default_version_zip_name(deployment_name, version_name):
         return "%s_%s_%s.zip" % (deployment_name, version_name, datetime_str)
     elif deployment_name:
         return "%s_%s.zip" % (deployment_name, datetime_str)
+    else:
+        return "%s.zip" % datetime_str
+
+
+def environment_revision_zip_name(environment_name):
+    """
+    Generate the name of the zip file for the environment package of the given environment
+    """
+
+    datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
+    if environment_name:
+        return "%s_%s.zip" % (environment_name, datetime_str)
     else:
         return "%s.zip" % datetime_str
 

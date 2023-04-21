@@ -157,7 +157,11 @@ VERSION_YAML_OUTPUT = click.option(
 
 LANGUAGE = click.option(
     '-l', '--language', required=False, default=None, type=click.STRING, metavar='<string>',
-    help="Programming language of code"
+    help="[DEPRECATED] Programming language of code"
+)
+ENVIRONMENT = click.option(
+    '-e', '--environment', required=False, default=None, type=click.STRING, metavar='<string>',
+    help="Environment for the version"
 )
 INSTANCE_TYPE = click.option(
     '-inst', '--instance_type', required=False, default=None, type=click.STRING, metavar='<string>',
@@ -406,7 +410,9 @@ FILE_CONTINUATION_TOKEN = click.option(
 FILE_NAME_ARGUMENT = click.argument('file_name', required=True, metavar='<file_name>', nargs=1)
 FILE_NAME_OVERRULE = click.argument('file_name', required=False, default=None, metavar='<file_name>', nargs=1)
 FILE_URI_OPTION = click.option(
-    '-u', '--uri', 'file_uri', required=False, metavar='<string>', help="UbiOps URI of the file to download, e.g. 'ubiops-file://default/my-file.jpg'")
+    '-u', '--uri', 'file_uri', required=False, metavar='<string>',
+    help="UbiOps URI of the file to download, e.g. 'ubiops-file://default/my-file.jpg'"
+)
 FILE_SOURCE_PATH_OPTION = click.option(
     '-f', '--source_file', 'source_file', required=True, type=click.Path(), metavar='<path>',
     help="Path of file to upload"
@@ -597,4 +603,55 @@ IMPORT_STATUS_FILTER = click.option(
     '--status', required=False, default=None, type=str,
     metavar='[pending|scanning|confirmation|confirmation_pending|processing|completed|failed]',
     help="Status of the import"
+)
+
+# Environments
+ENVIRONMENT_TYPE_FILTER = click.option(
+    '-env-type', '--environment_type', required=False, default=None, type=str, metavar='<environment-type>',
+    help="Environment type. It can be either base or custom."
+)
+ENVIRONMENT_NAME_ARGUMENT = click.argument('environment_name', required=True, metavar='<environment_name>', nargs=1)
+ENVIRONMENT_NAME_OPTION = click.option(
+    '-e', '--environment_name', required=True, metavar='<name>', help="The environment name"
+)
+ENVIRONMENT_YAML_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default=None, metavar='<path>',
+    help="Path to file or directory to store environment yaml file"
+)
+ENVIRONMENT_NAME_OVERRULE = click.argument(
+    'environment_name', required=False, default=None, metavar='<environment_name>', nargs=1
+)
+ENVIRONMENT_YAML_FILE = click.option(
+    "-f", "--yaml_file", required=False, type=click.Path(), metavar='<path>', help="Path to a yaml file"
+)
+BASE_ENVIRONMENT = click.option(
+    '-base-env', '--base_environment', 'base_environment', required=False, default=None, type=click.STRING,
+    metavar='<string>', help="Base environment to use for the environment"
+)
+ENVIRONMENT_DISPLAY_NAME = click.option(
+    '--environment_display_name', 'environment_display_name', required=False, metavar='<string>',
+    help="Human readable name for the environment"
+)
+ENVIRONMENT_LABELS = click.option(
+    '-lb', '--labels', 'environment_labels', required=False, default=None, multiple=True, type=click.STRING,
+    metavar='<key1:value,key2:value>', help="Labels defined as key/value pairs"
+)
+ENVIRONMENT_DESCRIPTION = click.option(
+    '-desc', '--environment_description', 'environment_description', required=False, metavar='<string>',
+    help="The environment description"
+)
+ENVIRONMENT_NAME_UPDATE = click.option(
+    '-n', '--new_name', required=False, default=None, help="The new environment name", metavar='<name>'
+)
+ENVIRONMENT_REVISION_ID = click.argument('revision_id', required=True, metavar='<revision_id>', nargs=1)
+ENVIRONMENT_REVISION_ID_OPTION = click.option(
+    '-rid', '--revision_id', required=True, metavar='<revision_id>', help="The environment revision id"
+)
+ENVIRONMENT_BUILD_ID = click.argument('build_id', required=True, metavar='<build_id>', nargs=1)
+ENVIRONMENT_ZIP_FILE = click.option(
+    '-z', '--zip_path', required=True, type=click.Path(), metavar='<path>', help="Path to environment zip file"
+)
+ENVIRONMENT_ZIP_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default='', metavar='<path>',
+    help="Path to file or directory to store environment package zip"
 )

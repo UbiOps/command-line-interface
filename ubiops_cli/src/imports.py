@@ -121,7 +121,7 @@ def imports_confirm(import_id, yaml_file, format_):
           v1:
             zip: "deployments/deployment_deployment-1/versions/deployment_deployment-1_version_v1.zip"
             description:
-            language: python3.8
+            environment: python3-8
             maximum_idle_time: 300
             minimum_instances: 0
             maximum_instances: 5
