@@ -3,7 +3,7 @@ from ubiops_cli.src.helpers.formatting import print_list, print_item
 from ubiops_cli.src.helpers.options import *
 
 
-LIST_ITEMS = ['creation_date', 'id', 'created_by']
+LIST_ITEMS = ['creation_date', 'id', 'created_by', 'status']
 
 
 @click.group(["version_revisions", "revisions"], short_help="Manage your deployment version revisions")
@@ -69,8 +69,9 @@ def revisions_download(deployment_name, version_name, revision_id, output_path, 
     project_name = get_current_project(error=True)
 
     client = init_client()
-    with client.revisions_file_download(project_name=project_name, deployment_name=deployment_name,
-                                        version=version_name, revision_id=revision_id) as response:
+    with client.revisions_file_download(
+        project_name=project_name, deployment_name=deployment_name, version=version_name, revision_id=revision_id
+    ) as response:
         filename = default_version_zip_name(deployment_name, version_name)
         output_path = write_blob(response.read(), output_path, filename)
     client.api_client.close()
@@ -93,8 +94,9 @@ def revisions_upload(deployment_name, version_name, zip_path, format_):
     project_name = get_current_project(error=True)
 
     client = init_client()
-    revision = client.revisions_file_upload(project_name=project_name, deployment_name=deployment_name,
-                                            version=version_name, file=zip_path)
+    revision = client.revisions_file_upload(
+        project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path
+    )
     client.api_client.close()
 
     print_item(revision, row_attrs=['revision', 'build'], fmt=format_)

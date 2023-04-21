@@ -1,7 +1,8 @@
 import ubiops as api
 from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
 from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
-    DEPLOYMENT_VERSION_FIELDS, DEPLOYMENT_VERSION_FIELDS_UPDATE, DEPLOYMENT_VERSION_FIELDS_RENAMED
+    DEPLOYMENT_VERSION_CREATE_FIELDS, DEPLOYMENT_VERSION_GET_FIELDS, DEPLOYMENT_VERSION_FIELDS_UPDATE, \
+    DEPLOYMENT_VERSION_FIELDS_RENAMED
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers.options import *
@@ -78,7 +79,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    language: python3.7
+    environment: python3-8
     instance_type: 2048mb
     minimum_instances: 0
     maximum_instances: 5
@@ -106,7 +107,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
         # Store only reusable settings
         dictionary = format_yaml(
             item=version,
-            required_front=['version', 'deployment', *DEPLOYMENT_VERSION_FIELDS],
+            required_front=['version', 'deployment', *DEPLOYMENT_VERSION_GET_FIELDS],
             rename={'deployment': 'deployment_name', 'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
             as_str=False
         )
@@ -126,6 +127,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @DEPLOYMENT_NAME_OPTIONAL
 @VERSION_NAME_OVERRULE
 @LANGUAGE
+@ENVIRONMENT
 @INSTANCE_TYPE
 @MIN_INSTANCES
 @MAX_INSTANCES
@@ -154,7 +156,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    language: python3.7
+    environment: python3-8
     instance_type: 2048mb
     minimum_instances: 0
     maximum_instances: 1
@@ -187,12 +189,17 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
             "made to the same deployment version.", fg='red'
         )
 
+    if format_ != 'json' and ('language' in yaml_content or kwargs['language']):
+        click.secho("Deprecation warning: 'language' is deprecated. Use 'environment' instead.", fg='red')
+
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
 
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
-    version = api.DeploymentVersionCreate(version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS})
+    version = api.DeploymentVersionCreate(
+        version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_CREATE_FIELDS}
+    )
     response = client.deployment_versions_create(
         project_name=project_name, deployment_name=deployment_name, data=version
     )
@@ -214,6 +221,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @VERSION_NAME_UPDATE
 @DEPLOYMENT_FILE
 @VERSION_YAML_FILE
+@ENVIRONMENT
 @INSTANCE_TYPE
 @MIN_INSTANCES
 @MAX_INSTANCES
@@ -253,8 +261,6 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     and passing the file path as `<yaml_file>`, or passing the options as command options.
     If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
     will be overwritten by the specified command options.
-
-    It's not possible to update the programming language of an existing deployment version.
     """
 
     project_name = get_current_project(error=True)

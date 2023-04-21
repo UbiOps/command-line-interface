@@ -52,7 +52,7 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-language: python3.7
+environment: python3-8
 instance_type: 2048mb
 minimum_instances: 0
 maximum_instances: 5
@@ -103,7 +103,7 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-language: python3.7
+environment: python3-8
 instance_type: 2048mb
 minimum_instances: 0
 maximum_instances: 1
@@ -129,7 +129,9 @@ The version name can either be passed as command argument or specified inside th
 
 - `-d`/`--deployment_name`<br/>The deployment name
 
-- `-l`/`--language`<br/>Programming language of code
+- `-l`/`--language`<br/>[DEPRECATED] Programming language of code
+
+- `-e`/`--environment`<br/>Environment for the version
 
 - `-inst`/`--instance_type`<br/>Reserved instance type for the version
 
@@ -197,8 +199,6 @@ and passing the file path as `<yaml_file>`, or passing the options as command op
 If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
 will be overwritten by the specified command options.
 
-It's not possible to update the programming language of an existing deployment version.
-
 **Arguments:**
 
 - [required] `version_name`
@@ -214,6 +214,8 @@ It's not possible to update the programming language of an existing deployment v
 - `-deployment_py`/`--deployment_file`<br/>Name of deployment file which contains class Deployment. Must be located in the root of the deployment package directory
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
+
+- `-e`/`--environment`<br/>Environment for the version
 
 - `-inst`/`--instance_type`<br/>Reserved instance type for the version
 

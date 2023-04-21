@@ -11,5 +11,6 @@ WARNING_STATUSES = ['queued', 'pending', 'processing', 'building', 'validating',
                     'confirmation', 'confirmation_pending']
 ERROR_STATUSES = ['failed', 'cancelled_pending', 'cancelled']
 DEFAULT_IGNORE_FILE = '.ubiops-ignore'
+IMPLICIT_ENVIRONMENT_FILES = ['ubiops.yaml', 'requirements.txt', 'install_packages.R', 'environment.yaml']
 
 UPDATE_TIME = 30  # seconds to wait between update and new zip upload

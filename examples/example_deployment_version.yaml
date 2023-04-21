@@ -1,6 +1,6 @@
 deployment_name: demo-example
 version_name: v1
-language: python3.8
+environment: python3-8
 instance_type: 256mb
 minimum_instances: 0
 maximum_instances: 1
