@@ -21,7 +21,7 @@ List the builds of an environment.
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
-- [required] `--revision_id`<br/>The environment revision id
+- [required] `-rid`/`--revision_id`<br/>The environment revision id
 
 - `-fmt`/`--format`<br/>The output format
 
@@ -46,7 +46,7 @@ Get the build of an environment.
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
-- [required] `--revision_id`<br/>The environment revision id
+- [required] `-rid`/`--revision_id`<br/>The environment revision id
 
 - `-fmt`/`--format`<br/>The output format
 
