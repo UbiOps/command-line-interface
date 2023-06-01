@@ -1,11 +1,12 @@
 import ubiops as api
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project
+
 from ubiops_cli.src.helpers.environment_helpers import define_environment, ENVIRONMENT_OUTPUT_FIELDS, \
     ENVIRONMENT_FIELDS_RENAMED, ENVIRONMENT_REQUIRED_FIELDS, ENVIRONMENT_FIELDS_UPDATE
-from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
+from ubiops_cli.src.helpers.helpers import get_label_filter
+from ubiops_cli.src.helpers.wait_for import wait_for
 from ubiops_cli.src.helpers.options import *
-
+from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project
 
 LIST_ITEMS = ['last_updated', 'name', 'base_environment', 'labels']
 
@@ -228,3 +229,24 @@ def environments_delete(environment_name, assume_yes, quiet):
         client.api_client.close()
         if not quiet:
             click.echo("Environment was successfully deleted")
+
+
+@commands.command("wait", short_help="Wait for an environment to be ready")
+@ENVIRONMENT_NAME_ARGUMENT
+@TIMEOUT_OPTION
+@QUIET
+def environments_wait(environment_name, timeout, quiet):
+    """Wait for an environment to be ready."""
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    wait_for(
+        api.utils.wait_for.wait_for_environment,
+        client=client.api_client,
+        project_name=project_name,
+        environment_name=environment_name,
+        timeout=timeout,
+        quiet=quiet
+    )
+    client.api_client.close()

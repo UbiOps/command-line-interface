@@ -126,6 +126,8 @@ Audit Events | [docs/audit_events.md](docs/audit_events.md)
 Schedules | [docs/schedules.md](docs/schedules.md)
 Exports | [docs/exports.md](docs/exports.md)
 Imports | [docs/imports.md](docs/imports.md)
+Validate | [docs/validate.md](docs/validate.md)
+Run Local | [docs/run_local.md](docs/run_local.md)
 
 
 

@@ -108,3 +108,30 @@ Please, specify the deployment package `<zip_path>` that should be uploaded.
 
 
 <br/>
+
+### ubiops version_revisions wait
+
+**Command:** `ubiops version_revisions wait`
+
+**Description:**
+
+Wait for a deployment revision to be ready
+
+**Arguments:**
+
+- [required] `revision_id`
+
+
+
+**Options:**
+
+- [required] `-d`/`--deployment_name`<br/>The deployment name
+
+- [required] `-v`/`--version_name`<br/>The version name
+
+- `-t`/`--timeout`<br/>Timeout in seconds for the operation
+
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>

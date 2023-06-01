@@ -24,6 +24,8 @@ import ubiops_cli.src.config as config
 import ubiops_cli.src.auth as auth
 import ubiops_cli.src.environment_variables as env_vars
 import ubiops_cli.src.request_schedules as schedules
+import ubiops_cli.src.validation as validation
+import ubiops_cli.src.run_local as runlocal
 from ubiops_cli.src.helpers.click_helpers import CustomGroup
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -61,6 +63,8 @@ cli.add_command(logs.audit_events)
 cli.add_command(schedules.commands)
 cli.add_command(exports.commands)
 cli.add_command(imports.commands)
+cli.add_command(validation.commands)
+cli.add_command(runlocal.deployment_run_local)
 
 
 def print_error(msg, status=None):

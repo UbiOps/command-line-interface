@@ -1,7 +1,9 @@
-from ubiops_cli.utils import init_client, get_current_project, default_version_zip_name, write_blob
-from ubiops_cli.src.helpers.formatting import print_list, print_item
-from ubiops_cli.src.helpers.options import *
+import ubiops as api
 
+from ubiops_cli.src.helpers.formatting import print_list, print_item
+from ubiops_cli.src.helpers.wait_for import wait_for
+from ubiops_cli.src.helpers.options import *
+from ubiops_cli.utils import init_client, get_current_project, default_version_zip_name, write_blob
 
 LIST_ITEMS = ['creation_date', 'id', 'created_by', 'status']
 
@@ -100,3 +102,28 @@ def revisions_upload(deployment_name, version_name, zip_path, format_):
     client.api_client.close()
 
     print_item(revision, row_attrs=['revision', 'build'], fmt=format_)
+
+
+@commands.command("wait", short_help="Wait for a deployment revision to be ready")
+@DEPLOYMENT_NAME_OPTION
+@VERSION_NAME_OPTION
+@REVISION_ID
+@TIMEOUT_OPTION
+@QUIET
+def revisions_wait(deployment_name, version_name, revision_id, timeout, quiet):
+    """Wait for a deployment revision to be ready."""
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    wait_for(
+        api.utils.wait_for.wait_for_revision,
+        client=client.api_client,
+        project_name=project_name,
+        deployment_name=deployment_name,
+        version=version_name,
+        revision_id=revision_id,
+        timeout=timeout,
+        quiet=quiet
+    )
+    client.api_client.close()
