@@ -1,12 +1,13 @@
 import ubiops as api
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
+
 from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
     DEPLOYMENT_VERSION_CREATE_FIELDS, DEPLOYMENT_VERSION_GET_FIELDS, DEPLOYMENT_VERSION_FIELDS_UPDATE, \
     DEPLOYMENT_VERSION_FIELDS_RENAMED
-from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
+from ubiops_cli.src.helpers.helpers import get_label_filter
+from ubiops_cli.src.helpers.wait_for import wait_for
 from ubiops_cli.src.helpers.options import *
-
+from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
 
 LIST_ITEMS = ['last_updated', 'version', 'status', 'labels']
 
@@ -304,3 +305,33 @@ def versions_delete(deployment_name, version_name, assume_yes, quiet):
         client.api_client.close()
         if not quiet:
             click.echo("Deployment version was successfully deleted")
+
+
+@commands.command("wait", short_help="Wait for a deployment version to be ready")
+@DEPLOYMENT_NAME_OPTION
+@VERSION_NAME_ARGUMENT
+@REVISION_ID_OPTIONAL
+@TIMEOUT_OPTION
+@QUIET
+def versions_wait(deployment_name, version_name, revision_id, timeout, quiet):
+    """
+    Wait for a deployment version to be ready.
+
+    To wait for a specific revision of the version, pass `--revision_id`:
+    `ubiops versions wait v1 -d deployment-1 --revision_id=ced676ab-423b-4469-97e7-e5179515affb`
+    """
+
+    project_name = get_current_project(error=True)
+
+    client = init_client()
+    wait_for(
+        api.utils.wait_for.wait_for_deployment_version,
+        client=client.api_client,
+        project_name=project_name,
+        deployment_name=deployment_name,
+        version=version_name,
+        revision_id=revision_id,
+        timeout=timeout,
+        quiet=quiet
+    )
+    client.api_client.close()

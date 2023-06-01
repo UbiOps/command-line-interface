@@ -247,6 +247,9 @@ ZIP_OUTPUT = click.option(
 
 # Deployment version revisions
 REVISION_ID = click.argument('revision_id', required=True, metavar='<revision_id>', nargs=1)
+REVISION_ID_OPTIONAL = click.option(
+    '-rid', '--revision_id', required=False, default=None, metavar='<id>', help="The deployment version revision ID"
+)
 
 # Deployment version builds
 BUILD_ID = click.argument('build_id', required=True, metavar='<build_id>', nargs=1)
@@ -654,4 +657,27 @@ ENVIRONMENT_ZIP_FILE = click.option(
 ENVIRONMENT_ZIP_OUTPUT = click.option(
     '-o', '--output_path', required=False, default='', metavar='<path>',
     help="Path to file or directory to store environment package zip"
+)
+
+REQUIREMENTS_FILE = click.argument(
+    'requirements_file', required=True, metavar='<requirements_file>', type=click.Path(exists=True), nargs=1,
+)
+
+UBIOPS_YAML_FILE = click.argument(
+    'yaml_file', required=True, metavar='<yaml_file>', type=click.Path(exists=True), nargs=1
+)
+
+TIMEOUT_OPTION = click.option(
+    '-t', '--timeout', required=False, default=1800, type=click.INT, metavar='<timeout>',
+    help="Timeout in seconds for the operation"
+)
+
+DEPLOYMENT_DIR = click.option(
+    "-dir", "--directory", required=True, type=click.Path(resolve_path=True), metavar='<path>',
+    help="Path to a directory that contains at least a '%s.py'" % SYS_DEPLOYMENT_FILE_NAME_VALUE
+)
+
+REQUEST_DATA_PLAIN = click.option(
+    "--plain", required=False, is_flag=True, default=False, show_default=True,
+    help="Set the input data as plain text"
 )

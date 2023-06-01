@@ -190,3 +190,26 @@ Delete an environment.
 
 
 <br/>
+
+### ubiops environments wait
+
+**Command:** `ubiops environments wait`
+
+**Description:**
+
+Wait for an environment to be ready
+
+**Arguments:**
+
+- [required] `environment_name`
+
+
+
+**Options:**
+
+- `-t`/`--timeout`<br/>Timeout in seconds for the operation
+
+- `-q`/`--quiet`<br/>Suppress informational messages
+
+
+<br/>
