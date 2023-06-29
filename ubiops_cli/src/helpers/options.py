@@ -282,20 +282,16 @@ REQUEST_ID_OPTIONAL = click.option(
 PIPELINE_REQUEST_ID_OPTIONAL = click.option(
     '-pid', '--pipeline_request_id', required=False, default=None, metavar='<id>', help="The ID of the pipeline request"
 )
-REQUEST_TIMEOUT = click.option(
-    '-t', '--timeout', required=False, default=None, metavar='[10-345600]', type=click.IntRange(10, 345600),
-    help="Timeout in seconds"
-)
+REQUEST_TIMEOUT = click.option('-t', '--timeout', required=False, type=click.INT, help="Timeout in seconds")
 REQUEST_DEPLOYMENT_TIMEOUT_DEPRECATED = click.option(
-    '-t', '--timeout', required=False, default=300, type=click.IntRange(10, 3600), metavar='[10-3600]',
-    show_default=True, help="Timeout in seconds"
+    '-t', '--timeout', required=False, type=click.INT, help="Timeout in seconds"
 )
 REQUEST_PIPELINE_TIMEOUT_DEPRECATED = click.option(
-    '-pt', '--pipeline_timeout', required=False, default=3600, type=click.IntRange(10, 7200), metavar='[10-7200]',
-    show_default=True, help="Timeout for the entire pipeline request in seconds"
+    '-pt', '--pipeline_timeout', required=False, type=click.INT,
+    help="Timeout for the entire pipeline request in seconds"
 )
 REQUEST_OBJECT_TIMEOUT = click.option(
-    '-dt', '--deployment_timeout', required=False, default=None, type=click.IntRange(10, 3600), metavar='[10-3600]',
+    '-dt', '--deployment_timeout', required=False, type=click.INT,
     help="Timeout for each deployment request in the pipeline in seconds"
 )
 

@@ -188,10 +188,9 @@ Delete a deployment.
 
 Package code to ZIP file which is ready to be deployed.
 
-Please, specify the code `<directory>` that should be deployed. The files in this directory
-will be zipped and uploaded. Subdirectories and files that shouldn't be contained in
-the ZIP can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of
-this file is assumed to be equal to the wellknown .gitignore file.
+Please, specify the code `<directory>` that should be deployed. The files in this directory will be zipped.
+Subdirectories and files that shouldn't be contained in the ZIP can be specified in an ignore file, which is by
+default '.ubiops-ignore'. The structure of this file is assumed to be equal to the well-known .gitignore file.
 
 Use the `<output_path>` option to specify the output location of the zip file. If not specified,
 the current directory will be used. If the `<output_path>` is a directory, the zip will be saved in
@@ -289,7 +288,7 @@ Deploy a new version of a deployment.
 Please, specify the code `<directory>` that should be deployed. The files in this directory
 will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the
 ZIP can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this
-file is assumed to be equal to the wellknown '.gitignore' file.
+file is assumed to be equal to the well-known '.gitignore' file.
 
 If you want to store a local copy of the uploaded zip file, please use the `<output_path>` option.
 The `<output_path>` option will be used as output location of the zip file. If the `<output_path>` is a

@@ -341,10 +341,13 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
         params['version'] = version_name
 
     if batch:
-        params['timeout'] = timeout
+        if timeout is not None:
+            params['timeout'] = timeout
     else:
-        params['pipeline_timeout'] = timeout
-        params['deployment_timeout'] = deployment_timeout
+        if timeout is not None:
+            params['pipeline_timeout'] = timeout
+        if deployment_timeout is not None:
+            params['deployment_timeout'] = deployment_timeout
 
     if batch:
         response = getattr(client, f"batch_{method}")(**params, data=input_data)
@@ -504,24 +507,18 @@ def deprecated_pipelines_request(pipeline_name, version_name, data, pipeline_tim
     if pipeline.input_type == STRUCTURED_TYPE:
         data = parse_json(data)
 
-    if version_name is not None:
-        response = client.pipeline_version_requests_create(
-            project_name=project_name,
-            pipeline_name=pipeline_name,
-            version=version_name,
-            data=data,
-            pipeline_timeout=pipeline_timeout,
-            deployment_timeout=deployment_timeout
-        )
+    params = {'project_name': project_name, 'pipeline_name': pipeline_name, 'data': data}
 
+    if pipeline_timeout is not None:
+        params['pipeline_timeout'] = pipeline_timeout
+    if deployment_timeout is not None:
+        params['deployment_timeout'] = deployment_timeout
+
+    if version_name is not None:
+        params['version'] = version_name
+        response = client.pipeline_version_requests_create(**params)
     else:
-        response = client.pipeline_requests_create(
-            project_name=project_name,
-            pipeline_name=pipeline_name,
-            data=data,
-            pipeline_timeout=pipeline_timeout,
-            deployment_timeout=deployment_timeout
-        )
+        response = client.pipeline_requests_create(**params)
 
     client.api_client.close()
     if format_ == 'reference':
@@ -589,15 +586,13 @@ def deprecated_batch_requests_create(pipeline_name, version_name, data, format_)
     else:
         input_data = data
 
-    if version_name is not None:
-        response = client.batch_pipeline_version_requests_create(
-            project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=input_data
-        )
+    params = {'project_name': project_name, 'pipeline_name': pipeline_name, 'data': input_data}
 
+    if version_name is not None:
+        params['version'] = version_name
+        response = client.batch_pipeline_version_requests_create(**params)
     else:
-        response = client.batch_pipeline_requests_create(
-            project_name=project_name, pipeline_name=pipeline_name, data=input_data
-        )
+        response = client.batch_pipeline_requests_create(**params)
 
     client.api_client.close()
 

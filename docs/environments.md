@@ -197,7 +197,7 @@ Delete an environment.
 
 **Description:**
 
-Wait for an environment to be ready
+Wait for an environment to be ready.
 
 **Arguments:**
 

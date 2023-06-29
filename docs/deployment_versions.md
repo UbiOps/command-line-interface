@@ -275,7 +275,8 @@ Delete a version of a deployment.
 
 **Description:**
 
-Wait for a deployment version to be ready
+Wait for a deployment version to be ready.
+
 To wait for a specific revision of the version, pass `--revision_id`:
 `ubiops versions wait v1 -d deployment-1 --revision_id=ced676ab-423b-4469-97e7-e5179515affb`
 
