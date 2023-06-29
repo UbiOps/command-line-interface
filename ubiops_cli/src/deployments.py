@@ -271,10 +271,9 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
     """
     Package code to ZIP file which is ready to be deployed.
 
-    Please, specify the code `<directory>` that should be deployed. The files in this directory
-    will be zipped and uploaded. Subdirectories and files that shouldn't be contained in
-    the ZIP can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of
-    this file is assumed to be equal to the wellknown .gitignore file.
+    Please, specify the code `<directory>` that should be deployed. The files in this directory will be zipped.
+    Subdirectories and files that shouldn't be contained in the ZIP can be specified in an ignore file, which is by
+    default '.ubiops-ignore'. The structure of this file is assumed to be equal to the well-known .gitignore file.
 
     Use the `<output_path>` option to specify the output location of the zip file. If not specified,
     the current directory will be used. If the `<output_path>` is a directory, the zip will be saved in
@@ -395,7 +394,7 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     Please, specify the code `<directory>` that should be deployed. The files in this directory
     will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the
     ZIP can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this
-    file is assumed to be equal to the wellknown '.gitignore' file.
+    file is assumed to be equal to the well-known '.gitignore' file.
 
     If you want to store a local copy of the uploaded zip file, please use the `<output_path>` option.
     The `<output_path>` option will be used as output location of the zip file. If the `<output_path>` is a
@@ -616,7 +615,11 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
         raise Exception("Missing option <data> or <json_file>")
 
     method = "deployment_requests_create"
-    params = {'project_name': project_name, 'deployment_name': deployment_name, 'timeout': timeout}
+    params = {'project_name': project_name, 'deployment_name': deployment_name}
+
+    if timeout is not None:
+        params['timeout'] = timeout
+
     if version_name is not None:
         method = "deployment_version_requests_create"
         params['version'] = version_name
@@ -773,14 +776,20 @@ def deprecated_deployments_request(deployment_name, version_name, data, timeout,
     if deployment.input_type == STRUCTURED_TYPE:
         data = parse_json(data)
 
+    params = {
+        'project_name': project_name,
+        'deployment_name': deployment_name,
+        'data': data
+    }
+
+    if timeout is not None:
+        params['timeout'] = timeout
+
     if version_name is not None:
-        response = client.deployment_version_requests_create(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, data=data, timeout=timeout
-        )
+        params['version'] = version_name
+        response = client.deployment_version_requests_create(**params)
     else:
-        response = client.deployment_requests_create(
-            project_name=project_name, deployment_name=deployment_name, data=data, timeout=timeout
-        )
+        response = client.deployment_requests_create(**params)
 
     client.api_client.close()
 
@@ -849,15 +858,21 @@ def deprecated_batch_requests_create(deployment_name, version_name, data, timeou
     else:
         input_data = data
 
+    params = {
+        'project_name': project_name,
+        'deployment_name': deployment_name,
+        'data': input_data
+    }
+
+    if timeout is not None:
+        params['timeout'] = timeout
+
     if version_name is not None:
-        response = client.batch_deployment_version_requests_create(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, data=input_data,
-            timeout=timeout
-        )
+        params['version'] = version_name
+        response = client.batch_deployment_version_requests_create(**params)
     else:
-        response = client.batch_deployment_requests_create(
-            project_name=project_name, deployment_name=deployment_name, data=input_data, timeout=timeout
-        )
+        response = client.batch_deployment_requests_create(**params)
+
     client.api_client.close()
 
     if format_ == 'reference':

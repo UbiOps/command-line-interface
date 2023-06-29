@@ -9,9 +9,9 @@ Run a deployment locally and call its request function.
 
 Use `-dir` to specify the deployment directory where the deployment.py is.
 
-Use `--json_file` to use input data from a JSON file.
-
-The input data must be a valid JSON string when using `--data`.
+Input data can be provided to the deployment in two ways:
+- Use `--json_file` to use input data from a JSON file.
+- Use `--data` to provide input data directly. The input data must be a valid JSON string.
 
 If the input data is plain, pass the `--plain` option. The input data will be sent as a string as it is provided.
 

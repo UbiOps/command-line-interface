@@ -115,7 +115,7 @@ Please, specify the deployment package `<zip_path>` that should be uploaded.
 
 **Description:**
 
-Wait for a deployment revision to be ready
+Wait for a deployment revision to be ready.
 
 **Arguments:**
 
