@@ -71,12 +71,12 @@ def define_deployment_version(fields, yaml_content, extra_yaml_fields):
             fields[k] = strings_to_dict(fields[k])
 
     if yaml_content:
-        for p in [*DEPLOYMENT_VERSION_CREATE_FIELDS, *extra_yaml_fields]:
-            yaml_key = DEPLOYMENT_VERSION_FIELDS_RENAMED[p] if p in DEPLOYMENT_VERSION_FIELDS_RENAMED else p
-            value = fields[p] if p in fields else None
-            fields[p] = set_dict_default(
-                value, yaml_content, yaml_key,
-                set_type=DEPLOYMENT_VERSION_FIELD_TYPES[p] if p in DEPLOYMENT_VERSION_FIELD_TYPES else str
+        for k in [*DEPLOYMENT_VERSION_CREATE_FIELDS, *extra_yaml_fields]:
+            fields[k] = set_dict_default(
+                value=fields.get(k, None),
+                defaults_dict=yaml_content,
+                default_key=DEPLOYMENT_VERSION_FIELDS_RENAMED.get(k, k),
+                set_type=DEPLOYMENT_VERSION_FIELD_TYPES.get(k, str)
             )
 
     return fields
@@ -131,10 +131,10 @@ def update_deployment_file(client, project, deployment, version, deployment_file
                     client.deployment_version_environment_variables_create(
                         project_name=project, deployment_name=deployment, version=version, data=new_env_var
                     )
-        elif (deployment_file != SYS_DEPLOYMENT_FILE_NAME_VALUE
-              and deployment_file != "%s.py" % SYS_DEPLOYMENT_FILE_NAME_VALUE
-              and deployment_file != ML_MODEL_FILE_NAME_VALUE
-              and deployment_file != "%s.py" % ML_MODEL_FILE_NAME_VALUE):
+        elif deployment_file not in [
+            SYS_DEPLOYMENT_FILE_NAME_VALUE, ML_MODEL_FILE_NAME_VALUE, f"{SYS_DEPLOYMENT_FILE_NAME_VALUE}.py",
+            f"{ML_MODEL_FILE_NAME_VALUE}.py", f"{SYS_DEPLOYMENT_FILE_NAME_VALUE}.R", f"{ML_MODEL_FILE_NAME_VALUE}.R"
+        ]:
             # Create environment variable
             has_changed_env_vars = True
             client.deployment_version_environment_variables_create(
@@ -143,6 +143,7 @@ def update_deployment_file(client, project, deployment, version, deployment_file
     return has_changed_env_vars
 
 
+# pylint: disable=too-many-arguments
 def update_existing_deployment_version(client, project_name, deployment_name, version_name, existing_version, kwargs):
     """
     If deployment_file is specified:

@@ -7,6 +7,7 @@ Includes:
 - Managing projects
 - Managing deployments
 - Managing versions
+- Managing environments
 - Managing pipelines
 - Managing schedules
 - Managing buckets and files
@@ -15,7 +16,8 @@ Includes:
 - Making requests
 - View logs
 - View audit events
-
+- Validate requirements.txt/ubiops.yaml
+- Run your deployment package locally
 
 ## Examples
 

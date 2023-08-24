@@ -1,38 +1,48 @@
-import ubiops as api
 from datetime import datetime, timedelta
+
+import click
+import ubiops as api
 
 from ubiops_cli.utils import init_client, get_current_project
 from ubiops_cli.src.helpers.formatting import print_item, format_logs_reference, format_logs_oneline, parse_datetime, \
     print_list, format_json, format_datetime
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 
 
-@click.group("logs", short_help="View your logs")
+@click.group(name="logs", short_help="View your logs")
 def commands():
-    """View your logs."""
-    pass
+    """
+    View your logs.
+    """
+
+    return
 
 
-@commands.command("list", short_help="List logs")
-@DEPLOYMENT_NAME_OPTIONAL
-@DEPLOYMENT_VERSION_OPTIONAL
-@PIPELINE_NAME_OPTIONAL
-@PIPELINE_VERSION_OPTIONAL
-@PIPELINE_OBJECT_NAME
-@BUILD_ID_OPTIONAL
-@REQUEST_ID_OPTIONAL
-@PIPELINE_REQUEST_ID_OPTIONAL
-@SYSTEM
-@LEVEL
-@START_DATE
-@START_LOG
-@DATE_RANGE
-@LOGS_LIMIT
-@LOGS_FORMATS
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
+@commands.command(name="list", short_help="List logs")
+@options.DEPLOYMENT_NAME_OPTIONAL
+@options.DEPLOYMENT_VERSION_OPTIONAL
+@options.PIPELINE_NAME_OPTIONAL
+@options.PIPELINE_VERSION_OPTIONAL
+@options.PIPELINE_OBJECT_NAME
+@options.BUILD_ID_OPTIONAL
+@options.REQUEST_ID_OPTIONAL
+@options.PIPELINE_REQUEST_ID_OPTIONAL
+@options.SYSTEM
+@options.LEVEL
+@options.START_DATE
+@options.START_LOG
+@options.DATE_RANGE
+@options.LOGS_LIMIT
+@options.LOGS_FORMATS
 def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_version_name, pipeline_object_name,
               request_id, pipeline_request_id, build_id, system, level, start_date, start_log, date_range, limit,
               format_):
-    """Get the logs of your project.
+    """
+    Get the logs of your project.
 
     Use the command options as filters.
     """
@@ -66,7 +76,7 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
         try:
             start_date = format_datetime(parse_datetime(start_date), fmt='%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
-            raise Exception(
+            raise ValueError(
                 "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
             )
     elif start_date is None and start_log is None:
@@ -106,12 +116,12 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
             end_point = (parse_datetime(start_date) + timedelta(seconds=date_range)).isoformat()
         else:
             end_point = (parse_datetime(start_date) - timedelta(seconds=abs(date_range))).isoformat()
-        click.echo("No logs found between <%s> and <%s>" % (starting_point, end_point))
+        click.echo(f"No logs found between <{starting_point}> and <{end_point}>")
 
 
-@commands.command("get", short_help="Get details of a log")
-@LOG_ID
-@GET_FORMATS
+@commands.command(name="get", short_help="Get details of a log")
+@options.LOG_ID
+@options.GET_FORMATS
 def logs_get(log_id, format_):
     """
     \b
@@ -148,21 +158,25 @@ def logs_get(log_id, format_):
     )
 
 
-@click.group(["audit_events", "audit"], short_help="View your audit events")
+@click.group(name=["audit_events", "audit"], short_help="View your audit events")
 def audit_events():
-    """View your audit events."""
-    pass
+    """
+    View your audit events.
+    """
+
+    return
 
 
-@audit_events.command("list", short_help="List audit events")
-@DEPLOYMENT_NAME_OPTIONAL
-@PIPELINE_NAME_OPTIONAL
-@AUDIT_LIMIT
-@OFFSET
-@AUDIT_ACTION
-@LIST_FORMATS
+@audit_events.command(name="list", short_help="List audit events")
+@options.DEPLOYMENT_NAME_OPTIONAL
+@options.PIPELINE_NAME_OPTIONAL
+@options.AUDIT_LIMIT
+@options.OFFSET
+@options.AUDIT_ACTION
+@options.LIST_FORMATS
 def audit_list(deployment_name, pipeline_name, format_, **kwargs):
-    """List the audit events.
+    """
+    List the audit events.
 
     Use the command options as filters.
     """
@@ -171,14 +185,16 @@ def audit_list(deployment_name, pipeline_name, format_, **kwargs):
     client = init_client()
 
     if deployment_name and pipeline_name:
-        raise Exception("Please, filter either on deployment or pipeline name, not both")
-    elif deployment_name:
-        events = client.deployment_audit_events_list(project_name=project_name, deployment_name=deployment_name,
-                                                     **kwargs)
+        raise AssertionError("Please, filter either on deployment or pipeline name, not both")
+
+    if deployment_name:
+        events = client.deployment_audit_events_list(
+            project_name=project_name, deployment_name=deployment_name, **kwargs
+        )
     elif pipeline_name:
         events = client.pipeline_audit_events_list(project_name=project_name, pipeline_name=pipeline_name, **kwargs)
     else:
         events = client.project_audit_events_list(project_name=project_name, **kwargs)
     client.api_client.close()
 
-    print_list(events, ['date', 'action', 'user', 'event'], fmt=format_, pager=len(events) > 10)
+    print_list(items=events, attrs=['date', 'action', 'user', 'event'], fmt=format_, pager=len(events) > 10)

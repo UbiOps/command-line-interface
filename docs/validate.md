@@ -2,8 +2,6 @@
 
 **Command:** `ubiops validate`
 
-**Alias:** `ubiops `
-
 
 <br/>
 

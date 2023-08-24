@@ -1,22 +1,26 @@
-import os
-import ubiops as api
 import configparser
-from ubiops_cli.constants import IMPLICIT_ENVIRONMENT_FILES
-from ubiops_cli.exceptions import UnAuthorizedException
-from ubiops_cli.ignore.ignore import walk
-from ubiops_cli.version import VERSION
+import json
+import os
+import zipfile
+
 from datetime import datetime
 
 import yaml
-import zipfile
 import click
-import json
+
+import ubiops as api
+
+
+from ubiops_cli.constants import IMPLICIT_ENVIRONMENT_FILES
+from ubiops_cli.exceptions import UnAuthorizedException, UbiOpsException
+from ubiops_cli.gitignorefile.gitignorefile import parse as parse_ignore
+from ubiops_cli.version import VERSION
 
 
 class Config:
     REQUIRED_SECTIONS = ['auth', 'default']
     DEFAULT_API_VERSION = "v2.1"
-    DEFAULT_API = "https://api.ubiops.com/%s/" % DEFAULT_API_VERSION
+    DEFAULT_API = f"https://api.ubiops.com/{DEFAULT_API_VERSION}/"
 
     def __init__(self):
         basedir = os.path.dirname(os.path.abspath(__file__))
@@ -28,14 +32,18 @@ class Config:
     def __str__(self):
         string_list = []
         for section in self.dictionary.sections():
-            d = dict(self.dictionary[section])
-            for k, value in d.items():
-                key = "%s.%s" % (section, k)
-                if key != 'auth.tmp_access_token' and key != 'auth.service_token':
-                    string_list.append("%s: %s" % (key, value))
+            options = dict(self.dictionary[section])
+            for option, value in options.items():
+                key = f"{section}.{option}"
+                if key not in ['auth.tmp_access_token', 'auth.service_token']:
+                    string_list.append(f"{key}: {value}")
         return "\n".join(string_list)
 
     def load(self):
+        """
+        Load the config from a file
+        """
+
         self.dictionary.read(self.config_file)
         for section in self.REQUIRED_SECTIONS:
             self.check_section(section)
@@ -45,6 +53,13 @@ class Config:
             self.dictionary.set('auth', 'api', self.DEFAULT_API)
 
     def set(self, key, value):
+        """
+        Set the value for a key in the config
+
+        :param str key: the key in the config, may contain sections
+        :param str value: the value to put for the key
+        """
+
         section, option = self.split_key(key)
         self.check_section(section)
 
@@ -57,6 +72,11 @@ class Config:
         self.dictionary.set(section, option, value)
 
     def get(self, key):
+        """
+        Get the value of an option from the config based on the key
+
+        :param str key: the key to get the value from, may contain sections
+        """
         section, option = self.split_key(key)
         if not self.dictionary.has_section(section):
             return None
@@ -65,6 +85,12 @@ class Config:
         return self.dictionary.get(section, option)
 
     def delete_option(self, key):
+        """
+        Delete an option from the config based on the key
+
+        :param str key: the key to remove, may contain sections
+        """
+
         section, option = self.split_key(key)
         if not self.dictionary.has_section(section):
             return False
@@ -74,29 +100,57 @@ class Config:
         return True
 
     def write(self):
-        with open(self.config_file, 'w') as f:
+        """
+        Write config to file
+        """
+
+        with open(self.config_file, 'w', encoding='utf-8') as f:
             self.dictionary.write(f)
 
     def check_section(self, section):
+        """
+        Check whether a section exists in the config, if not create it
+
+        :param str section: the section to check
+        """
+
         if not self.dictionary.has_section(section):
             self.dictionary.add_section(section)
 
     def split_key(self, key):
+        """
+        Split a key in section and option
+
+        :param str key: the key to split
+        """
+
         keys = key.split('.')
-        assert len(keys) > 1, "key does not contain a section: %s" % key
+        assert len(keys) > 1, f"key does not contain a section: {key}"
         section = self.format_section(keys)
         option = keys[-1]
         return section, option
 
     @staticmethod
     def format_section(keys):
+        """
+        Format a section from keys. If subsections are given, split them with dots
+
+        :param list[str] keys: the keys to format the sections from
+        """
+
         section = keys[0]
         if len(keys) > 2:
-            section = '%s "%s"' % (section, ".".join(keys[1:-1]))
+            content = ".".join(keys[1:-1])
+            section = f'{section} "{content}"'
         return section
 
 
+# pylint: disable=broad-except
 def init_client():
+    """
+    Initialize the client library with the credentials in the config
+    """
+
     config_access_token = Config().get('auth.tmp_access_token')
     config_service_token = Config().get('auth.service_token')
     config_api = Config().get('auth.api')
@@ -112,10 +166,10 @@ def init_client():
             configuration.api_key_prefix['Authorization'] = ''
             configuration.api_key['Authorization'] = config_service_token
         else:
-            raise Exception("No access or service token found.")
+            raise UbiOpsException("No access or service token found.")
 
         client = api.ApiClient(configuration)
-        client.user_agent = "UbiOps/cli/%s" % VERSION
+        client.user_agent = f"UbiOps/cli/{VERSION}"
 
         core_api = api.CoreApi(client)
         assert core_api.service_status().status == 'ok'
@@ -125,6 +179,15 @@ def init_client():
 
 
 def get_current_project(error=False, check_existing=False):
+    """
+    Get the current project from the config. If check_existing is True, we will check whether the project in the config
+    still exists. If no project in the config is found, we will pick the first project in alphabetic order from the
+    projects that the user has access to, and write it to the config.
+
+    :param bool error: whether to raise an error if no project was found
+    :param bool check_existing: whether the project found in the config should be check for existence
+    """
+
     user_config = Config()
     current = user_config.get('default.project')
     if not current or check_existing:
@@ -148,27 +211,41 @@ def get_current_project(error=False, check_existing=False):
 
         # Select first project in list
         if len(projects) > 0 and hasattr(projects[0], 'name') and hasattr(projects[0], 'organization_name'):
-            user_config.set('default.project', projects[0].name)
+            user_config.set(key='default.project', value=projects[0].name)
             user_config.write()
             return projects[0].name
-        else:
-            if error:
-                raise Exception("No project found.")
-            return None
+
+        if error:
+            raise UbiOpsException("No project found.")
+        return None
+
     return current
 
 
 def abs_path(path_param):
+    """
+    Get the absolute path if the path is a relative path
+
+    :param str path_param: either a relative or absolute path
+    """
+
     if not os.path.isabs(path_param):
         path_param = os.path.join(os.getcwd(), path_param)
     return path_param
 
 
 def read_yaml(yaml_file, required_fields=None):
+    """
+    Read the content of a yaml file
+
+    :param str yaml_file: the yaml file to read
+    :param list[str] required_fields: the required keys in the yaml content
+    """
+
     if yaml_file is None:
         return {}
 
-    with open(yaml_file) as f:
+    with open(yaml_file, encoding='utf-8') as f:
         content = yaml.safe_load(f)
 
     if content is None:
@@ -176,22 +253,43 @@ def read_yaml(yaml_file, required_fields=None):
 
     if required_fields:
         for field_name in required_fields:
-            assert (field_name in content), "Missing field name '%s' in given file." % field_name
+            assert (field_name in content), f"Missing field name '{field_name}' in given file."
     return content
 
 
 def write_yaml(yaml_file, dictionary, default_file_name):
+    """
+    Write a dictionary to a yaml file
+
+    :param str yaml_file: the output location of the yaml, either a file or directory
+    :param dict dictionary: the dictionary to write to a file
+    :param str default_file_name: the filename used when the output location is a directory
+    """
+
     yaml_file = abs_path(yaml_file)
     if os.path.isdir(yaml_file):
         yaml_file = os.path.join(yaml_file, default_file_name)
 
-    with open(yaml_file, 'w') as f:
+    with open(yaml_file, 'w', encoding='utf-8') as f:
         yaml.dump(dictionary, f, sort_keys=False)
     return yaml_file
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
 def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", deployment_name=None, version_name=None,
             force=False):
+    """
+    Zip a deployment package and take care of the ignore file if given
+
+    :param str directory: the directory that should be zipped
+    :param str output_path: the output location of the zip, either a file or directory
+    :param str ignore_filename: the name of the ignore file
+    :param str|None deployment_name: the name of the deployment, used for the default zip filename
+    :param str|None version_name: the version of the deployment, used for the default zip filename
+    :param bool force: whether to overwrite when the file already exists
+    """
+
     path_dir = abs_path(directory)
     assert os.path.isdir(path_dir), "Given path is not a directory."
     has_ignore_file = os.path.isfile(os.path.join(path_dir, ignore_filename)) if ignore_filename else False
@@ -200,25 +298,45 @@ def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", deployment
     if os.path.isdir(output_path):
         output_path = os.path.join(output_path, default_version_zip_name(deployment_name, version_name))
     if not force and os.path.isfile(output_path):
-        click.confirm("File %s already exists. Do you want to overwrite it?" % output_path, abort=True)
+        click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
 
     implicit_environment = False
 
+    # Initialize 'is_ignored' function. It will be overwritten with `parse_ignore` if a .ubiops-ignore file is present.
+    def is_ignored(_):
+        """
+        If no ignore file is present, we will not ignore anything
+        """
+        return False
+
+    if has_ignore_file:
+        # Overwrite the 'is_ignored' function so we use what we found in the .ubiops-ignore file
+        is_ignored = parse_ignore(os.path.join(path_dir, ignore_filename), path_dir)
+
     package_path = str(os.path.join(path_dir, ""))
-    with zipfile.ZipFile(output_path, "w") as zf:
-        for r, d, files in walk(path_dir, filename=ignore_filename) if has_ignore_file else os.walk(path_dir):
-            root_subdir = os.path.join('', *r.split(package_path)[1:])
+    with zipfile.ZipFile(output_path, "w") as f:
+        for root, _, files in os.walk(path_dir):
+            root_subdir = os.path.join('', *root.split(package_path)[1:])
             package_subdir = os.path.join('deployment_package', root_subdir)
             for filename in files:
-                if os.path.join(r, filename) != output_path:
+                source_file = os.path.join(root, filename)
+                if source_file != output_path and not is_ignored(source_file):
                     if len(root_subdir.split()) == 0 and filename in IMPLICIT_ENVIRONMENT_FILES:
                         implicit_environment = True
-                    zf.write(os.path.join(r, filename), os.path.join(package_subdir, filename))
+                    f.write(source_file, os.path.join(package_subdir, filename))
 
     return output_path, implicit_environment
 
 
 def write_blob(blob, output_path, filename=None):
+    """
+    Write content to a file
+
+    :param blob: the file content
+    :param str output_path: path to output location, either a file or directory
+    :param str filename: the filename of the blob, used if output_path is a directory
+    """
+
     output_path = abs_path(output_path)
     if os.path.isdir(output_path) and filename:
         output_path = os.path.join(output_path, filename)
@@ -229,6 +347,15 @@ def write_blob(blob, output_path, filename=None):
 
 
 def set_dict_default(value, defaults_dict, default_key, set_type=str):
+    """
+    Obtain the default value from a dict if no value was provided
+
+    :param value: the value that should be checked for None
+    :param dict defaults_dict: the dict to retrieve the default value from
+    :param str default_key: the key to look for in the dict
+    :param set_type: function to set the type of the default value if given
+    """
+
     if not value and default_key in defaults_dict and defaults_dict[default_key] is not None:
         if set_type is not None:
             value = set_type(defaults_dict[default_key])
@@ -238,19 +365,33 @@ def set_dict_default(value, defaults_dict, default_key, set_type=str):
 
 
 def set_object_default(value, defaults_object, default_key):
+    """
+    Obtain the default value from an object if no value was provided
+
+    :param value: the value that should be checked for None
+    :param object defaults_object: the object to retrieve the default value from
+    :param str default_key: the key to look for in the object
+    """
+
     if not value and hasattr(defaults_object, default_key):
         value = getattr(defaults_object, default_key)
     return value
 
 
 def default_version_zip_name(deployment_name, version_name):
+    """
+    Obtain the default name for a deployment package zip file based on deployment name and version if given
+
+    :param str|None deployment_name: name of the deployment
+    :param str|None version_name: the deployment version
+    """
+
     datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
     if deployment_name and version_name:
-        return "%s_%s_%s.zip" % (deployment_name, version_name, datetime_str)
-    elif deployment_name:
-        return "%s_%s.zip" % (deployment_name, datetime_str)
-    else:
-        return "%s.zip" % datetime_str
+        return f"{deployment_name}_{version_name}_{datetime_str}.zip"
+    if deployment_name:
+        return f"{deployment_name}_{datetime_str}.zip"
+    return f"{datetime_str}.zip"
 
 
 def environment_revision_zip_name(environment_name):
@@ -260,20 +401,28 @@ def environment_revision_zip_name(environment_name):
 
     datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
     if environment_name:
-        return "%s_%s.zip" % (environment_name, datetime_str)
-    else:
-        return "%s.zip" % datetime_str
+        return f"{environment_name}_{datetime_str}.zip"
+    return f"{datetime_str}.zip"
 
 
-def check_required_fields(input_dict, list_name, required_fields):
-    assert list_name in input_dict, "No list '%s' found in %s" % (list_name, str(input_dict))
+def check_required_fields_in_list(input_dict, list_name, required_fields):
+    """
+    Check whether required fields are
+    """
+
+    assert list_name in input_dict, f"No list '{list_name}' found in {str(input_dict)}"
     for list_item in input_dict[list_name]:
         for requirement in required_fields:
-            assert requirement in list_item, "No key '%s' found for one of the %s." \
-                                             "\nFound: %s" % (requirement, list_name, str(list_item))
+            assert requirement in list_item, (
+                f"No key '{requirement}' found for one of the {list_name}.\nFound: {list_item}"
+            )
 
 
 def read_json(json_file):
+    """
+    Try to read a json file
+    """
+
     if json_file is None:
         return {}
 
@@ -281,7 +430,7 @@ def read_json(json_file):
         with open(json_file, 'rb') as f:
             content = json.load(f)
     except ValueError:
-        raise Exception("Failed to parse json file")
+        raise ValueError("Failed to parse json file")
 
     if content is None:
         content = {}
@@ -290,19 +439,28 @@ def read_json(json_file):
 
 
 def parse_json(data):
+    """
+    Try to parse data as json
+
+    :param str|None data: the data to parse
+    """
+
     if data is None:
         return {}
 
     try:
         return json.loads(data)
-    except json.JSONDecodeError:
-        raise Exception("Failed to parse request data. JSON format expected. Input: %s" % str(data))
+    except (TypeError, ValueError):
+        raise ValueError(f"Failed to parse request data. JSON format expected. Input: {data}")
 
 
 def import_export_zip_name(object_id, object_type):
     """
     Get the name of the zip file to store import/export depending on the object id and type
+
+    :param str object_id: import or export id
+    :param str object_type: either 'import' or 'export'
     """
 
     datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
-    return "%s_%s_%s.zip" % (object_type, object_id, datetime_str)
+    return f"{object_type}_{object_id}_{datetime_str}.zip"

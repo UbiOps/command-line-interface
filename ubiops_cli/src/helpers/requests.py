@@ -1,14 +1,25 @@
-import ubiops as api
-import requests
 import json
-from json import JSONDecodeError
+import requests
 
+import ubiops as api
+
+from ubiops_cli.exceptions import UbiOpsException
 from ubiops_cli.version import VERSION
 from ubiops_cli.utils import Config
 
 
-def do_call(_type, api_endpoint, path, data=None, headers=None):
-    url = "%s%s" % (api_endpoint, path)
+def do_call(method, host, path, data=None, headers=None):
+    """
+    Make an API call
+
+    :param str method: the request method, e.g. 'post'
+    :param str host: the API host to make the call to
+    :param str path: the url path to call
+    :param dict|None data: the data to send in the body of the call
+    :param dict|None headers: additional headers
+    """
+
+    url = f"{host}{path}"
     default_headers = {"Content-Type": "application/json", "accept": "application/json"}
 
     if headers is None:
@@ -16,113 +27,176 @@ def do_call(_type, api_endpoint, path, data=None, headers=None):
     else:
         headers = {**default_headers, **headers}
 
-    if _type == 'post':
-        response = requests.post(url, data=json.dumps(data), headers=headers)
-    elif _type == 'get':
-        response = requests.get(url, headers=headers)
+    if method == 'post':
+        response = requests.post(url, data=json.dumps(data), headers=headers, timeout=10)
+    elif method == 'get':
+        response = requests.get(url, headers=headers, timeout=10)
     else:
-        raise NotImplementedError("Unknown request type %s" % str(_type))
+        raise NotImplementedError(f"Unknown request method {str(method)}")
 
     try:
         response = json.loads(response.text)
-    except JSONDecodeError:
-        raise Exception("Could not access %s" % api_endpoint)
+    except json.JSONDecodeError:
+        raise UbiOpsException(f"Could not access {host}")
     return response
 
 
-def sign_in(api_endpoint, email):
+def sign_in(host, email):
+    """
+    Start sign in flow for email
+
+    :param str host: the API host to use
+    :param str email: email of the user
+    """
+
     data = {"email": email}
-    response = do_call("post", api_endpoint, "/oauth/sign-in", data=data)
+    response = do_call(method="post", host=host, path="/oauth/sign-in", data=data)
     assert 'error' not in response, response['error']
     assert 'provider' in response, "Could not authorize."
     assert 'url' in response, "Could not authorize."
     return response['provider'], response['url']
 
 
-def authorize(api_endpoint, email, password):
+def authorize(host, email, password):
+    """
+    Authorize without 2FA
+
+    :param str host: the API host to use
+    :param str email: email of the user
+    :param str password: password of the user
+    """
+
     data = {"email": email, "password": password}
-    response = do_call("post", api_endpoint, "/authorize", data=data)
+    response = do_call(method="post", host=host, path="/authorize", data=data)
 
     if 'error' in response and "two factor authentication" in response['error']:
         return False
-    elif 'error' in response:
-        raise AssertionError(response['error'])
+    if 'error' in response:
+        raise UbiOpsException(response['error'])
 
-    assert 'access' in response, "Could not authorize."
+    if 'access' not in response:
+        raise UbiOpsException("Could not authorize")
 
     user_config = Config()
-    user_config.set('auth.api', api_endpoint)
-    user_config.set('auth.email', email)
-    user_config.set('auth.tmp_access_token', response['access'])
-    user_config.delete_option('auth.service_token')
+    user_config.set(key='auth.api', value=host)
+    user_config.set(key='auth.email', value=email)
+    user_config.set(key='auth.tmp_access_token', value=response['access'])
+    user_config.delete_option(key='auth.service_token')
     user_config.write()
     return True
 
 
-def authorize2fa(api_endpoint, email, password, token):
+def authorize2fa(host, email, password, token):
+    """
+    Authorize with 2FA
+
+    :param str host: the API host to use
+    :param str email: email of the user
+    :param str password: password of the user
+    :param str token: 2FA token for the user if 2FA is enabled for the user
+    """
+
     data = {"email": email, "password": password, "token": token}
-    response = do_call("post", api_endpoint, "/authorize", data=data)
+    response = do_call(method="post", host=host, path="/authorize", data=data)
 
-    assert 'error' not in response, response['error']
-    assert 'access' in response, "Could not authorize."
+    if 'error' in response:
+        raise UbiOpsException(response['error'])
+
+    if 'access' not in response:
+        raise UbiOpsException("Could not authorize")
 
     user_config = Config()
-    user_config.set('auth.api', api_endpoint)
-    user_config.set('auth.email', email)
-    user_config.set('auth.tmp_access_token', response['access'])
-    user_config.delete_option('auth.service_token')
+    user_config.set(key='auth.api', value=host)
+    user_config.set(key='auth.email', value=email)
+    user_config.set(key='auth.tmp_access_token', value=response['access'])
+    user_config.delete_option(key='auth.service_token')
     user_config.write()
     return True
 
 
-def sign_in_complete(api_endpoint, code, provider):
+def sign_in_complete(host, code, provider):
+    """
+    Complete sign in flow
+
+    :param str host: the API host to use
+    :param str code: code generated by the authorization server
+    :param str provider: provider with which the user wants to sign-in/sign-up
+    """
+
     data = {"code": code, "provider": provider}
-    response = do_call("post", api_endpoint, "/oauth/complete", data=data)
-    assert 'error' not in response, response['error']
-    assert 'access' in response, "Could not authorize."
+    response = do_call(method="post", host=host, path="/oauth/complete", data=data)
+
+    if 'error' in response:
+        raise UbiOpsException(response['error'])
+
+    if 'access' not in response:
+        raise UbiOpsException("Could not authorize")
 
     # Get email from token
-    token = "Bearer %s" % response['access']
-    oauth_user = user(api_endpoint=api_endpoint, token=token)
+    token = f"Bearer {response['access']}"
+    oauth_user = user(host=host, token=token)
 
     user_config = Config()
-    user_config.set('auth.api', api_endpoint)
-    user_config.set('auth.email', oauth_user['email'])
-    user_config.set('auth.tmp_access_token', response['access'])
-    user_config.delete_option('auth.service_token')
+    user_config.set(key='auth.api', value=host)
+    user_config.set(key='auth.email', value=oauth_user['email'])
+    user_config.set(key='auth.tmp_access_token', value=response['access'])
+    user_config.delete_option(key='auth.service_token')
     user_config.write()
     return oauth_user['email']
 
 
-def raise_for_status(api_endpoint, token):
+def raise_for_status(host, token):
+    """
+    Authorize with given token and retrieve user details
+
+    :param str host: the API host to use
+    :param str token: the token for authentication
+    """
+
     configuration = api.Configuration()
-    configuration.host = api_endpoint
+    configuration.host = host
     configuration.api_key_prefix['Authorization'] = ''
     configuration.api_key['Authorization'] = token
     client = api.CoreApi(api.ApiClient(configuration))
-    client.user_agent = "UbiOps/cli/%s" % VERSION
+    client.user_agent = f"UbiOps/cli/{VERSION}"
     assert client.service_status().status == 'ok'
     client.api_client.close()
 
     # Get email from token
-    service_user = user(api_endpoint=api_endpoint, token=token)
+    service_user = user(host=host, token=token)
 
     user_config = Config()
-    user_config.set('auth.api', api_endpoint)
-    user_config.set('auth.email', service_user['email'])
-    user_config.set('auth.service_token', token)
-    user_config.delete_option('auth.tmp_access_token')
+    user_config.set(key='auth.api', value=host)
+    user_config.set(key='auth.email', value=service_user['email'])
+    user_config.set(key='auth.service_token', value=token)
+    user_config.delete_option(key='auth.tmp_access_token')
     user_config.write()
 
 
-def user(api_endpoint, token):
-    response = do_call("get", api_endpoint, "/user", headers={"Authorization": token})
-    assert 'error' not in response, response['error']
-    assert 'email' in response, "Could not authorize."
+def user(host, token):
+    """
+    Retrieve information about the user
+
+    :param str host: the API host to use
+    :param str token: the token credential
+    """
+
+    response = do_call(method="get", host=host, path="/user", headers={"Authorization": token})
+
+    if 'error' in response:
+        raise UbiOpsException(response['error'])
+
+    if 'email' not in response:
+        raise UbiOpsException("Could not authorize")
+
     return response
 
 
 def sign_out():
+    """
+    Sign out to ubiops by removing access token from config
+    """
+
     user_config = Config()
     user_config.delete_option('auth.tmp_access_token')
     user_config.delete_option('auth.service_token')

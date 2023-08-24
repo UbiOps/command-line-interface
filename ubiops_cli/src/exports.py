@@ -1,26 +1,28 @@
+import click
 import ubiops as api
 
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, write_blob, import_export_zip_name
+from ubiops_cli.exceptions import UbiOpsException
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
+from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, write_blob, import_export_zip_name
 
 
 LIST_ITEMS = ['id', 'creation_date', 'status', 'size']
 GET_ITEMS = ['id', 'creation_date', 'status', 'error_message', 'size']
 
 
-@click.group("exports", short_help="Manage your exports")
+@click.group(name="exports", short_help="Manage your exports")
 def commands():
     """
     Manage your exports.
     """
 
-    pass
+    return
 
 
-@commands.command("list", short_help="List exports")
-@EXPORT_STATUS_FILTER
-@LIST_FORMATS
+@commands.command(name="list", short_help="List exports")
+@options.EXPORT_STATUS_FILTER
+@options.LIST_FORMATS
 def exports_list(status, format_):
     """
     List all your exports in your project.
@@ -36,11 +38,11 @@ def exports_list(status, format_):
         print_list(items=exports, attrs=LIST_ITEMS, sorting_col=1, sorting_reverse=True, fmt=format_)
 
 
-@commands.command("get", short_help="Get details of an export")
-@EXPORT_ID
-@EXPORT_DETAILS_YAML_OUTPUT
-@QUIET
-@GET_FORMATS
+@commands.command(name="get", short_help="Get details of an export")
+@options.EXPORT_ID
+@options.EXPORT_DETAILS_YAML_OUTPUT
+@options.QUIET
+@options.GET_FORMATS
 def exports_get(export_id, output_path, quiet, format_):
     """
     Get the details of an export.
@@ -65,14 +67,14 @@ def exports_get(export_id, output_path, quiet, format_):
         )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="export.yaml")
         if not quiet:
-            click.echo('Export details are stored in: %s' % yaml_file)
+            click.echo(f"Export details are stored in: {yaml_file}")
     else:
         print_item(item=export, row_attrs=GET_ITEMS, fmt=format_)
 
 
-@commands.command("create", short_help="Create an export")
-@EXPORT_DETAILS_YAML_FILE
-@CREATE_FORMATS
+@commands.command(name="create", short_help="Create an export")
+@options.EXPORT_DETAILS_YAML_FILE
+@options.CREATE_FORMATS
 def exports_create(yaml_file, format_):
     """
     Create a new export.
@@ -112,7 +114,7 @@ def exports_create(yaml_file, format_):
 
     if 'deployments' in yaml_content:
         if not isinstance(yaml_content['deployments'], dict):
-            raise Exception(
+            raise UbiOpsException(
                 "Deployments field should be a dictionary with deployment names as key and versions as value"
             )
         deployments = yaml_content['deployments']
@@ -121,7 +123,7 @@ def exports_create(yaml_file, format_):
 
     if 'pipelines' in yaml_content:
         if not isinstance(yaml_content['pipelines'], dict):
-            raise Exception(
+            raise UbiOpsException(
                 "Pipelines field should be a dictionary with pipeline names as key and versions as value"
             )
         pipelines = yaml_content['pipelines']
@@ -130,7 +132,7 @@ def exports_create(yaml_file, format_):
 
     if 'environment_variables' in yaml_content:
         if not isinstance(yaml_content['environment_variables'], dict):
-            raise Exception(
+            raise UbiOpsException(
                 "Environment_variables field should be a dictionary with environment variable name as key and details "
                 "of whether to include the variable value as value"
             )
@@ -149,10 +151,10 @@ def exports_create(yaml_file, format_):
     print_item(item=response, row_attrs=LIST_ITEMS, fmt=format_)
 
 
-@commands.command("delete", short_help="Delete an export")
-@EXPORT_ID
-@ASSUME_YES
-@QUIET
+@commands.command(name="delete", short_help="Delete an export")
+@options.EXPORT_ID
+@options.ASSUME_YES
+@options.QUIET
 def exports_delete(export_id, assume_yes, quiet):
     """
     Delete an export.
@@ -161,7 +163,7 @@ def exports_delete(export_id, assume_yes, quiet):
     project_name = get_current_project(error=True)
 
     if assume_yes or click.confirm(
-        "Are you sure you want to delete export <%s> of project <%s>?" % (export_id, project_name)
+        f"Are you sure you want to delete export <{export_id}> of project <{project_name}>?"
     ):
         client = init_client()
         client.exports_delete(project_name=project_name, export_id=export_id)
@@ -171,10 +173,10 @@ def exports_delete(export_id, assume_yes, quiet):
             click.echo("Export was successfully deleted")
 
 
-@commands.command("download", short_help="Download an export")
-@EXPORT_ID
-@EXPORT_ZIP_OUTPUT
-@QUIET
+@commands.command(name="download", short_help="Download an export")
+@options.EXPORT_ID
+@options.EXPORT_ZIP_OUTPUT
+@options.QUIET
 def exports_download(export_id, output_path, quiet):
     """
     Download an export.
@@ -193,4 +195,4 @@ def exports_download(export_id, output_path, quiet):
     client.api_client.close()
 
     if not quiet:
-        click.echo("Export file stored in: %s" % output_path)
+        click.echo(f"Export file stored in: {output_path}")

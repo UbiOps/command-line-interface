@@ -7,6 +7,7 @@ Includes:
 - Managing projects
 - Managing deployments
 - Managing versions
+- Managing environments
 - Managing pipelines
 - Managing schedules
 - Managing buckets and files
@@ -15,7 +16,8 @@ Includes:
 - Making requests
 - View logs
 - View audit events
-
+- Validate requirements.txt/ubiops.yaml
+- Run your deployment package locally
 
 For more information, please visit [https://ubiops.com/docs](https://ubiops.com/docs)
 
@@ -100,7 +102,6 @@ ubiops deployments list
 ```
 
 
-
 ## Documentation
 
 Category | Documentation reference
@@ -130,8 +131,5 @@ Validate | [docs/validate.md](docs/validate.md)
 Run Local | [docs/run_local.md](docs/run_local.md)
 
 
-
-
 ### Attribution
-This software uses the library [ignorance](https://github.com/snark/ignorance) by Steve Cook - see [license](https://github.com/UbiOps/command-line-interface/blob/master/ubiops_cli/ignore/LICENSE).
-
+This software uses the library [gitignorefile](https://github.com/excitoon/gitignorefile) by Vladimir Chebotarev - see [license](https://github.com/UbiOps/command-line-interface/blob/master/ubiops_cli/gitignorefile/LICENSE).

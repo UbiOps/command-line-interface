@@ -1,30 +1,33 @@
+import click
 import ubiops as api
 
-from ubiops_cli.utils import get_current_project, init_client, read_json, read_yaml, write_yaml, parse_json
-from ubiops_cli.src.helpers.pipeline_helpers import define_pipeline, get_changed_pipeline_structure
+from ubiops_cli.constants import STRUCTURED_TYPE, PLAIN_TYPE
+from ubiops_cli.exceptions import UbiOpsException
+from ubiops_cli.src.helpers.pipeline_helpers import define_pipeline, get_changed_pipeline_structure, \
+    PIPELINE_REQUIRED_FIELDS
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_pipeline_requests_reference, \
     format_pipeline_requests_oneline, format_json, format_datetime, parse_datetime
-from ubiops_cli.src.helpers.options import *
-from ubiops_cli.constants import STRUCTURED_TYPE, PLAIN_TYPE
+from ubiops_cli.src.helpers import options
+from ubiops_cli.utils import get_current_project, init_client, read_json, read_yaml, write_yaml, parse_json
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
 REQUEST_LIST_ITEMS = ['id', 'status', 'success', 'time_created']
 
 
-@click.group(["pipelines", "ppl"], short_help="Manage your pipelines")
+@click.group(name=["pipelines", "ppl"], short_help="Manage your pipelines")
 def commands():
     """
     Manage your pipelines.
     """
 
-    pass
+    return
 
 
-@commands.command("list", short_help="List pipelines")
-@LABELS_FILTER
-@LIST_FORMATS
+@commands.command(name="list", short_help="List pipelines")
+@options.LABELS_FILTER
+@options.LIST_FORMATS
 def pipelines_list(labels, format_):
     """
     List pipelines in project.
@@ -42,11 +45,11 @@ def pipelines_list(labels, format_):
         client.api_client.close()
 
 
-@commands.command("get", short_help="Get a pipeline")
-@PIPELINE_NAME_ARGUMENT
-@PIPELINE_YAML_OUTPUT
-@QUIET
-@GET_FORMATS
+@commands.command(name="get", short_help="Get a pipeline")
+@options.PIPELINE_NAME_ARGUMENT
+@options.PIPELINE_YAML_OUTPUT
+@options.QUIET
+@options.GET_FORMATS
 def pipelines_get(pipeline_name, output_path, quiet, format_):
     """
     Get the pipeline settings, like, input_type and input_fields.
@@ -77,7 +80,7 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
 
         yaml_file = write_yaml(output_path, dictionary, default_file_name="pipeline.yaml")
         if not quiet:
-            click.echo('Pipeline file is stored in: %s' % yaml_file)
+            click.echo(f"Pipeline file is stored in: {yaml_file}")
 
     else:
         print_item(
@@ -93,10 +96,10 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
         )
 
 
-@commands.command("create", short_help="Create a pipeline")
-@PIPELINE_NAME_OVERRULE
-@PIPELINE_YAML_FILE
-@CREATE_FORMATS
+@commands.command(name="create", short_help="Create a pipeline")
+@options.PIPELINE_NAME_OVERRULE
+@options.PIPELINE_YAML_FILE
+@options.CREATE_FORMATS
 def pipelines_create(pipeline_name, yaml_file, format_):
     """
     Create a new pipeline.
@@ -149,12 +152,12 @@ def pipelines_create(pipeline_name, yaml_file, format_):
     )
 
 
-@commands.command("update", short_help="Update a pipeline")
-@PIPELINE_NAME_ARGUMENT
-@PIPELINE_NAME_UPDATE
-@PIPELINE_YAML_FILE_UPDATE
-@VERSION_DEFAULT_UPDATE
-@QUIET
+@commands.command(name="update", short_help="Update a pipeline")
+@options.PIPELINE_NAME_ARGUMENT
+@options.PIPELINE_NAME_UPDATE
+@options.PIPELINE_YAML_FILE_UPDATE
+@options.VERSION_DEFAULT_UPDATE
+@options.QUIET
 def pipelines_update(pipeline_name, new_name, yaml_file, default_version, quiet):
     """
     Update a pipeline.
@@ -193,9 +196,9 @@ def pipelines_update(pipeline_name, new_name, yaml_file, default_version, quiet)
             # Pipeline will be renamed
             try:
                 client.pipelines_get(project_name=project_name, pipeline_name=pipeline.name)
-                raise Exception(
+                raise UbiOpsException(
                     f"Trying to rename pipeline '{pipeline_name}' to '{pipeline.name}', but a pipeline with the new "
-                    f"name already exists"
+                    "name already exists"
                 )
             except api.exceptions.ApiException:
                 pass
@@ -209,9 +212,9 @@ def pipelines_update(pipeline_name, new_name, yaml_file, default_version, quiet)
         # Pipeline will be renamed (and default version update if given)
         try:
             client.pipelines_get(project_name=project_name, pipeline_name=new_name)
-            raise Exception(
+            raise UbiOpsException(
                 f"Trying to rename pipeline '{pipeline_name}' to '{new_name}', but a pipeline with the new "
-                f"name already exists"
+                "name already exists"
             )
         except api.exceptions.ApiException:
             pass
@@ -237,10 +240,10 @@ def pipelines_update(pipeline_name, new_name, yaml_file, default_version, quiet)
     client.api_client.close()
 
 
-@commands.command("delete", short_help="Delete a pipeline")
-@PIPELINE_NAME_ARGUMENT
-@ASSUME_YES
-@QUIET
+@commands.command(name="delete", short_help="Delete a pipeline")
+@options.PIPELINE_NAME_ARGUMENT
+@options.ASSUME_YES
+@options.QUIET
 def pipelines_delete(pipeline_name, assume_yes, quiet):
     """
     Delete a pipeline.
@@ -259,23 +262,27 @@ def pipelines_delete(pipeline_name, assume_yes, quiet):
             click.echo("Pipeline was successfully deleted")
 
 
-@commands.group("requests", short_help="Manage your pipeline requests")
+@commands.group(name="requests", short_help="Manage your pipeline requests")
 def requests():
     """
     Manage your pipeline requests.
     """
-    pass
+
+    return
 
 
-@requests.command("create", short_help="Create pipeline request")
-@PIPELINE_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_BATCH
-@REQUEST_TIMEOUT
-@REQUEST_OBJECT_TIMEOUT
-@REQUEST_DATA_MULTI
-@REQUEST_DATA_FILE
-@REQUESTS_FORMATS
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
+@requests.command(name="create", short_help="Create pipeline request")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_BATCH
+@options.REQUEST_TIMEOUT
+@options.REQUEST_OBJECT_TIMEOUT
+@options.REQUEST_DATA_MULTI
+@options.REQUEST_DATA_FILE
+@options.REQUESTS_FORMATS
 def requests_create(pipeline_name, version_name, batch, timeout, deployment_timeout, data, json_file, format_):
     """
     Create a pipeline request. Use `--batch` to create a batch (asynchronous) request.
@@ -312,10 +319,10 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
     pipeline = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name)
 
     if batch and deployment_timeout is not None:
-        raise Exception("It's not possible to pass a deployment timeout for a batch pipeline request")
+        raise UbiOpsException("It's not possible to pass a deployment timeout for a batch pipeline request")
 
     if json_file and data:
-        raise Exception("Specify data either using the <data> or <json_file> option, not both")
+        raise UbiOpsException("Specify data either using the <data> or <json_file> option, not both")
 
     if json_file:
         input_data = read_json(json_file)
@@ -325,13 +332,13 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
     elif data:
         if pipeline.input_type == STRUCTURED_TYPE:
             input_data = []
-            for d in data:
-                input_data.append(parse_json(d))
+            for data_item in data:
+                input_data.append(parse_json(data=data_item))
         else:
             input_data = data
 
     else:
-        raise Exception("Missing option <data> or <json_file>")
+        raise UbiOpsException("Missing option <data> or <json_file>")
 
     method = "pipeline_requests_create"
     params = {'project_name': project_name, 'pipeline_name': pipeline_name}
@@ -371,11 +378,11 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
         click.echo(format_pipeline_requests_reference(response))
 
 
-@requests.command("get", short_help="Get a pipeline request")
-@PIPELINE_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_ID_MULTI
-@REQUESTS_FORMATS
+@requests.command(name="get", short_help="Get a pipeline request")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_ID_MULTI
+@options.REQUESTS_FORMATS
 def requests_get(pipeline_name, version_name, request_id, format_):
     """
     Get one or more pipeline requests.
@@ -418,18 +425,18 @@ def requests_get(pipeline_name, version_name, request_id, format_):
         click.echo(format_pipeline_requests_reference(response))
 
 
-@requests.command("list", short_help="List pipeline requests")
-@PIPELINE_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@OFFSET
-@REQUEST_LIMIT
-@REQUEST_SORT
-@REQUEST_FILTER_PIPELINE_STATUS
-@REQUEST_FILTER_SUCCESS
-@REQUEST_FILTER_START_DATE
-@REQUEST_FILTER_END_DATE
-@REQUEST_FILTER_SEARCH_ID
-@LIST_FORMATS
+@requests.command(name="list", short_help="List pipeline requests")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.OFFSET
+@options.REQUEST_LIMIT
+@options.REQUEST_SORT
+@options.REQUEST_FILTER_PIPELINE_STATUS
+@options.REQUEST_FILTER_SUCCESS
+@options.REQUEST_FILTER_START_DATE
+@options.REQUEST_FILTER_END_DATE
+@options.REQUEST_FILTER_SEARCH_ID
+@options.LIST_FORMATS
 def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
     """
     List pipeline requests.
@@ -445,15 +452,17 @@ def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
         try:
             kwargs['start_date'] = format_datetime(parse_datetime(kwargs['start_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
-            raise Exception("Failed to parse start_date. Please use iso-format, "
-                            "for example, '2020-01-01T00:00:00.000000Z'")
+            raise UbiOpsException(
+                "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
+            )
 
     if 'end_date' in kwargs and kwargs['end_date']:
         try:
             kwargs['end_date'] = format_datetime(parse_datetime(kwargs['end_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
-            raise Exception("Failed to parse end_date. Please use iso-format, "
-                            "for example, '2020-01-01T00:00:00.000000Z'")
+            raise UbiOpsException(
+                "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
+            )
 
     client = init_client()
     if version_name is not None:
@@ -472,13 +481,14 @@ def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
         click.echo("\n(Use the <offset> and <limit> options to load more)")
 
 
-@commands.command("request", short_help="[DEPRECATED] Create a pipeline direct request")
-@PIPELINE_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_DATA
-@REQUEST_PIPELINE_TIMEOUT_DEPRECATED
-@REQUEST_OBJECT_TIMEOUT
-@REQUESTS_FORMATS
+# pylint: disable=too-many-arguments
+@commands.command(name="request", short_help="[DEPRECATED] Create a pipeline direct request")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_DATA
+@options.REQUEST_PIPELINE_TIMEOUT_DEPRECATED
+@options.REQUEST_OBJECT_TIMEOUT
+@options.REQUESTS_FORMATS
 def deprecated_pipelines_request(pipeline_name, version_name, data, pipeline_timeout, deployment_timeout, format_):
     """
     [DEPRECATED] Create a pipeline request and retrieve the result.
@@ -534,20 +544,20 @@ def deprecated_pipelines_request(pipeline_name, version_name, data, pipeline_tim
         click.echo(format_pipeline_requests_reference([response]))
 
 
-@commands.group("batch_requests", short_help="[DEPRECATED] Manage your pipeline batch requests")
+@commands.group(name="batch_requests", short_help="[DEPRECATED] Manage your pipeline batch requests")
 def deprecated_batch_requests():
     """
     [DEPRECATED] Manage your pipeline batch requests.
     """
 
-    pass
+    return
 
 
-@deprecated_batch_requests.command("create", short_help="[DEPRECATED] Create a pipeline batch request")
-@PIPELINE_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_DATA_MULTI
-@REQUESTS_FORMATS
+@deprecated_batch_requests.command(name="create", short_help="[DEPRECATED] Create a pipeline batch request")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_DATA_MULTI
+@options.REQUESTS_FORMATS
 def deprecated_batch_requests_create(pipeline_name, version_name, data, format_):
     """
     [DEPRECATED] Create a pipeline batch request and retrieve request IDs to collect the results later.
@@ -581,12 +591,16 @@ def deprecated_batch_requests_create(pipeline_name, version_name, data, format_)
 
     if pipeline.input_type == STRUCTURED_TYPE:
         input_data = []
-        for d in data:
-            input_data.append(parse_json(d))
+        for data_item in data:
+            input_data.append(parse_json(data=data_item))
     else:
         input_data = data
 
-    params = {'project_name': project_name, 'pipeline_name': pipeline_name, 'data': input_data}
+    params = {
+        'project_name': project_name,
+        'pipeline_name': pipeline_name,
+        'data': input_data
+    }
 
     if version_name is not None:
         params['version'] = version_name
@@ -597,20 +611,20 @@ def deprecated_batch_requests_create(pipeline_name, version_name, data, format_)
     client.api_client.close()
 
     if format_ == 'reference':
-        click.echo(format_pipeline_requests_reference(response))
+        click.echo(format_pipeline_requests_reference(pipeline_requests=response))
     elif format_ == 'oneline':
-        click.echo(format_pipeline_requests_oneline(response))
+        click.echo(format_pipeline_requests_oneline(pipeline_requests=response))
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(items=response))
     else:
-        click.echo(format_pipeline_requests_reference(response))
+        click.echo(format_pipeline_requests_reference(pipeline_requests=response))
 
 
-@deprecated_batch_requests.command("get", short_help="[DEPRECATED] Get a pipeline batch request")
-@PIPELINE_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_ID_MULTI
-@REQUESTS_FORMATS
+@deprecated_batch_requests.command(name="get", short_help="[DEPRECATED] Get a pipeline batch request")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_ID_MULTI
+@options.REQUESTS_FORMATS
 def deprecated_batch_requests_get(pipeline_name, version_name, request_id, format_):
     """
     [DEPRECATED] Get the results of one or more pipeline batch requests.
@@ -659,12 +673,12 @@ def deprecated_batch_requests_get(pipeline_name, version_name, request_id, forma
         click.echo(format_pipeline_requests_reference(response))
 
 
-@deprecated_batch_requests.command("list", short_help="[DEPRECATED] List pipeline batch requests")
-@PIPELINE_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@OFFSET
-@REQUEST_LIMIT
-@LIST_FORMATS
+@deprecated_batch_requests.command(name="list", short_help="[DEPRECATED] List pipeline batch requests")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.OFFSET
+@options.REQUEST_LIMIT
+@options.LIST_FORMATS
 def deprecated_batch_requests_list(pipeline_name, version_name, offset, limit, format_):
     """
     [DEPRECATED] List pipeline batch requests.

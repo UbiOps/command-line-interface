@@ -1,41 +1,25 @@
-import sys
-import ubiops as api
-import click
 import json
+import sys
 
-from ubiops_cli.version import VERSION
-import ubiops_cli.src.projects as projects
-import ubiops_cli.src.deployments as deployments
-import ubiops_cli.src.deployment_versions as deployment_versions
-import ubiops_cli.src.deployment_revisions as deployment_revisions
-import ubiops_cli.src.deployment_builds as deployment_builds
-import ubiops_cli.src.environments as environments
-import ubiops_cli.src.environment_revisions as environment_revisions
-import ubiops_cli.src.environment_builds as environment_builds
-import ubiops_cli.src.exports as exports
-import ubiops_cli.src.imports as imports
-import ubiops_cli.src.pipelines as pipelines
-import ubiops_cli.src.pipeline_versions as pipeline_versions
-import ubiops_cli.src.blobs as blobs
-import ubiops_cli.src.buckets as buckets
-import ubiops_cli.src.files as files
-import ubiops_cli.src.logs as logs
-import ubiops_cli.src.config as config
-import ubiops_cli.src.auth as auth
-import ubiops_cli.src.environment_variables as env_vars
-import ubiops_cli.src.request_schedules as schedules
-import ubiops_cli.src.validation as validation
-import ubiops_cli.src.run_local as runlocal
+import click
+
+import ubiops as api
+
+from ubiops_cli.src import auth, blobs, buckets, config, deployment_builds, deployment_revisions, deployment_versions, \
+    deployments, environment_builds, environment_revisions, environment_variables, environments, exports, files, \
+    imports, pipelines, pipeline_versions, projects, logs, run_local, request_schedules, validation
 from ubiops_cli.src.helpers.click_helpers import CustomGroup
+from ubiops_cli.version import VERSION
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+CONTEXT_SETTINGS = {'help_option_names': ['-h', '--help']}
 
 
 @click.group(cls=CustomGroup, context_settings=CONTEXT_SETTINGS)
 @click.version_option(VERSION, prog_name="UbiOps CLI")
 def cli():
     """UbiOps command line interface (CLI)"""
-    pass
+
+    return
 
 
 cli.add_command(auth.signin)
@@ -57,25 +41,37 @@ cli.add_command(pipeline_versions.commands)
 cli.add_command(blobs.commands)
 cli.add_command(buckets.commands)
 cli.add_command(files.commands)
-cli.add_command(env_vars.commands)
+cli.add_command(environment_variables.commands)
 cli.add_command(logs.commands)
 cli.add_command(logs.audit_events)
-cli.add_command(schedules.commands)
+cli.add_command(request_schedules.commands)
 cli.add_command(exports.commands)
 cli.add_command(imports.commands)
 cli.add_command(validation.commands)
-cli.add_command(runlocal.deployment_run_local)
+cli.add_command(run_local.deployment_run_local)
 
 
 def print_error(msg, status=None):
+    """
+    Format errors and print to screen
+
+    :param msg: the error to print
+    :param int|None status: the error status code
+    """
+
     if status:
-        click.secho("Error (%s): %s" % (status, msg), fg="red")
+        click.secho(message=f"Error ({status}): {msg}", fg="red")
     else:
-        click.secho("Error: %s" % msg, fg="red")
+        click.secho(message=f"Error: {msg}", fg="red")
     sys.exit(1)
 
 
+# pylint: disable=broad-except
 def main():
+    """
+    Main function to start click and handle exceptions
+    """
+
     try:
         cli()
     except api.exceptions.ApiException as e:
@@ -86,20 +82,20 @@ def main():
             try:
                 message = json.loads(e.body)
                 if 'error' in message:
-                    print_error(message['error'])
+                    print_error(msg=message['error'])
                 elif 'error_message' in message:
-                    print_error(message['error_message'])
+                    print_error(msg=message['error_message'])
                 else:
-                    print_error(message)
+                    print_error(msg=message)
             except json.JSONDecodeError:
                 if hasattr(e, "status") and hasattr(e, "reason"):
-                    print_error(e.reason, status=e.status)
+                    print_error(msg=e.reason, status=e.status)
                 else:
-                    print_error("an unknown error occurred.")
+                    print_error(msg="an unknown error occurred.")
         else:
-            print_error(e)
+            print_error(msg=e)
     except Exception as e:
-        print_error(e)
+        print_error(msg=e)
 
 
 if __name__ == '__main__':

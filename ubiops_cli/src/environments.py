@@ -1,26 +1,31 @@
+import click
 import ubiops as api
 
+from ubiops_cli.exceptions import UbiOpsException
 from ubiops_cli.src.helpers.environment_helpers import define_environment, ENVIRONMENT_OUTPUT_FIELDS, \
     ENVIRONMENT_FIELDS_RENAMED, ENVIRONMENT_REQUIRED_FIELDS, ENVIRONMENT_FIELDS_UPDATE
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.wait_for import wait_for
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project
 
 LIST_ITEMS = ['last_updated', 'name', 'base_environment', 'labels']
 
 
-@click.group(["environments", "envs"], short_help="Manage your environments")
+@click.group(name=["environments", "envs"], short_help="Manage your environments")
 def commands():
-    """Manage your environments."""
-    pass
+    """
+    Manage your environments.
+    """
+
+    return
 
 
-@commands.command("list", short_help="List environments")
-@LABELS_FILTER
-@ENVIRONMENT_TYPE_FILTER
-@LIST_FORMATS
+@commands.command(name="list", short_help="List environments")
+@options.LABELS_FILTER
+@options.ENVIRONMENT_TYPE_FILTER
+@options.LIST_FORMATS
 def environments_list(labels, environment_type, format_):
     """
     List all your environments in your project.
@@ -46,13 +51,14 @@ def environments_list(labels, environment_type, format_):
     )
 
 
-@commands.command("get", short_help="Get details of an environment")
-@ENVIRONMENT_NAME_ARGUMENT
-@ENVIRONMENT_YAML_OUTPUT
-@QUIET
-@GET_FORMATS
+@commands.command(name="get", short_help="Get details of an environment")
+@options.ENVIRONMENT_NAME_ARGUMENT
+@options.ENVIRONMENT_YAML_OUTPUT
+@options.QUIET
+@options.GET_FORMATS
 def environments_get(environment_name, output_path, quiet, format_):
-    """Get the environment details.
+    """
+    Get the environment details.
 
     If you specify the `<output_path>` option, this location will be used to store the
     environment settings in a yaml file. You can either specify the `<output_path>` as
@@ -92,7 +98,7 @@ def environments_get(environment_name, output_path, quiet, format_):
 
         yaml_file = write_yaml(output_path, dictionary, default_file_name="environment.yaml")
         if not quiet:
-            click.echo('Environment file stored in: %s' % yaml_file)
+            click.echo(f"Environment file stored in: {yaml_file}")
 
     else:
         print_item(
@@ -106,16 +112,17 @@ def environments_get(environment_name, output_path, quiet, format_):
         )
 
 
-@commands.command("create", short_help="Create an environment")
-@ENVIRONMENT_NAME_OVERRULE
-@BASE_ENVIRONMENT
-@ENVIRONMENT_DISPLAY_NAME
-@ENVIRONMENT_DESCRIPTION
-@ENVIRONMENT_LABELS
-@ENVIRONMENT_YAML_FILE
-@CREATE_FORMATS
+@commands.command(name="create", short_help="Create an environment")
+@options.ENVIRONMENT_NAME_OVERRULE
+@options.BASE_ENVIRONMENT
+@options.ENVIRONMENT_DISPLAY_NAME
+@options.ENVIRONMENT_DESCRIPTION
+@options.ENVIRONMENT_LABELS
+@options.ENVIRONMENT_YAML_FILE
+@options.CREATE_FORMATS
 def environments_create(yaml_file, format_, **kwargs):
-    """Create an environment
+    """
+    Create an environment.
 
     \b
     It is possible to define the parameters using a yaml file.
@@ -145,8 +152,8 @@ def environments_create(yaml_file, format_, **kwargs):
 
     environment = define_environment(fields=kwargs, yaml_content=yaml_content, update=True)
 
-    if any(field not in environment.keys() for field in ENVIRONMENT_REQUIRED_FIELDS):
-        raise Exception(
+    if any(field not in environment for field in ENVIRONMENT_REQUIRED_FIELDS):
+        raise UbiOpsException(
             f"Please provide all required fields for environment creation: {', '.join(ENVIRONMENT_REQUIRED_FIELDS)}"
         )
 
@@ -165,16 +172,17 @@ def environments_create(yaml_file, format_, **kwargs):
     )
 
 
-@commands.command("update", short_help="Update an environment")
-@ENVIRONMENT_NAME_ARGUMENT
-@ENVIRONMENT_NAME_UPDATE
-@ENVIRONMENT_DISPLAY_NAME
-@ENVIRONMENT_DESCRIPTION
-@ENVIRONMENT_LABELS
-@ENVIRONMENT_YAML_FILE
-@QUIET
+@commands.command(name="update", short_help="Update an environment")
+@options.ENVIRONMENT_NAME_ARGUMENT
+@options.ENVIRONMENT_NAME_UPDATE
+@options.ENVIRONMENT_DISPLAY_NAME
+@options.ENVIRONMENT_DESCRIPTION
+@options.ENVIRONMENT_LABELS
+@options.ENVIRONMENT_YAML_FILE
+@options.QUIET
 def environments_update(environment_name, new_name, yaml_file, quiet, **kwargs):
-    """Update an environment.
+    """
+    Update an environment.
 
     \b
     It is possible to define the parameters using a yaml file or passing the options as command options.
@@ -212,17 +220,19 @@ def environments_update(environment_name, new_name, yaml_file, quiet, **kwargs):
         click.echo("Environment was successfully updated")
 
 
-@commands.command("delete", short_help="Delete an environment")
-@ENVIRONMENT_NAME_ARGUMENT
-@ASSUME_YES
-@QUIET
+@commands.command(name="delete", short_help="Delete an environment")
+@options.ENVIRONMENT_NAME_ARGUMENT
+@options.ASSUME_YES
+@options.QUIET
 def environments_delete(environment_name, assume_yes, quiet):
-    """Delete an environment."""
+    """
+    Delete an environment.
+    """
 
     project_name = get_current_project(error=True)
 
     if assume_yes or click.confirm(
-        "Are you sure you want to delete environment <%s> in project <%s>?" % (environment_name, project_name)
+        f"Are you sure you want to delete environment <{environment_name}> in project <{project_name}>?"
     ):
         client = init_client()
         client.environments_delete(project_name=project_name, environment_name=environment_name)
@@ -231,12 +241,15 @@ def environments_delete(environment_name, assume_yes, quiet):
             click.echo("Environment was successfully deleted")
 
 
-@commands.command("wait", short_help="Wait for an environment to be ready")
-@ENVIRONMENT_NAME_ARGUMENT
-@TIMEOUT_OPTION
-@QUIET
-def environments_wait(environment_name, timeout, quiet):
-    """Wait for an environment to be ready."""
+@commands.command(name="wait", short_help="Wait for an environment to be ready")
+@options.ENVIRONMENT_NAME_ARGUMENT
+@options.TIMEOUT_OPTION
+@options.STREAM_LOGS
+@options.QUIET
+def environments_wait(environment_name, timeout, stream_logs, quiet):
+    """
+    Wait for an environment to be ready.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -247,6 +260,7 @@ def environments_wait(environment_name, timeout, quiet):
         project_name=project_name,
         environment_name=environment_name,
         timeout=timeout,
-        quiet=quiet
+        quiet=quiet,
+        stream_logs=stream_logs
     )
     client.api_client.close()

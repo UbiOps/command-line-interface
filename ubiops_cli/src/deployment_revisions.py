@@ -1,23 +1,27 @@
+import click
 import ubiops as api
 
 from ubiops_cli.src.helpers.formatting import print_list, print_item
 from ubiops_cli.src.helpers.wait_for import wait_for
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import init_client, get_current_project, default_version_zip_name, write_blob
 
 LIST_ITEMS = ['creation_date', 'id', 'created_by', 'status']
 
 
-@click.group(["version_revisions", "revisions"], short_help="Manage your deployment version revisions")
+@click.group(name=["version_revisions", "revisions"], short_help="Manage your deployment version revisions")
 def commands():
-    """Manage your deployment version revisions."""
-    pass
+    """
+    Manage your deployment version revisions.
+    """
+
+    return
 
 
-@commands.command("list", short_help="List the revisions")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_OPTION
-@LIST_FORMATS
+@commands.command(name="list", short_help="List the revisions")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_OPTION
+@options.LIST_FORMATS
 def revisions_list(deployment_name, version_name, format_):
     """
     List the revisions of a deployment version.
@@ -32,13 +36,15 @@ def revisions_list(deployment_name, version_name, format_):
     print_list(response, LIST_ITEMS, sorting_col=0, fmt=format_)
 
 
-@commands.command("get", short_help="Get a revision of a deployment version")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_OPTION
-@REVISION_ID
-@GET_FORMATS
+@commands.command(name="get", short_help="Get a revision of a deployment version")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_OPTION
+@options.REVISION_ID
+@options.GET_FORMATS
 def revisions_get(deployment_name, version_name, revision_id, format_):
-    """Get a revision of a deployment version."""
+    """
+    Get a revision of a deployment version.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -54,14 +60,15 @@ def revisions_get(deployment_name, version_name, revision_id, format_):
     print_item(revision, row_attrs=LIST_ITEMS, fmt=format_)
 
 
-@commands.command("download", short_help="Download a revision of a deployment version")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_OPTION
-@REVISION_ID
-@ZIP_OUTPUT
-@QUIET
+@commands.command(name="download", short_help="Download a revision of a deployment version")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_OPTION
+@options.REVISION_ID
+@options.ZIP_OUTPUT
+@options.QUIET
 def revisions_download(deployment_name, version_name, revision_id, output_path, quiet):
-    """Download a revision of a deployment version.
+    """
+    Download a revision of a deployment version.
 
     The `<output_path>` option will be used as output location of the zip file. If not specified,
     the current directory will be used. If the `<output_path>` is a directory, the zip will be
@@ -79,16 +86,18 @@ def revisions_download(deployment_name, version_name, revision_id, output_path, 
     client.api_client.close()
 
     if not quiet:
-        click.echo("Zip stored in: %s" % output_path)
+        click.echo(f"Zip stored in: {output_path}")
 
 
-@commands.command("upload", short_help="Create a revision of a deployment version")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_OPTION
-@ZIP_FILE
-@GET_FORMATS
-def revisions_upload(deployment_name, version_name, zip_path, format_):
-    """Create a revision of a deployment version by uploading a ZIP.
+@commands.command(name="upload", short_help="Create a revision of a deployment version")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_OPTION
+@options.ZIP_FILE
+@options.PROGRESS_BAR
+@options.GET_FORMATS
+def revisions_upload(deployment_name, version_name, zip_path, progress_bar, format_):
+    """
+    Create a revision of a deployment version by uploading a ZIP.
 
     Please, specify the deployment package `<zip_path>` that should be uploaded.
     """
@@ -97,21 +106,26 @@ def revisions_upload(deployment_name, version_name, zip_path, format_):
 
     client = init_client()
     revision = client.revisions_file_upload(
-        project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path
+        project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path,
+        _progress_bar=progress_bar
     )
     client.api_client.close()
 
     print_item(revision, row_attrs=['revision', 'build'], fmt=format_)
 
 
-@commands.command("wait", short_help="Wait for a deployment revision to be ready")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_OPTION
-@REVISION_ID
-@TIMEOUT_OPTION
-@QUIET
-def revisions_wait(deployment_name, version_name, revision_id, timeout, quiet):
-    """Wait for a deployment revision to be ready."""
+# pylint: disable=too-many-arguments
+@commands.command(name="wait", short_help="Wait for a deployment revision to be ready")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_OPTION
+@options.REVISION_ID
+@options.TIMEOUT_OPTION
+@options.STREAM_LOGS
+@options.QUIET
+def revisions_wait(deployment_name, version_name, revision_id, timeout, stream_logs, quiet):
+    """
+    Wait for a deployment revision to be ready.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -124,6 +138,7 @@ def revisions_wait(deployment_name, version_name, revision_id, timeout, quiet):
         version=version_name,
         revision_id=revision_id,
         timeout=timeout,
-        quiet=quiet
+        quiet=quiet,
+        stream_logs=stream_logs
     )
     client.api_client.close()

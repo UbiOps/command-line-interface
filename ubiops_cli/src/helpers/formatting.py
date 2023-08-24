@@ -1,22 +1,28 @@
-import yaml
 import json
+
+from datetime import datetime, date
+
 import click
 import dateutil.parser
+import yaml
+
 from tabulate import tabulate
-from datetime import datetime, date
+
 from ubiops_cli.constants import SUCCESS_STATUSES, WARNING_STATUSES, ERROR_STATUSES
 
 
 def format_status(status, success_green=False):
     """
-    Format status with color
+    Format status with color; success (green|default), warning (yellow) and error (red)
+
+    :param str status: the status to format
+    :param bool success_green: whether to format success statuses with green color
     """
 
     if status in SUCCESS_STATUSES:
         if success_green:
             return click.style(status, fg='green')
-        else:
-            return status
+        return status
     if status in WARNING_STATUSES:
         return click.style(status, fg='yellow')
     if status in ERROR_STATUSES:
@@ -27,19 +33,22 @@ def format_status(status, success_green=False):
 def format_boolean(value):
     """
     Format boolean with color
+
+    :param bool value: the boolean to format
     """
 
-    if type(value) == bool:
+    if isinstance(value, bool):
         if value:
             return click.style(str(value), fg='green')
-        else:
-            return click.style(str(value), fg='red')
+        return click.style(str(value), fg='red')
     return value
 
 
 def format_action(action):
     """
-    Format status with color
+    Format action with color
+
+    :param str action: the action in the audit events
     """
 
     if action == 'create':
@@ -54,6 +63,8 @@ def format_action(action):
 def format_labels(labels_dict):
     """
     Format labels dictionary as 'key:value,key2:value'
+
+    :param dict labels_dict: the labels to format
     """
 
     if labels_dict is None:
@@ -61,13 +72,15 @@ def format_labels(labels_dict):
 
     labels = []
     for k, v in labels_dict.items():
-        labels.append("%s:%s" % (k, str(v)))
+        labels.append(f"{k}:{v}")
     return ", ".join(labels)
 
 
 def parse_datetime(dt):
     """
     Parse ISO formatted datetime-string
+
+    :param str dt: the datetime string to parse
     """
 
     try:
@@ -79,7 +92,10 @@ def parse_datetime(dt):
 
 def format_datetime(dt, fmt='%a %b %d %Y %H:%M:%S %Z'):
     """
-    Format datetime human readable
+    Format datetime human-readable
+
+    :param datetime dt: the datetime to format
+    :param str fmt: how to format it
     """
 
     if dt is None:
@@ -87,7 +103,7 @@ def format_datetime(dt, fmt='%a %b %d %Y %H:%M:%S %Z'):
 
     try:
         return dt.strftime(fmt)
-    except TypeError:
+    except (AttributeError, TypeError):
         pass
     return str(dt)
 
@@ -95,6 +111,9 @@ def format_datetime(dt, fmt='%a %b %d %Y %H:%M:%S %Z'):
 def format_log(log, log_level):
     """
     Format log line with color depending on the log level (info or error)
+
+    :param str log: the log to format
+    :param str log_level: the log level to use; 'info' or 'error'
     """
 
     if log_level == 'error':
@@ -104,7 +123,9 @@ def format_log(log, log_level):
 
 def object_to_dict(obj):
     """
-    Change object to dict
+    Convert object to dict
+
+    :param object obj: the object to convert
     """
 
     if isinstance(obj, (str, dict)):
@@ -114,10 +135,10 @@ def object_to_dict(obj):
     dictionary = {}
     for attr in attributes:
         value = getattr(obj, attr)
-        if type(value) == list:
+        if isinstance(value, list):
             dictionary[attr] = [object_to_dict(j) for j in value]
 
-        elif type(value) == datetime or type(value) == date:
+        elif isinstance(value, (date, datetime)):
             dictionary[attr] = str(value)
 
         else:
@@ -131,15 +152,21 @@ def object_to_dict(obj):
 
 
 def format_json(items):
+    """
+    Format object(s) as json/dict
+
+    :param object|list[object] items: the item(s) to format
+    """
+
     items = format_datetime_attrs(items, prettify=False)
 
-    if type(items) == list:
+    if isinstance(items, list):
         return json.dumps([object_to_dict(i) for i in items])
 
-    else:
-        return json.dumps(object_to_dict(items))
+    return json.dumps(object_to_dict(items))
 
 
+# pylint: disable=too-many-arguments
 def format_yaml(item, required_front=None, optional=None, required_end=None, rename=None, as_str=True):
     """
     Change object to dict in such a way that it can be used as yaml output.
@@ -167,51 +194,46 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
     if rename is None:
         rename = {}
 
-    def split_lower_level_attributes(attrs):
-        """
-        If a space is used in the attribute lists, the first part is the current attribute
-        and after the space is a lower level attribute. This is useful when the item contains inner-items.
-        """
+    required_front = _split_lower_level_attributes(required_front)
+    optional = _split_lower_level_attributes(optional)
+    required_end = _split_lower_level_attributes(required_end)
 
-        splitted = [(a.split(" ")[0], " ".join(a.split(" ")[1:]))
-                    if len(a.split(" ")) > 1 else (a, None) for a in attrs]
-        grouped = {}
-        for attr, inner_attr in splitted:
-            if attr in grouped:
-                if inner_attr is not None:
-                    grouped[attr].append(inner_attr)
-            else:
-                if inner_attr is None:
-                    grouped[attr] = []
-                else:
-                    grouped[attr] = [inner_attr]
-        grouped = {attr: None if len(inner_attr) == 0 else inner_attr for attr, inner_attr in grouped.items()}
-        return grouped
-
-    required_front = split_lower_level_attributes(required_front)
-    optional = split_lower_level_attributes(optional)
-    required_end = split_lower_level_attributes(required_end)
-
-    def set_value_in_dict(k, v, results_dict):
+    def set_value_in_dict(key, value, results_dict):
         """
         Set key k (possibly renamed by 'rename') in results_dict to value v.
         If value v is of type list, format each item in list as dictionary too.
+
+        ;param str key: the key in the dict
+        :param value: the value to put for the key
+        :param dict results_dict: the dict to update
         """
 
-        key_name = rename[k] if k in rename else k
+        key_name = rename[key] if key in rename else key
         if key_name in results_dict:
             return
 
-        if type(v) == list:
-            inner_front = required_front[k] if k in required_front else None
-            inner_optional = optional[k] if k in optional else None
-            inner_end = required_end[k] if k in required_end else None
-            inner_rename = {" ".join(rename_key.split(' ')[1:]): rename_value
-                            for rename_key, rename_value in rename.items() if rename_key.startswith('%s ' % k)}
-            results_dict[key_name] = [format_yaml(j, as_str=False, required_front=inner_front, optional=inner_optional,
-                                                  required_end=inner_end, rename=inner_rename) for j in v]
+        if isinstance(value, list):
+            inner_front = required_front[key] if key in required_front else None
+            inner_optional = optional[key] if key in optional else None
+            inner_end = required_end[key] if key in required_end else None
+            inner_rename = {
+                " ".join(rename_key.split(' ')[1:]): rename_value
+                for rename_key, rename_value in rename.items()
+                if rename_key.startswith(f"{key} ")
+            }
+            results_dict[key_name] = [
+                format_yaml(
+                    item=j,
+                    as_str=False,
+                    required_front=inner_front,
+                    optional=inner_optional,
+                    required_end=inner_end,
+                    rename=inner_rename
+                )
+                for j in value
+            ]
         else:
-            results_dict[key_name] = v
+            results_dict[key_name] = value
 
     dictionary = {}
     for i in required_front.keys():
@@ -225,8 +247,7 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
     if as_str:
         # Convert dictionary to yaml string, and remove last empty line
         return yaml.dump(dictionary, sort_keys=False).rstrip("\n")
-    else:
-        return dictionary
+    return dictionary
 
 
 def format_datetime_attrs(items, prettify=True):
@@ -234,19 +255,22 @@ def format_datetime_attrs(items, prettify=True):
     Change datetime attributes of object(s) to formatted string.
     If prettify = True: use format_datetime() to format datetime attribute values.
     If prettify = False: use str() to format datetime attribute values.
+
+    :param object|list[object] items: the items to format which will be checked for datetime attributes
+    :param bool prettify: whether to format datetime values to prettier strings
     """
 
     def _format_date_fields(obj):
         attrs = [k[1:] for k in obj.__dict__.keys() if k.startswith('_')]
         for attr in attrs:
-            if hasattr(obj, attr) and (type(getattr(obj, attr)) == datetime or type(getattr(obj, attr)) == date):
+            if hasattr(obj, attr) and isinstance(getattr(obj, attr), (date, datetime)):
                 value = getattr(obj, attr)
                 value = format_datetime(value) if prettify else str(value)
                 setattr(obj, attr, value)
 
         return obj
 
-    if type(items) == list:
+    if isinstance(items, list):
         formatted = []
         for item in items:
             formatted.append(_format_date_fields(item))
@@ -256,7 +280,22 @@ def format_datetime_attrs(items, prettify=True):
     return formatted
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-branches
 def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse=False, fmt='table', pager=False):
+    """
+    Print a list of objects returned from the client library
+
+    :param list[object] items: the items to print
+    :param list[str] attrs: the attributes to print for each object
+    :param dict rename_cols: if provided, attributes to rename in the columns of the table, in the form of;
+        <attribute name>: <column name>
+    :param int sorting_col: index of the attributes list to sort on
+    :param bool sorting_reverse: whether to sort the column in descending order, ascending otherwise
+    :param str fmt: how the object should be formatted; 'json', 'yaml' or 'row'
+    :param bool pager: whether to
+    """
+
     rename_cols = {} if rename_cols is None else rename_cols
     if fmt == 'json':
         click.echo(format_json(items))
@@ -267,10 +306,15 @@ def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse
         items = format_datetime_attrs(items)
 
         if len(items) > 0:
-            header = [rename_cols[attr].upper() if attr in rename_cols else attr.upper()
-                      for attr in attrs if hasattr(items[0], attr)]
+            header = [
+                rename_cols[attr].upper() if attr in rename_cols else attr.upper()
+                for attr in attrs if hasattr(items[0], attr)
+            ]
         else:
-            header = [rename_cols[attr].upper() if attr in rename_cols else attr.upper() for attr in attrs]
+            header = [
+                rename_cols[attr].upper() if attr in rename_cols else attr.upper()
+                for attr in attrs
+            ]
 
         table = []
         for i in items:
@@ -279,7 +323,7 @@ def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse
                 if hasattr(i, attr):
                     if attr == 'status':
                         row.append(format_status(getattr(i, attr)))
-                    elif attr == 'enabled' or attr == 'success':
+                    elif attr in ['enabled', 'success']:
                         row.append(format_boolean(getattr(i, attr)))
                     elif attr == 'action':
                         row.append(format_action(getattr(i, attr)))
@@ -301,15 +345,40 @@ def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse
 
 
 def print_projects_list(projects, current, attrs, fmt='simple'):
+    """
+    Print the projects returned from the client library
+
+    :param list[object] projects: the projects to print
+    :param str current: the name of the current project
+    :param list[str] attrs: the project attributes to print
+    :param str fmt: how the projects should be formatted; 'simple', 'json' or 'table'
+    """
+
     if fmt == 'simple':
-        table = [[click.style('*', fg='yellow') if i.name == current else None, i.name] for i in projects]
+        table = [[click.style(text='*', fg='yellow') if i.name == current else None, i.name] for i in projects]
         sorted_table = sorted(table, key=lambda x: x[1])
         click.echo(tabulate(sorted_table, tablefmt="plain"))
     else:
         print_list(projects, attrs, sorting_col=1, fmt=fmt)
 
 
+# pylint: disable=too-many-arguments
 def print_item(item, row_attrs, required_front=None, optional=None, required_end=None, rename=None, fmt='row'):
+    """
+    Print an object returned from the client library
+
+    :param object item: the item to print
+    :param list[str] row_attrs: the object attributes to print as a row of a table
+    :param list[str] required_front: the object attributes that should be printed first and are required; if they are
+        not given or None, they will be printed as none
+    :param list[str] optional: the object attributes that should be printed after the required_front attributes and are
+        optoinal; if they are not given or None, they will be excluded
+    :param list[str] required_end: the object attributes that should be printed last and are required; if they are not
+        given or None, they will be printed as none
+    :param dict rename: if provided, attributes to rename in the form of; <attribute name>: <renamed key>
+    :param str fmt: how the object should be formatted; 'json', 'yaml' or 'row'
+    """
+
     if fmt == 'json':
         click.echo(format_json(item))
     elif fmt == 'yaml':
@@ -320,15 +389,22 @@ def print_item(item, row_attrs, required_front=None, optional=None, required_end
 
 
 def format_logs_reference(logs, extended=None):
+    """
+    Format logs to multiple lines
+
+    :param list[object] logs: the logs to format
+    :param list[str] extended: set of extra attributes to show apart from the log and date
+    """
+
     overview = ''
     total = len(logs)
     for i, log in enumerate(logs):
-        overview += "Log: %s\n" % click.style(log.id, fg='yellow')
-        overview += 'Date: %s\n' % format_datetime(parse_datetime(log.date))
+        overview += f"Log: {click.style(log.id, fg='yellow')}\n"
+        overview += f"Date: {format_datetime(parse_datetime(log.date))}\n"
         if extended:
             for attr in extended:
                 if getattr(log, attr) is not None:
-                    overview += '%s: %s\n' % (attr, getattr(log, attr))
+                    overview += f"{attr}: {getattr(log, attr)}\n"
         overview += '\n'
 
         # Change the color of the log depending on the log level
@@ -346,6 +422,12 @@ def format_logs_reference(logs, extended=None):
 
 
 def format_logs_oneline(logs):
+    """
+    Format logs to single lines
+
+    :param list[object] logs: the logs to format
+    """
+
     overview = ''
     total = len(logs)
     for i, log in enumerate(logs):
@@ -368,9 +450,13 @@ def format_logs_oneline(logs):
     return overview
 
 
+# pylint: disable=too-many-branches
 def format_requests_reference(requests, split_requests='\n\n'):
     """
-    Format deployment requests in a pipeline request with reference
+    Format object requests in a pipeline request with references
+
+    :param list[object] requests: the pipeline object requests to format
+    :param str split_requests: string with which the requests are separated in the formatted string
     """
 
     overview = ''
@@ -378,48 +464,51 @@ def format_requests_reference(requests, split_requests='\n\n'):
 
     for i, request in enumerate(requests):
         if hasattr(request, 'pipeline_object'):
-            overview += 'Object: %s\n' % request.pipeline_object
+            overview += f"Object: {request.pipeline_object}\n"
 
         if hasattr(request, 'id') and request.id is not None:
-            overview += "Id: %s\n" % click.style(str(request.id), fg='yellow')
+            overview += f"Request id: {click.style(str(request.id), fg='yellow')}\n"
 
         if hasattr(request, 'time_created'):
-            overview += 'Creation date: %s\n' % format_datetime(request.time_created)
+            overview += f"Creation date: {format_datetime(request.time_created)}\n"
 
         if hasattr(request, 'time_started'):
-            overview += 'Start date: %s\n' % format_datetime(request.time_started)
+            overview += f"Start date: {format_datetime(request.time_started)}\n"
 
         if hasattr(request, 'time_completed'):
-            overview += 'Completion date: %s\n' % format_datetime(request.time_completed)
+            overview += f"Completion date: {format_datetime(request.time_completed)}\n"
 
         if hasattr(request, 'operator'):
-            overview += 'Operator: %s\n' % request.operator
+            overview += f"Operator: {request.operator}\n"
 
         if hasattr(request, 'deployment'):
-            overview += 'Deployment: %s\n' % request.deployment
+            overview += f"Deployment: {request.deployment}\n"
+
+        if hasattr(request, 'pipeline'):
+            overview += f"Pipeline: {request.pipeline}\n"
 
         if hasattr(request, 'version'):
-            overview += 'Version: %s\n' % request.version
+            overview += f"Version: {request.version}\n"
 
         if hasattr(request, 'status') and request.status != 'completed':
-            overview += 'Status: %s' % format_status(request.status, success_green=True)
+            overview += f"Status: {format_status(status=request.status, success_green=True)}"
 
         elif hasattr(request, 'success'):
             if request.success:
-                overview += 'Status: %s' % click.style('completed', fg='green')
+                overview += f"Status: {click.style(text='completed', fg='green')}"
             else:
-                overview += 'Status: %s' % click.style('failed', fg='red')
+                overview += f"Status: {click.style(text='failed', fg='red')}"
 
         if hasattr(request, 'error_message') and request.error_message:
-            overview += '\nError message: %s' % click.style(str(request.error_message), fg='red')
+            overview += f"\nError message: {click.style(str(request.error_message), fg='red')}"
 
         if hasattr(request, 'request_data'):
             request_data = '-' if request.request_data is None else json.dumps(request.request_data)
-            overview += '\nRequest data: %s' % request_data
+            overview += f"\nRequest data: {request_data}"
 
         if hasattr(request, 'result'):
             request_result = '-' if request.result is None else json.dumps(request.result)
-            overview += '\nResult: %s' % request_result
+            overview += f"\nResult: {request_result}"
 
         if i + 1 < total:
             overview += split_requests
@@ -429,7 +518,9 @@ def format_requests_reference(requests, split_requests='\n\n'):
 
 def format_requests_oneline(requests):
     """
-    Format deployment requests in a pipeline request in one line
+    Format object requests in a pipeline request in one line
+
+    :param list[object] requests: the pipeline object requests to format
     """
 
     overview = ''
@@ -454,9 +545,9 @@ def format_requests_oneline(requests):
 
         elif hasattr(request, 'success'):
             if request.success:
-                overview += click.style('completed ', fg='green')
+                overview += click.style(text='completed ', fg='green')
             else:
-                overview += click.style('failed ', fg='red')
+                overview += click.style(text='failed ', fg='red')
 
         if hasattr(request, 'request_data'):
             overview += '-' if request.request_data is None else json.dumps(request.request_data)
@@ -467,7 +558,7 @@ def format_requests_oneline(requests):
 
         if hasattr(request, 'error_message') and request.error_message:
             overview += ' '
-            overview += click.style(str(request.error_message), fg='red')
+            overview += click.style(text=str(request.error_message), fg='red')
 
         if i + 1 < total:
             overview += '\n'
@@ -475,9 +566,12 @@ def format_requests_oneline(requests):
     return overview
 
 
+# pylint: disable=too-many-branches
 def format_pipeline_requests_reference(pipeline_requests):
     """
-    Format the given pipeline request(s) with reference for showing in response
+    Format the given pipeline requests with references
+
+    :param list[object] pipeline_requests: the pipeline requests to format
     """
 
     overview = ''
@@ -485,60 +579,57 @@ def format_pipeline_requests_reference(pipeline_requests):
 
     for j, pipeline_request in enumerate(pipeline_requests):
         if hasattr(pipeline_request, 'id') and pipeline_request.id is not None:
-            overview += "Pipeline request id: %s\n" % click.style(str(pipeline_request.id), fg='yellow')
+            overview += f"Pipeline request id: {click.style(text=str(pipeline_request.id), fg='yellow')}\n"
 
         if hasattr(pipeline_request, 'pipeline'):
-            overview += 'Pipeline: %s\n' % pipeline_request.pipeline
+            overview += f"Pipeline: {pipeline_request.pipeline}\n"
 
         if hasattr(pipeline_request, 'version'):
-            overview += 'Version: %s\n' % pipeline_request.version
+            overview += f"Version: {pipeline_request.version}\n"
 
         if hasattr(pipeline_request, 'time_created'):
-            overview += 'Creation date: %s\n' % format_datetime(pipeline_request.time_created)
+            overview += f"Creation date: {format_datetime(pipeline_request.time_created)}\n"
 
         if hasattr(pipeline_request, 'status') and pipeline_request.status != 'completed':
-            overview += 'Status: %s' % format_status(pipeline_request.status, success_green=True)
+            overview += f"Status: {format_status(pipeline_request.status, success_green=True)}"
 
         elif hasattr(pipeline_request, 'success'):
             if pipeline_request.success:
-                overview += 'Status: %s' % click.style('completed', fg='green')
+                overview += f"Status: {click.style('completed', fg='green')}"
             else:
-                overview += 'Status: %s' % click.style('failed', fg='red')
+                overview += f"Status: {click.style('failed', fg='red')}"
 
         if hasattr(pipeline_request, 'error_message') and pipeline_request.error_message:
-            overview += '\nError message: %s' % click.style(str(pipeline_request.error_message), fg='red')
+            overview += f"\nError message: {click.style(str(pipeline_request.error_message), fg='red')}"
 
         if hasattr(pipeline_request, 'request_data'):
             request_data = '-' if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
-            overview += '\nRequest data: %s' % request_data
+            overview += f"\nRequest data: {request_data}"
 
         if hasattr(pipeline_request, 'result'):
             request_result = '-' if pipeline_request.result is None else json.dumps(pipeline_request.result)
-            overview += '\nResult: %s' % request_result
+            overview += f"\nResult: {request_result}"
 
-        if hasattr(pipeline_request, 'deployment_requests') and isinstance(pipeline_request.deployment_requests, list) \
-                and len(pipeline_request.deployment_requests) > 0:
-            overview += '\n'
-            deployment_requests = format_requests_reference(
-                pipeline_request.deployment_requests, split_requests='\n'
-            )
-            deployment_requests = "\n".join(
-                ["\n - %s" % line if line.startswith('Object') else "   %s" % line
-                 for line in deployment_requests.split("\n")]
-            )
-            overview += deployment_requests
+        object_requests = []
+        if hasattr(pipeline_request, 'deployment_requests') and isinstance(pipeline_request.deployment_requests, list):
+            object_requests.extend(pipeline_request.deployment_requests)
+        if hasattr(pipeline_request, 'operator_requests') and isinstance(pipeline_request.operator_requests, list):
+            object_requests.extend(pipeline_request.operator_requests)
+        if hasattr(pipeline_request, 'pipeline_requests') and isinstance(pipeline_request.pipeline_requests, list):
+            object_requests.extend(pipeline_request.pipeline_requests)
 
-        if hasattr(pipeline_request, 'operator_requests') and isinstance(pipeline_request.operator_requests, list) \
-                and len(pipeline_request.operator_requests) > 0:
+        # Sort object requests on sequence_id
+        object_requests = sorted(object_requests, key=lambda k: k.sequence_id)
+
+        if len(object_requests) > 0:
             overview += '\n'
-            operator_requests = format_requests_reference(
-                pipeline_request.operator_requests, split_requests='\n'
+
+            requests = format_requests_reference(object_requests, split_requests='\n')
+            requests = "\n".join(
+                [f"\n - {line}" if line.startswith('Object') else f"   {line}"
+                 for line in requests.split("\n")]
             )
-            operator_requests = "\n".join(
-                ["\n - %s" % line if line.startswith('Object') else "   %s" % line
-                 for line in operator_requests.split("\n")]
-            )
-            overview += operator_requests
+            overview += requests
 
         if j + 1 < total:
             overview += '\n\n'
@@ -548,7 +639,9 @@ def format_pipeline_requests_reference(pipeline_requests):
 
 def format_pipeline_requests_oneline(pipeline_requests):
     """
-    Format the given pipeline request(s) in oneline for showing in response
+    Format the given pipeline requests in oneline
+
+    :param list[object] pipeline_requests: the pipeline requests to format
     """
 
     overview = ''
@@ -565,9 +658,9 @@ def format_pipeline_requests_oneline(pipeline_requests):
 
         elif hasattr(pipeline_request, 'success'):
             if pipeline_request.success:
-                overview += click.style('completed ', fg='green')
+                overview += click.style(text='completed ', fg='green')
             else:
-                overview += click.style('failed ', fg='red')
+                overview += click.style(text='failed ', fg='red')
             overview += ' '
 
         if hasattr(pipeline_request, 'request_data'):
@@ -583,3 +676,38 @@ def format_pipeline_requests_oneline(pipeline_requests):
             overview += '\n'
 
     return overview
+
+
+def _split_lower_level_attributes(attrs):
+    """
+    If a space is used in the attribute lists, the first part is the current attribute
+    and after the space is a lower level attribute. This is useful when the item contains inner-items.
+
+    :param list[str] attrs: the list of attributes to split for lower level attributes
+    """
+
+    split_lower_levels = []
+    for attribute in attrs:
+        attribute_levels = attribute.split(" ")
+        if len(attribute_levels) > 1:
+            split_lower_levels.append((attribute_levels[0],  " ".join(attribute_levels[1:])))
+        else:
+            split_lower_levels.append((attribute, None))
+
+    grouped = {}
+    for attr, inner_attr in split_lower_levels:
+        if attr in grouped:
+            if inner_attr is not None:
+                grouped[attr].append(inner_attr)
+        else:
+            if inner_attr is None:
+                grouped[attr] = []
+            else:
+                grouped[attr] = [inner_attr]
+
+    grouped = {
+        attr: None
+        if len(inner_attr) == 0 else inner_attr
+        for attr, inner_attr in grouped.items()
+    }
+    return grouped

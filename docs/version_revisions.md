@@ -104,6 +104,8 @@ Please, specify the deployment package `<zip_path>` that should be uploaded.
 
 - [required] `-z`/`--zip_path`<br/>Path to deployment version zip file
 
+- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+
 - `-fmt`/`--format`<br/>The output format
 
 
@@ -130,6 +132,8 @@ Wait for a deployment revision to be ready.
 - [required] `-v`/`--version_name`<br/>The version name
 
 - `-t`/`--timeout`<br/>Timeout in seconds for the operation
+
+- `--stream_logs`<br/>Stream logs while waiting
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 

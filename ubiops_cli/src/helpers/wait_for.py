@@ -3,6 +3,7 @@ from datetime import datetime
 import click
 
 
+# pylint: disable=broad-except
 def wait_for(func, **kwargs):
     """
     Executes a wait_for client library function and prints the result
@@ -22,13 +23,13 @@ def wait_for(func, **kwargs):
 
     if not kwargs.get('quiet'):
         time_completed = datetime.now()
-        click.echo("Start date: %s" % time_started.isoformat(timespec='milliseconds'))
-        click.echo("Completion date: %s" % time_completed.isoformat(timespec='milliseconds'))
+        click.echo(f"Start date: {time_started.isoformat(timespec='milliseconds')}")
+        click.echo(f"Completion date: {time_completed.isoformat(timespec='milliseconds')}")
 
     if success:
-        click.echo('Status: %s' % click.style('success', fg='green'))
+        click.echo(f"Status: {click.style('success', fg='green')}")
     else:
-        click.echo('Status: %s' % click.style('failed', fg='red'))
+        click.echo(f"Status: {click.style('failed', fg='red')}")
 
     if error_message:
-        click.echo('Error message: %s' % click.style(error_message, fg='red'))
+        click.echo(f"Error message: {click.style(error_message, fg='red')}")

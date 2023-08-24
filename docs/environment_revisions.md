@@ -96,6 +96,8 @@ Please, specify the deployment package `<zip_path>` that should be uploaded.
 
 - [required] `-z`/`--zip_path`<br/>Path to environment zip file
 
+- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+
 - `-fmt`/`--format`<br/>The output format
 
 

@@ -243,6 +243,8 @@ Use the `<overwrite>` option to overwrite the deployment package on UbiOps if on
 
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
+- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+
 - `-q`/`--quiet`<br/>Suppress informational messages
 
 
@@ -372,6 +374,8 @@ either be passed as command argument or specified inside the yaml file using `<d
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
 - `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
+
+- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 

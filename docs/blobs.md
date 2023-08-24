@@ -38,6 +38,8 @@ Upload a new blob.
 
 - `-ttl`/`--time_to_live`<br/>The time to live of the blob in seconds (default = 259200 seconds, 3 days)
 
+- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+
 - `-fmt`/`--format`<br/>The output format
 
 
@@ -85,6 +87,8 @@ Update an existing blob by uploading a new file.
 - [required] `-f`/`--input_path`<br/>Path to file
 
 - `-ttl`/`--time_to_live`<br/>The time to live of the blob in seconds (default = 259200 seconds, 3 days)
+
+- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 

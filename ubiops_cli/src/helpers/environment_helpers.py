@@ -31,10 +31,7 @@ def define_environment(fields, yaml_content, update=False):
 
     # Iterate through expected input fields and retrieve them from the provided fields and / or yaml content
     for input_field in ENVIRONMENT_INPUT_FIELDS:
-        input_field_name = input_field
-
-        if input_field in ENVIRONMENT_FIELDS_RENAMED:
-            input_field_name = ENVIRONMENT_FIELDS_RENAMED[input_field]
+        input_field_name = ENVIRONMENT_FIELDS_RENAMED.get(input_field, input_field)
 
         # Options provided via the CLI have priority over options provided via YAML file
         if is_defined(fields, input_field_name):

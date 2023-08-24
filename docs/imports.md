@@ -74,6 +74,8 @@ Please, specify the import file `<zip_path>` that should be uploaded.
 
 - `--skip_confirmation`<br/>Whether you want to skip the confirmation step
 
+- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+
 - `-fmt`/`--format`<br/>The output format
 
 

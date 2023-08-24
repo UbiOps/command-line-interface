@@ -78,7 +78,7 @@ base_environment: python3-9
 
 **Description:**
 
-Create an environment
+Create an environment.
 
 
 It is possible to define the parameters using a yaml file.
@@ -208,6 +208,8 @@ Wait for an environment to be ready.
 **Options:**
 
 - `-t`/`--timeout`<br/>Timeout in seconds for the operation
+
+- `--stream_logs`<br/>Stream logs while waiting
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 

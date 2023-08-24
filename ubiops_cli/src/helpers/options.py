@@ -12,6 +12,14 @@ ASSUME_YES = click.option(
     '-y', '--assume_yes', default=False, required=False, is_flag=True,
     help="Assume yes instead of asking for confirmation"
 )
+PROGRESS_BAR = click.option(
+    '-pb', '--progress_bar', required=False, metavar='<bool>', default=True, type=click.BOOL,
+    help="Whether the show a progress bar while uploading", show_default=True
+)
+STREAM_LOGS = click.option(
+    '--stream_logs', default=False, required=False, is_flag=True,
+    help="Stream logs while waiting"
+)
 QUIET = click.option(
     '-q', '--quiet', default=False, required=False, is_flag=True, help="Suppress informational messages"
 )
@@ -55,12 +63,12 @@ SET_VALUE = click.argument('value', nargs=1, required=True, metavar='<value>')
 
 # Authentication
 BEARER = click.option(
-    '--bearer', 'type_', flag_value='bearer', default=True,
+    '--bearer', 'method', flag_value='bearer', default=True,
     help="Sign in with email and password [default]"
 )
-TOKEN = click.option('--token', 'type_', flag_value='token', help="Sign in with a service token")
-API_ENDPOINT = click.option(
-    '--api', 'api_endpoint', default=Config().DEFAULT_API, show_default=True,
+TOKEN = click.option('--token', 'method', flag_value='token', help="Sign in with a service token")
+API_HOST = click.option(
+    '--api', 'host', default=Config().DEFAULT_API, show_default=True,
     metavar="<endpoint>", type=click.STRING, help="The API endpoint of UbiOps"
 )
 EMAIL_ARGUMENT = click.argument('email', required=True, metavar="<email>", nargs=1)
@@ -100,7 +108,7 @@ DEPLOYMENT_NAME_UPDATE = click.option(
 )
 DEPLOYMENT_YAML_FILE = click.option(
     "-f", "--yaml_file", required=True, type=click.Path(), metavar='<path>',
-    help="Path to a yaml file that contains at least the following fields: [%s]" % ", ".join(DEPLOYMENT_REQUIRED_FIELDS)
+    help=f"Path to a yaml file that contains at least the following fields: [{', '.join(DEPLOYMENT_REQUIRED_FIELDS)}]"
 )
 DEPLOYMENT_YAML_FILE_OPTIONAL = click.option(
     "-f", "--yaml_file", required=False, default=None, type=click.Path(),
@@ -217,7 +225,7 @@ VERSION_DESCRIPTION = click.option(
 # Deployment package variables
 PACKAGE_DIR = click.option(
     "-dir", "--directory", required=True, type=click.Path(resolve_path=True), metavar='<path>',
-    help="Path to a directory that contains at least a '%s.py'" % SYS_DEPLOYMENT_FILE_NAME_VALUE
+    help=f"Path to a directory that contains at least a '{SYS_DEPLOYMENT_FILE_NAME_VALUE}.py'"
 )
 IGNORE_FILE = click.option(
     '-i', '--ignore_file', 'ignore_file', required=False, default=None, metavar='<filename>',
@@ -432,11 +440,11 @@ PIPELINE_NAME_UPDATE = click.option('-n', '--new_name', required=False, default=
 
 PIPELINE_YAML_FILE = click.option(
     "-f", "--yaml_file", required=True, type=click.Path(), metavar='<path>',
-    help="Path to a yaml file that contains at least the following fields: [%s]" % ", ".join(PIPELINE_REQUIRED_FIELDS)
+    help=f"Path to a yaml file that contains at least the following fields: [{', '.join(PIPELINE_REQUIRED_FIELDS)}]"
 )
 PIPELINE_YAML_FILE_UPDATE = click.option(
     "-f", "--yaml_file", required=False, default=None, type=click.Path(), metavar='<path>',
-    help="Path to a yaml file that contains at least the following fields: [%s]" % ", ".join(PIPELINE_REQUIRED_FIELDS)
+    help=f"Path to a yaml file that contains at least the following fields: [{', '.join(PIPELINE_REQUIRED_FIELDS)}]"
 )
 PIPELINE_YAML_OUTPUT = click.option(
     '-o', '--output_path', required=False, default=None, metavar='<path>',
@@ -670,7 +678,7 @@ TIMEOUT_OPTION = click.option(
 
 DEPLOYMENT_DIR = click.option(
     "-dir", "--directory", required=True, type=click.Path(resolve_path=True), metavar='<path>',
-    help="Path to a directory that contains at least a '%s.py'" % SYS_DEPLOYMENT_FILE_NAME_VALUE
+    help=f"Path to a directory that contains at least a '{SYS_DEPLOYMENT_FILE_NAME_VALUE}.py'"
 )
 
 REQUEST_DATA_PLAIN = click.option(
