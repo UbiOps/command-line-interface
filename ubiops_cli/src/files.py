@@ -1,35 +1,46 @@
 from os import path
 
+import click
+
 from ubiops.utils.file_operations import upload_file, download_file
 
 from ubiops_cli.utils import get_current_project, init_client
 from ubiops_cli.src.helpers.formatting import print_list, print_item
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 
 
 LIST_ITEMS = ['file', 'size', 'time_created']
 
 
-@click.group("files", short_help="Manage your files")
+@click.group(name="files", short_help="Manage your files")
 def commands():
-    """Manage your files."""
-    pass
+    """
+    Manage your files.
+    """
+
+    return
 
 
-@commands.group("signedurl", short_help="Manage signedurls for your files")
+@commands.group(name="signedurl", short_help="Manage signedurls for your files")
 def signedurl_commands():
-    """Manage signedurls for your files."""
+    """
+    Manage signedurls for your files.
+    """
+
+    return
 
 
-@commands.command("list", short_help="List files in bucket")
-@BUCKET_NAME_OPTION
-@FILE_PREFIX
-@FILE_DELIMITER
-@FILE_LIMIT
-@FILE_CONTINUATION_TOKEN
-@LIST_FORMATS
+# pylint: disable=too-many-arguments
+@commands.command(name="list", short_help="List files in bucket")
+@options.BUCKET_NAME_OPTION
+@options.FILE_PREFIX
+@options.FILE_DELIMITER
+@options.FILE_LIMIT
+@options.FILE_CONTINUATION_TOKEN
+@options.LIST_FORMATS
 def files_list(bucket_name, prefix, delimiter, limit, continuation_token, format_):
-    """List files in a bucket.
+    """
+    List files in a bucket.
 
     If formatted as table it will only show the file name, size and time_created.
 
@@ -59,16 +70,18 @@ def files_list(bucket_name, prefix, delimiter, limit, continuation_token, format
 
     # If format is table print prefixes as well
     if format_ == 'table':
-        for prefix in file_detail.prefixes:
-            click.echo(prefix)
+        for detail_prefix in file_detail.prefixes:
+            click.echo(detail_prefix)
 
 
-@commands.command("get", short_help="Get a file")
-@BUCKET_NAME_OPTION
-@FILE_NAME_ARGUMENT
-@GET_FORMATS
+@commands.command(name="get", short_help="Get a file")
+@options.BUCKET_NAME_OPTION
+@options.FILE_NAME_ARGUMENT
+@options.GET_FORMATS
 def files_get(bucket_name, file_name, format_):
-    """Get the details of a file in the bucket."""
+    """
+    Get the details of a file in the bucket.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -84,12 +97,14 @@ def files_get(bucket_name, file_name, format_):
     )
 
 
-@signedurl_commands.command("create", short_help="Generate signed url to upload a file")
-@BUCKET_NAME_OPTION
-@FILE_NAME_ARGUMENT
-@GET_FORMATS
+@signedurl_commands.command(name="create", short_help="Generate signed url to upload a file")
+@options.BUCKET_NAME_OPTION
+@options.FILE_NAME_ARGUMENT
+@options.GET_FORMATS
 def files_signedurl_create(bucket_name, file_name, format_):
-    """Generate a signed url to upload a file."""
+    """
+    Generate a signed url to upload a file.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -104,12 +119,14 @@ def files_signedurl_create(bucket_name, file_name, format_):
     )
 
 
-@signedurl_commands.command("get", short_help="Generate signed url to download a file")
-@BUCKET_NAME_OPTION
-@FILE_NAME_ARGUMENT
-@GET_FORMATS
+@signedurl_commands.command(name="get", short_help="Generate signed url to download a file")
+@options.BUCKET_NAME_OPTION
+@options.FILE_NAME_ARGUMENT
+@options.GET_FORMATS
 def files_signedurl_get(bucket_name, file_name, format_):
-    """Generate a signed url to download a file."""
+    """
+    Generate a signed url to download a file.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -124,18 +141,22 @@ def files_signedurl_get(bucket_name, file_name, format_):
     )
 
 
-@commands.command("delete", short_help="Delete a file")
-@BUCKET_NAME_OPTION
-@FILE_NAME_ARGUMENT
-@ASSUME_YES
-@QUIET
+@commands.command(name="delete", short_help="Delete a file")
+@options.BUCKET_NAME_OPTION
+@options.FILE_NAME_ARGUMENT
+@options.ASSUME_YES
+@options.QUIET
 def files_delete(bucket_name, file_name, assume_yes, quiet):
-    """Delete a file from a bucket."""
+    """
+    Delete a file from a bucket.
+    """
 
     project_name = get_current_project(error=True)
 
-    if assume_yes or click.confirm("Are you sure you want to delete file <%s> from bucket <%s> "
-                                   "of project <%s>?" % (file_name, bucket_name, project_name)):
+    if assume_yes or click.confirm(
+        text=f"Are you sure you want to delete file <{file_name}> from bucket <{bucket_name}>"
+             f" of project <{project_name}>?"
+    ):
         client = init_client()
         client.files_delete(project_name=project_name, bucket_name=bucket_name, file=file_name)
         client.api_client.close()
@@ -144,13 +165,16 @@ def files_delete(bucket_name, file_name, assume_yes, quiet):
             click.echo("File was successfully deleted")
 
 
-@commands.command("upload", short_help="Upload a file")
-@FILE_SOURCE_PATH_OPTION
-@BUCKET_NAME_OPTION
-@FILE_NAME_OVERRULE
-@QUIET
-def files_upload(source_file, bucket_name, file_name, quiet):
-    """Upload a file to a bucket."""
+@commands.command(name="upload", short_help="Upload a file")
+@options.FILE_SOURCE_PATH_OPTION
+@options.BUCKET_NAME_OPTION
+@options.FILE_NAME_OVERRULE
+@options.PROGRESS_BAR
+@options.QUIET
+def files_upload(source_file, bucket_name, file_name, progress_bar, quiet):
+    """
+    Upload a file to a bucket.
+    """
 
     project_name = get_current_project(error=True)
 
@@ -162,6 +186,7 @@ def files_upload(source_file, bucket_name, file_name, quiet):
         bucket_name=bucket_name,
         file_path=source_file,
         file_name=file_name,
+        _progress_bar=progress_bar
     )
 
     client.api_client.close()
@@ -170,12 +195,12 @@ def files_upload(source_file, bucket_name, file_name, quiet):
         click.echo(file_uri)
 
 
-@commands.command("download", short_help="Download a file")
-@BUCKET_NAME_OPTION
-@FILE_NAME_OVERRULE
-@FILE_URI_OPTION
-@FILE_DESTINATION_PATH_OPTION
-@QUIET
+@commands.command(name="download", short_help="Download a file")
+@options.BUCKET_NAME_OPTION
+@options.FILE_NAME_OVERRULE
+@options.FILE_URI_OPTION
+@options.FILE_DESTINATION_PATH_OPTION
+@options.QUIET
 def files_download(bucket_name, file_name, file_uri, output_path, quiet):
     """
     Download a file from a bucket. Provide either file_name or file_uri (e.g. 'ubiops-file://default/my-file.jpg').
@@ -205,4 +230,4 @@ def files_download(bucket_name, file_name, file_uri, output_path, quiet):
     client.api_client.close()
 
     if not quiet:
-        click.echo("File was successfully downloaded")
+        click.echo(f"File stored in: {output_path}")

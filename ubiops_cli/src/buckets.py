@@ -1,24 +1,26 @@
+import click
 import ubiops as api
 
 from ubiops_cli.utils import get_current_project, init_client, read_yaml, write_yaml
 from ubiops_cli.src.helpers.bucket_helpers import define_bucket, BUCKET_OUTPUT_FIELDS, BUCKET_FIELDS_RENAMED
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 
 
 LIST_ITEMS = ['name', 'provider', 'labels']
 
 
-@click.group("buckets", short_help="Manage your buckets")
+@click.group(name="buckets", short_help="Manage your buckets")
 def commands():
     """Manage your buckets."""
-    pass
+
+    return
 
 
-@commands.command("list", short_help="List buckets")
-@LABELS_FILTER
-@LIST_FORMATS
+@commands.command(name="list", short_help="List buckets")
+@options.LABELS_FILTER
+@options.LIST_FORMATS
 def buckets_list(labels, format_):
     """List buckets in project."""
 
@@ -32,11 +34,11 @@ def buckets_list(labels, format_):
     print_list(response, LIST_ITEMS, sorting_col=0, fmt=format_)
 
 
-@commands.command("get", short_help="Get a bucket")
-@BUCKET_NAME_ARGUMENT
-@BUCKET_YAML_OUTPUT
-@QUIET
-@GET_FORMATS
+@commands.command(name="get", short_help="Get a bucket")
+@options.BUCKET_NAME_ARGUMENT
+@options.BUCKET_YAML_OUTPUT
+@options.QUIET
+@options.GET_FORMATS
 def buckets_get(bucket_name, output_path, quiet, format_):
     """Retrieve details of a bucket in a project.
 
@@ -82,7 +84,7 @@ def buckets_get(bucket_name, output_path, quiet, format_):
 
         yaml_file = write_yaml(output_path, dictionary, default_file_name="bucket.yaml")
         if not quiet:
-            click.echo('Bucket file stored in: %s' % yaml_file)
+            click.echo(f"Bucket file stored in: {yaml_file}")
     else:
 
         print_item(
@@ -95,16 +97,16 @@ def buckets_get(bucket_name, output_path, quiet, format_):
         )
 
 
-@commands.command("create", short_help="Create a bucket")
-@BUCKET_NAME_OVERRULE
-@BUCKET_PROVIDER
-@BUCKET_CREDENTIALS
-@BUCKET_CONFIGURATION
-@BUCKET_DESCRIPTION
-@BUCKET_LABELS
-@BUCKET_TTL
-@BUCKET_YAML_FILE
-@CREATE_FORMATS
+@commands.command(name="create", short_help="Create a bucket")
+@options.BUCKET_NAME_OVERRULE
+@options.BUCKET_PROVIDER
+@options.BUCKET_CREDENTIALS
+@options.BUCKET_CONFIGURATION
+@options.BUCKET_DESCRIPTION
+@options.BUCKET_LABELS
+@options.BUCKET_TTL
+@options.BUCKET_YAML_FILE
+@options.CREATE_FORMATS
 def buckets_create(yaml_file, format_, **kwargs):
     """
     Create a new bucket.
@@ -157,15 +159,15 @@ def buckets_create(yaml_file, format_, **kwargs):
     )
 
 
-@commands.command("update", short_help="Update a bucket")
-@BUCKET_NAME_OVERRULE
-@BUCKET_PROVIDER
-@BUCKET_DESCRIPTION
-@BUCKET_LABELS
-@BUCKET_TTL
-@BUCKET_YAML_FILE
-@CREATE_FORMATS
-@QUIET
+@commands.command(name="update", short_help="Update a bucket")
+@options.BUCKET_NAME_OVERRULE
+@options.BUCKET_PROVIDER
+@options.BUCKET_DESCRIPTION
+@options.BUCKET_LABELS
+@options.BUCKET_TTL
+@options.BUCKET_YAML_FILE
+@options.CREATE_FORMATS
+@options.QUIET
 def buckets_update(yaml_file, quiet, **kwargs):
     """Update a bucket.
 
@@ -195,17 +197,18 @@ def buckets_update(yaml_file, quiet, **kwargs):
         click.echo("Bucket was successfully updated")
 
 
-@commands.command("delete", short_help="Delete a bucket")
-@BUCKET_NAME_ARGUMENT
-@ASSUME_YES
-@QUIET
+@commands.command(name="delete", short_help="Delete a bucket")
+@options.BUCKET_NAME_ARGUMENT
+@options.ASSUME_YES
+@options.QUIET
 def buckets_delete(bucket_name, assume_yes, quiet):
     """Delete a bucket."""
 
     project_name = get_current_project(error=True)
 
-    if assume_yes or click.confirm("Are you sure you want to delete bucket <%s> "
-                                   "of project <%s>?" % (bucket_name, project_name)):
+    if assume_yes or click.confirm(
+        f"Are you sure you want to delete bucket <{bucket_name}> of project <{project_name}>?"
+    ):
         client = init_client()
         client.buckets_delete(project_name=project_name, bucket_name=bucket_name)
         client.api_client.close()

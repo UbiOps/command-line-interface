@@ -1,3 +1,4 @@
+import click
 import ubiops as api
 
 from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
@@ -6,25 +7,25 @@ from ubiops_cli.src.helpers.pipeline_helpers import rename_pipeline_object_refer
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.pipeline_helpers import format_pipeline_object_configuration
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 
 
 LIST_ITEMS = ['last_updated', 'version', 'labels']
 
 
-@click.group(["pipeline_versions", "pversions"], short_help="Manage your pipeline versions")
+@click.group(name=["pipeline_versions", "pversions"], short_help="Manage your pipeline versions")
 def commands():
     """
     Manage your pipeline versions.
     """
 
-    pass
+    return
 
 
-@commands.command("list", short_help="List the pipeline versions")
-@PIPELINE_NAME_OPTION
-@LABELS_FILTER
-@LIST_FORMATS
+@commands.command(name="list", short_help="List the pipeline versions")
+@options.PIPELINE_NAME_OPTION
+@options.LABELS_FILTER
+@options.LIST_FORMATS
 def pipeline_versions_list(pipeline_name, labels, format_):
     """
     List the versions of a pipeline.
@@ -60,12 +61,12 @@ def pipeline_versions_list(pipeline_name, labels, format_):
     )
 
 
-@commands.command("get", short_help="Get the version of a pipeline")
-@PIPELINE_NAME_OPTION
-@VERSION_NAME_ARGUMENT
-@VERSION_YAML_OUTPUT
-@QUIET
-@GET_FORMATS
+@commands.command(name="get", short_help="Get the version of a pipeline")
+@options.PIPELINE_NAME_OPTION
+@options.VERSION_NAME_ARGUMENT
+@options.VERSION_YAML_OUTPUT
+@options.QUIET
+@options.GET_FORMATS
 def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, format_):
     """
     Get the pipeline version structure: input_type, version, objects and connections between the objects (attachments).
@@ -149,7 +150,7 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
         yaml_file = write_yaml(output_path, dictionary, default_file_name="pipeline_version.yaml")
 
         if not quiet:
-            click.echo('Pipeline version file stored in: %s' % yaml_file)
+            click.echo(f"Pipeline version file stored in: {yaml_file}")
 
     else:
         print_item(
@@ -177,15 +178,15 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
         )
 
 
-@commands.command("create", short_help="Create a pipeline version")
-@PIPELINE_NAME_OPTIONAL
-@VERSION_NAME_OVERRULE
-@VERSION_LABELS
-@VERSION_DESCRIPTION
-@RETENTION_MODE
-@RETENTION_TIME
-@VERSION_YAML_FILE
-@CREATE_FORMATS
+@commands.command(name="create", short_help="Create a pipeline version")
+@options.PIPELINE_NAME_OPTIONAL
+@options.VERSION_NAME_OVERRULE
+@options.VERSION_LABELS
+@options.VERSION_DESCRIPTION
+@options.RETENTION_MODE
+@options.RETENTION_TIME
+@options.VERSION_YAML_FILE
+@options.CREATE_FORMATS
 def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **kwargs):
     """
     Create a version of a pipeline.
@@ -254,16 +255,16 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
     )
 
 
-@commands.command("update", short_help="Update a pipeline version")
-@PIPELINE_NAME_OPTION
-@VERSION_NAME_ARGUMENT
-@VERSION_NAME_UPDATE
-@VERSION_LABELS
-@VERSION_DESCRIPTION
-@RETENTION_MODE
-@RETENTION_TIME
-@VERSION_YAML_FILE
-@QUIET
+@commands.command(name="update", short_help="Update a pipeline version")
+@options.PIPELINE_NAME_OPTION
+@options.VERSION_NAME_ARGUMENT
+@options.VERSION_NAME_UPDATE
+@options.VERSION_LABELS
+@options.VERSION_DESCRIPTION
+@options.RETENTION_MODE
+@options.RETENTION_TIME
+@options.VERSION_YAML_FILE
+@options.QUIET
 def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, quiet, **kwargs):
     """
     Update a version of a pipeline.
@@ -327,11 +328,11 @@ def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, q
         click.echo("Pipeline version was successfully updated")
 
 
-@commands.command("delete", short_help="Delete a pipeline version")
-@PIPELINE_NAME_OPTION
-@VERSION_NAME_ARGUMENT
-@ASSUME_YES
-@QUIET
+@commands.command(name="delete", short_help="Delete a pipeline version")
+@options.PIPELINE_NAME_OPTION
+@options.VERSION_NAME_ARGUMENT
+@options.ASSUME_YES
+@options.QUIET
 def pipeline_versions_delete(pipeline_name, version_name, assume_yes, quiet):
     """
     Delete a version of a pipeline.

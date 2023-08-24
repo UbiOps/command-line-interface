@@ -111,24 +111,24 @@ def set_pipeline_version_defaults(fields, yaml_content, existing_version=None):
             fields[k] = strings_to_dict(fields[k])
 
     if yaml_content:
-        for p in PIPELINE_VERSION_FIELDS:
-            # Rename 'version_{p}' to '{p}'
-            input_field = PIPELINE_VERSION_FIELDS_RENAMED[p] if p in PIPELINE_VERSION_FIELDS_RENAMED else p
+        for k in PIPELINE_VERSION_FIELDS:
+            # Rename 'version_{k}' to '{k}'
+            input_field = PIPELINE_VERSION_FIELDS_RENAMED[k] if k in PIPELINE_VERSION_FIELDS_RENAMED else k
             value = fields[input_field] if input_field in fields else None
-            fields[p] = set_dict_default(
+            fields[k] = set_dict_default(
                 value, yaml_content, input_field,
-                set_type=PIPELINE_VERSION_FIELD_TYPES[p] if p in PIPELINE_VERSION_FIELD_TYPES else str
+                set_type=PIPELINE_VERSION_FIELD_TYPES[k] if k in PIPELINE_VERSION_FIELD_TYPES else str
             )
 
     if existing_version:
-        for p in PIPELINE_VERSION_FIELDS:
-            value = fields[p] if p in fields else None
+        for k in PIPELINE_VERSION_FIELDS:
+            value = fields[k] if k in fields else None
 
-            # If objects or attachments are given as an empty list, let them be removed from the pipeline
-            if p in ["objects", "attachments"] and value == []:
+            # If objects or attachments are given as an empty list, they will be removed from the pipeline
+            if k in ["objects", "attachments"] and value == []:
                 continue
 
-            fields[p] = set_object_default(value, existing_version, p)
+            fields[k] = set_object_default(value, existing_version, k)
 
     return fields
 
@@ -143,15 +143,15 @@ def get_pipeline_and_version_fields_from_yaml(yaml_content):
     """
 
     pipeline_fields, input_fields, output_fields = define_pipeline(yaml_content, pipeline_name=None)
-    version_fields = dict()
+    version_fields = {}
 
     if yaml_content:
-        for p in PIPELINE_VERSION_FIELDS:
-            # Rename 'version_{p}' to '{p}'
-            input_field = PIPELINE_VERSION_FIELDS_RENAMED[p] if p in PIPELINE_VERSION_FIELDS_RENAMED else p
-            version_fields[p] = set_dict_default(
-                None, yaml_content, input_field,
-                set_type=PIPELINE_VERSION_FIELD_TYPES[p] if p in PIPELINE_VERSION_FIELD_TYPES else str
+        for k in PIPELINE_VERSION_FIELDS:
+            # Rename 'version_{k}' to '{k}'
+            input_field = PIPELINE_VERSION_FIELDS_RENAMED[k] if k in PIPELINE_VERSION_FIELDS_RENAMED else k
+            version_fields[k] = set_dict_default(
+                value=None, defaults_dict=yaml_content, default_key=input_field,
+                set_type=PIPELINE_VERSION_FIELD_TYPES[k] if k in PIPELINE_VERSION_FIELD_TYPES else str
             )
 
     return pipeline_fields, input_fields, output_fields, version_fields
@@ -199,7 +199,7 @@ def get_changed_pipeline_structure(existing_pipeline, data, is_input=True):
             e.g. [PipelineInputFieldCreate(name=input1, data_type=int)]
     :param bool is_input: whether to use input_ or output_ prefix
     """
-    changed_data = dict()
+    changed_data = {}
 
     type_key = 'input_type' if is_input else 'output_type'
     type_fields = 'input_fields' if is_input else 'output_fields'

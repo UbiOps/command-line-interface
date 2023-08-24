@@ -1,3 +1,4 @@
+import click
 import ubiops as api
 
 from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
@@ -6,22 +7,25 @@ from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version,
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.wait_for import wait_for
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
 
 LIST_ITEMS = ['last_updated', 'version', 'status', 'labels']
 
 
-@click.group(["deployment_versions", "versions"], short_help="Manage your deployment versions")
+@click.group(name=["deployment_versions", "versions"], short_help="Manage your deployment versions")
 def commands():
-    """Manage your deployment versions."""
-    pass
+    """
+    Manage your deployment versions.
+    """
+
+    return
 
 
-@commands.command("list", short_help="List the versions")
-@DEPLOYMENT_NAME_OPTION
-@LABELS_FILTER
-@LIST_FORMATS
+@commands.command(name="list", short_help="List the versions")
+@options.DEPLOYMENT_NAME_OPTION
+@options.LABELS_FILTER
+@options.LIST_FORMATS
 def versions_list(deployment_name, labels, format_):
     """
     List the versions of a deployment.
@@ -57,14 +61,15 @@ def versions_list(deployment_name, labels, format_):
     )
 
 
-@commands.command("get", short_help="Get the version of a deployment")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_ARGUMENT
-@VERSION_YAML_OUTPUT
-@QUIET
-@GET_FORMATS
+@commands.command(name="get", short_help="Get the version of a deployment")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_ARGUMENT
+@options.VERSION_YAML_OUTPUT
+@options.QUIET
+@options.GET_FORMATS
 def versions_get(deployment_name, version_name, output_path, quiet, format_):
-    """Get the version of a deployment.
+    """
+    Get the version of a deployment.
 
     If you specify the `<output_path>` option, this location will be used to store the
     deployment version settings in a yaml file. You can either specify the `<output_path>`
@@ -114,7 +119,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
         )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="version.yaml")
         if not quiet:
-            click.echo('Version file stored in: %s' % yaml_file)
+            click.echo(f"Version file stored in: {yaml_file}")
     else:
         print_item(
             item=version,
@@ -124,28 +129,29 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
         )
 
 
-@commands.command("create", short_help="Create a version")
-@DEPLOYMENT_NAME_OPTIONAL
-@VERSION_NAME_OVERRULE
-@LANGUAGE
-@ENVIRONMENT
-@INSTANCE_TYPE
-@MIN_INSTANCES
-@MAX_INSTANCES
-@MAX_IDLE_TIME
-@DEPLOYMENT_MODE_DEPRECATED
-@RETENTION_MODE
-@RETENTION_TIME
-@MAX_QUEUE_SIZE_EXPRESS
-@MAX_QUEUE_SIZE_BATCH
-@VERSION_STATIC_IP
-@VERSION_LABELS
-@VERSION_DESCRIPTION
-@VERSION_YAML_FILE
-@DEPLOYMENT_FILE
-@CREATE_FORMATS
+@commands.command(name="create", short_help="Create a version")
+@options.DEPLOYMENT_NAME_OPTIONAL
+@options.VERSION_NAME_OVERRULE
+@options.LANGUAGE
+@options.ENVIRONMENT
+@options.INSTANCE_TYPE
+@options.MIN_INSTANCES
+@options.MAX_INSTANCES
+@options.MAX_IDLE_TIME
+@options.DEPLOYMENT_MODE_DEPRECATED
+@options.RETENTION_MODE
+@options.RETENTION_TIME
+@options.MAX_QUEUE_SIZE_EXPRESS
+@options.MAX_QUEUE_SIZE_BATCH
+@options.VERSION_STATIC_IP
+@options.VERSION_LABELS
+@options.VERSION_DESCRIPTION
+@options.VERSION_YAML_FILE
+@options.DEPLOYMENT_FILE
+@options.CREATE_FORMATS
 def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs):
-    """Create a version of a deployment.
+    """
+    Create a version of a deployment.
 
     \b
     It is possible to define the parameters using a yaml file.
@@ -216,27 +222,28 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     )
 
 
-@commands.command("update", short_help="Update a version")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_ARGUMENT
-@VERSION_NAME_UPDATE
-@DEPLOYMENT_FILE
-@VERSION_YAML_FILE
-@ENVIRONMENT
-@INSTANCE_TYPE
-@MIN_INSTANCES
-@MAX_INSTANCES
-@MAX_IDLE_TIME
-@RETENTION_MODE
-@RETENTION_TIME
-@MAX_QUEUE_SIZE_EXPRESS
-@MAX_QUEUE_SIZE_BATCH
-@VERSION_STATIC_IP
-@VERSION_LABELS
-@VERSION_DESCRIPTION
-@QUIET
+@commands.command(name="update", short_help="Update a version")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_ARGUMENT
+@options.VERSION_NAME_UPDATE
+@options.DEPLOYMENT_FILE
+@options.VERSION_YAML_FILE
+@options.ENVIRONMENT
+@options.INSTANCE_TYPE
+@options.MIN_INSTANCES
+@options.MAX_INSTANCES
+@options.MAX_IDLE_TIME
+@options.RETENTION_MODE
+@options.RETENTION_TIME
+@options.MAX_QUEUE_SIZE_EXPRESS
+@options.MAX_QUEUE_SIZE_BATCH
+@options.VERSION_STATIC_IP
+@options.VERSION_LABELS
+@options.VERSION_DESCRIPTION
+@options.QUIET
 def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, **kwargs):
-    """Update a version of a deployment.
+    """
+    Update a version of a deployment.
 
     \b
     It is possible to define the parameters using a yaml file.
@@ -286,18 +293,18 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
         click.echo("Deployment version was successfully updated")
 
 
-@commands.command("delete", short_help="Delete a version")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_ARGUMENT
-@ASSUME_YES
-@QUIET
+@commands.command(name="delete", short_help="Delete a version")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_ARGUMENT
+@options.ASSUME_YES
+@options.QUIET
 def versions_delete(deployment_name, version_name, assume_yes, quiet):
     """Delete a version of a deployment."""
 
     project_name = get_current_project(error=True)
 
-    if assume_yes or click.confirm("Are you sure you want to delete deployment version <%s> of deployment <%s> in"
-                                   " project <%s>?" % (version_name, deployment_name, project_name)):
+    if assume_yes or click.confirm(f"Are you sure you want to delete deployment version <{version_name}> of"
+                                   f" deployment <{deployment_name}> in project <{project_name}>?"):
         client = init_client()
         client.deployment_versions_delete(
             project_name=project_name, deployment_name=deployment_name, version=version_name
@@ -307,13 +314,15 @@ def versions_delete(deployment_name, version_name, assume_yes, quiet):
             click.echo("Deployment version was successfully deleted")
 
 
-@commands.command("wait", short_help="Wait for a deployment version to be ready")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_ARGUMENT
-@REVISION_ID_OPTIONAL
-@TIMEOUT_OPTION
-@QUIET
-def versions_wait(deployment_name, version_name, revision_id, timeout, quiet):
+# pylint: disable=too-many-arguments
+@commands.command(name="wait", short_help="Wait for a deployment version to be ready")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_ARGUMENT
+@options.REVISION_ID_OPTIONAL
+@options.TIMEOUT_OPTION
+@options.STREAM_LOGS
+@options.QUIET
+def versions_wait(deployment_name, version_name, revision_id, timeout, stream_logs, quiet):
     """
     Wait for a deployment version to be ready.
 
@@ -332,6 +341,7 @@ def versions_wait(deployment_name, version_name, revision_id, timeout, quiet):
         version=version_name,
         revision_id=revision_id,
         timeout=timeout,
-        quiet=quiet
+        quiet=quiet,
+        stream_logs=stream_logs
     )
     client.api_client.close()

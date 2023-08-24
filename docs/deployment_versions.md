@@ -294,6 +294,8 @@ To wait for a specific revision of the version, pass `--revision_id`:
 
 - `-t`/`--timeout`<br/>Timeout in seconds for the operation
 
+- `--stream_logs`<br/>Stream logs while waiting
+
 - `-q`/`--quiet`<br/>Suppress informational messages
 
 

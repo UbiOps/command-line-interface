@@ -1,34 +1,38 @@
-import ubiops as api
 import os
 from time import sleep
 
-from ubiops_cli.utils import init_client, read_json, read_yaml, write_yaml, zip_dir, get_current_project, \
-    set_dict_default, write_blob, default_version_zip_name, parse_json
+import click
+import ubiops as api
+
+from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, PLAIN_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME, \
+    IMPLICIT_ENVIRONMENT_FILES
+from ubiops_cli.exceptions import UbiOpsException
 from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
-    update_existing_deployment_version, DEPLOYMENT_VERSION_CREATE_FIELDS
+    update_existing_deployment_version, DEPLOYMENT_VERSION_CREATE_FIELDS, DEPLOYMENT_REQUIRED_FIELDS
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_requests_reference, \
     format_requests_oneline, format_json, parse_datetime, format_datetime
-from ubiops_cli.src.helpers.options import *
-from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, PLAIN_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME, \
-    IMPLICIT_ENVIRONMENT_FILES
+from ubiops_cli.src.helpers import options
+from ubiops_cli.utils import init_client, read_json, read_yaml, write_yaml, zip_dir, get_current_project, \
+    set_dict_default, write_blob, default_version_zip_name, parse_json
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
 REQUEST_LIST_ITEMS = ['id', 'status', 'success', 'time_created']
 
 
-@click.group(["deployments", "dpl"], short_help="Manage your deployments")
+@click.group(name=["deployments", "dpl"], short_help="Manage your deployments")
 def commands():
     """
     Manage your deployments.
     """
-    pass
+
+    return
 
 
-@commands.command("list", short_help="List deployments")
-@LABELS_FILTER
-@LIST_FORMATS
+@commands.command(name="list", short_help="List deployments")
+@options.LABELS_FILTER
+@options.LIST_FORMATS
 def deployments_list(labels, format_):
     """
     List all your deployments in your project.
@@ -46,11 +50,11 @@ def deployments_list(labels, format_):
         print_list(items=deployments, attrs=LIST_ITEMS, sorting_col=1, fmt=format_)
 
 
-@commands.command("get", short_help="Get details of a deployment")
-@DEPLOYMENT_NAME_ARGUMENT
-@DEPLOYMENT_YAML_OUTPUT
-@QUIET
-@GET_FORMATS
+@commands.command(name="get", short_help="Get details of a deployment")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.DEPLOYMENT_YAML_OUTPUT
+@options.QUIET
+@options.GET_FORMATS
 def deployments_get(deployment_name, output_path, quiet, format_):
     """
     Get the deployment settings, like, input_type and output_type.
@@ -77,7 +81,7 @@ def deployments_get(deployment_name, output_path, quiet, format_):
         )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="deployment.yaml")
         if not quiet:
-            click.echo('Deployment file is stored in: %s' % yaml_file)
+            click.echo(f"Deployment file is stored in: {yaml_file}")
     else:
         print_item(
             item=deployment,
@@ -90,10 +94,10 @@ def deployments_get(deployment_name, output_path, quiet, format_):
         )
 
 
-@commands.command("create", short_help="Create a deployment")
-@DEPLOYMENT_NAME_OVERRULE
-@DEPLOYMENT_YAML_FILE
-@CREATE_FORMATS
+@commands.command(name="create", short_help="Create a deployment")
+@options.DEPLOYMENT_NAME_OVERRULE
+@options.DEPLOYMENT_YAML_FILE
+@options.CREATE_FORMATS
 def deployments_create(deployment_name, yaml_file, format_):
     """
     Create a new deployment.
@@ -175,12 +179,12 @@ def deployments_create(deployment_name, yaml_file, format_):
     )
 
 
-@commands.command("update", short_help="Update a deployment")
-@DEPLOYMENT_NAME_ARGUMENT
-@DEPLOYMENT_NAME_UPDATE
-@VERSION_DEFAULT_UPDATE
-@DEPLOYMENT_YAML_FILE_OPTIONAL
-@QUIET
+@commands.command(name="update", short_help="Update a deployment")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.DEPLOYMENT_NAME_UPDATE
+@options.VERSION_DEFAULT_UPDATE
+@options.DEPLOYMENT_YAML_FILE_OPTIONAL
+@options.QUIET
 def deployments_update(deployment_name, new_name, default_version, yaml_file, quiet):
     """
     Update a deployment.
@@ -238,10 +242,10 @@ def deployments_update(deployment_name, new_name, default_version, yaml_file, qu
         click.echo("Deployment was successfully updated")
 
 
-@commands.command("delete", short_help="Delete a deployment")
-@DEPLOYMENT_NAME_ARGUMENT
-@ASSUME_YES
-@QUIET
+@commands.command(name="delete", short_help="Delete a deployment")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.ASSUME_YES
+@options.QUIET
 def deployments_delete(deployment_name, assume_yes, quiet):
     """
     Delete a deployment.
@@ -249,8 +253,9 @@ def deployments_delete(deployment_name, assume_yes, quiet):
 
     project_name = get_current_project(error=True)
 
-    if assume_yes or click.confirm("Are you sure you want to delete deployment <%s> "
-                                   "of project <%s>?" % (deployment_name, project_name)):
+    if assume_yes or click.confirm(
+        f"Are you sure you want to delete deployment <{deployment_name}> of project <{project_name}>?"
+    ):
         client = init_client()
         client.deployments_delete(project_name=project_name, deployment_name=deployment_name)
         client.api_client.close()
@@ -259,14 +264,15 @@ def deployments_delete(deployment_name, assume_yes, quiet):
             click.echo("Deployment was successfully deleted")
 
 
-@commands.command("package", short_help="Package deployment code")
-@DEPLOYMENT_NAME_ZIP
-@VERSION_NAME_ZIP
-@PACKAGE_DIR
-@ZIP_OUTPUT
-@IGNORE_FILE
-@ASSUME_YES
-@QUIET
+# pylint: disable=too-many-arguments
+@commands.command(name="package", short_help="Package deployment code")
+@options.DEPLOYMENT_NAME_ZIP
+@options.VERSION_NAME_ZIP
+@options.PACKAGE_DIR
+@options.ZIP_OUTPUT
+@options.IGNORE_FILE
+@options.ASSUME_YES
+@options.QUIET
 def deployments_package(deployment_name, version_name, directory, output_path, ignore_file, assume_yes, quiet):
     """
     Package code to ZIP file which is ready to be deployed.
@@ -291,16 +297,17 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
         force=assume_yes
     )
     if not quiet:
-        click.echo("Created zip: %s" % zip_path)
+        click.echo(f"Created zip: {zip_path}")
 
 
-@commands.command("upload", short_help="Upload a deployment package")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTION
-@ZIP_FILE
-@OVERWRITE
-@QUIET
-def deployments_upload(deployment_name, version_name, zip_path, overwrite, quiet):
+@commands.command(name="upload", short_help="Upload a deployment package")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTION
+@options.ZIP_FILE
+@options.OVERWRITE
+@options.PROGRESS_BAR
+@options.QUIET
+def deployments_upload(deployment_name, version_name, zip_path, overwrite, progress_bar, quiet):
     """
     Upload ZIP to a version of a deployment.
 
@@ -317,7 +324,8 @@ def deployments_upload(deployment_name, version_name, zip_path, overwrite, quiet
 
     if overwrite or current_version.status == STATUS_UNAVAILABLE:
         client.revisions_file_upload(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path
+            project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path,
+            _progress_bar=progress_bar
         )
         client.api_client.close()
 
@@ -325,14 +333,14 @@ def deployments_upload(deployment_name, version_name, zip_path, overwrite, quiet
             click.echo("Deployment was successfully uploaded")
     else:
         client.api_client.close()
-        raise Exception("A deployment package already exists for this deployment version")
+        raise UbiOpsException("A deployment package already exists for this deployment version")
 
 
-@commands.command("download", short_help="Download a deployment package")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTION
-@ZIP_OUTPUT
-@QUIET
+@commands.command(name="download", short_help="Download a deployment package")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTION
+@options.ZIP_OUTPUT
+@options.QUIET
 def deployments_download(deployment_name, version_name, output_path, quiet):
     """
     Get the version of a deployment.
@@ -349,45 +357,52 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
         project_name=project_name, deployment_name=deployment_name, version=version_name
     )
     if not version.active_revision:
-        raise Exception("No active revision available for this deployment")
+        raise UbiOpsException("No active revision available for this deployment")
 
-    with client.revisions_file_download(project_name=project_name, deployment_name=deployment_name,
-                                        version=version_name, revision_id=version.active_revision) as response:
+    with client.revisions_file_download(
+            project_name=project_name, deployment_name=deployment_name,
+            version=version_name, revision_id=version.active_revision
+    ) as response:
         filename = default_version_zip_name(deployment_name, version_name)
         output_path = write_blob(response.read(), output_path, filename)
     client.api_client.close()
 
     if not quiet:
-        click.echo("Zip stored in: %s" % output_path)
+        click.echo(f"Zip stored in: {output_path}")
 
 
-@commands.command("deploy", short_help="Deploy a new version of a deployment")
-@DEPLOYMENT_NAME_OVERRULE
-@VERSION_NAME_OPTIONAL
-@PACKAGE_DIR
-@DEPLOYMENT_FILE
-@IGNORE_FILE
-@ZIP_OUTPUT_STORE
-@VERSION_YAML_FILE
-@LANGUAGE
-@ENVIRONMENT
-@INSTANCE_TYPE
-@MIN_INSTANCES
-@MAX_INSTANCES
-@MAX_IDLE_TIME
-@DEPLOYMENT_MODE_DEPRECATED
-@RETENTION_MODE
-@RETENTION_TIME
-@MAX_QUEUE_SIZE_EXPRESS
-@MAX_QUEUE_SIZE_BATCH
-@VERSION_STATIC_IP
-@VERSION_LABELS
-@VERSION_DESCRIPTION
-@OVERWRITE
-@ASSUME_YES
-@QUIET
-def deployments_deploy(deployment_name, version_name, directory, output_path, yaml_file, overwrite, assume_yes, quiet,
-                       **kwargs):
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
+@commands.command(name="deploy", short_help="Deploy a new version of a deployment")
+@options.DEPLOYMENT_NAME_OVERRULE
+@options.VERSION_NAME_OPTIONAL
+@options.PACKAGE_DIR
+@options.DEPLOYMENT_FILE
+@options.IGNORE_FILE
+@options.ZIP_OUTPUT_STORE
+@options.VERSION_YAML_FILE
+@options.LANGUAGE
+@options.ENVIRONMENT
+@options.INSTANCE_TYPE
+@options.MIN_INSTANCES
+@options.MAX_INSTANCES
+@options.MAX_IDLE_TIME
+@options.DEPLOYMENT_MODE_DEPRECATED
+@options.RETENTION_MODE
+@options.RETENTION_TIME
+@options.MAX_QUEUE_SIZE_EXPRESS
+@options.MAX_QUEUE_SIZE_BATCH
+@options.VERSION_STATIC_IP
+@options.VERSION_LABELS
+@options.VERSION_DESCRIPTION
+@options.OVERWRITE
+@options.ASSUME_YES
+@options.PROGRESS_BAR
+@options.QUIET
+def deployments_deploy(deployment_name, version_name, directory, output_path, yaml_file, overwrite, assume_yes,
+                       progress_bar, quiet, **kwargs):
     """
     Deploy a new version of a deployment.
 
@@ -496,19 +511,20 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             )
             has_uploaded_zips = len(revisions) > 0
 
-        if implicit_environment and not has_uploaded_zips:
+        if implicit_environment and not has_uploaded_zips and kwargs.get('environment', None) is not None:
             # We don't show a warning on re-uploads
             try:
                 environment = client.environments_get(
-                    project_name=project_name, environment_name=kwargs.get('environment', None)
+                    project_name=project_name, environment_name=kwargs['environment']
                 )
                 if environment.base_environment is not None:
                     # A custom environment is used
                     click.secho(
-                        "Warning: You are trying to upload a deployment file containing at least one environment file "
-                        "(e.g. %s). It's not possible to use a custom environment in combination with an implicitly "
-                        "created environment.\nConsider adding the environment files to %s so no implicit environment "
-                        "is created on revision file upload." % (IMPLICIT_ENVIRONMENT_FILES[0], kwargs['ignore_file']),
+                        message="Warning: You are trying to upload a deployment file containing at least one"
+                                f" environment file (e.g. {IMPLICIT_ENVIRONMENT_FILES[0]}). It's not possible to use"
+                                " a custom environment in combination with an implicitly created environment.\nConsider"
+                                f" adding the environment files to {kwargs['ignore_file']} so no implicit environment"
+                                f" is created on revision file upload.",
                         fg='yellow'
                     )
             except api.exceptions.ApiException:
@@ -525,11 +541,12 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
 
         if has_uploaded_zips and (has_changed_fields or has_changed_env_vars):
             # Wait for changes being applied
-            click.echo("Waiting for changes to take effect... This takes %d seconds." % UPDATE_TIME)
+            click.echo(f"Waiting for changes to take effect... This takes {UPDATE_TIME} seconds.")
             sleep(UPDATE_TIME)
 
         client.revisions_file_upload(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path
+            project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path,
+            _progress_bar=progress_bar
         )
         client.api_client.close()
     except Exception as e:
@@ -541,7 +558,7 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     if os.path.isfile(zip_path):
         if store_zip:
             if not quiet:
-                click.echo("Created zip: %s" % zip_path)
+                click.echo(f"Created zip: {zip_path}")
         else:
             os.remove(zip_path)
 
@@ -549,22 +566,25 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
         click.echo("Deployment was successfully deployed")
 
 
-@commands.group("requests", short_help="Manage your deployment requests")
+@commands.group(name="requests", short_help="Manage your deployment requests")
 def requests():
     """
     Manage your deployment requests.
     """
-    pass
+
+    return
 
 
-@requests.command("create", short_help="Create deployment request")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_BATCH
-@REQUEST_DATA_MULTI
-@REQUEST_DATA_FILE
-@REQUEST_TIMEOUT
-@REQUESTS_FORMATS
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-branches
+@requests.command(name="create", short_help="Create deployment request")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_BATCH
+@options.REQUEST_DATA_MULTI
+@options.REQUEST_DATA_FILE
+@options.REQUEST_TIMEOUT
+@options.REQUESTS_FORMATS
 def requests_create(deployment_name, version_name, batch, data, json_file, timeout, format_):
     """
     Create a deployment request and retrieve request IDs to collect the results later.
@@ -596,7 +616,7 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
     deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)
 
     if json_file and data:
-        raise Exception("Specify data either using the <data> or <json_file> option, not both")
+        raise UbiOpsException("Specify data either using the <data> or <json_file> option, not both")
 
     if json_file:
         input_data = read_json(json_file)
@@ -606,13 +626,13 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
     elif data:
         if deployment.input_type == STRUCTURED_TYPE:
             input_data = []
-            for d in data:
-                input_data.append(parse_json(d))
+            for data_item in data:
+                input_data.append(parse_json(data_item))
         else:
             input_data = data
 
     else:
-        raise Exception("Missing option <data> or <json_file>")
+        raise UbiOpsException("Missing option <data> or <json_file>")
 
     method = "deployment_requests_create"
     params = {'project_name': project_name, 'deployment_name': deployment_name}
@@ -646,11 +666,11 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
         click.echo(format_requests_reference(response))
 
 
-@requests.command("get", short_help="Get deployment request")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_ID_MULTI
-@REQUESTS_FORMATS
+@requests.command(name="get", short_help="Get deployment request")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_ID_MULTI
+@options.REQUESTS_FORMATS
 def requests_get(deployment_name, version_name, request_id, format_):
     """
     Get one or more stored deployment requests.
@@ -688,19 +708,19 @@ def requests_get(deployment_name, version_name, request_id, format_):
         click.echo(format_requests_reference(response))
 
 
-@requests.command("list", short_help="List deployment requests")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@OFFSET
-@REQUEST_LIMIT
-@REQUEST_SORT
-@REQUEST_FILTER_DEPLOYMENT_STATUS
-@REQUEST_FILTER_SUCCESS
-@REQUEST_FILTER_START_DATE
-@REQUEST_FILTER_END_DATE
-@REQUEST_FILTER_SEARCH_ID
-@REQUEST_FILTER_IN_PIPELINE
-@LIST_FORMATS
+@requests.command(name="list", short_help="List deployment requests")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.OFFSET
+@options.REQUEST_LIMIT
+@options.REQUEST_SORT
+@options.REQUEST_FILTER_DEPLOYMENT_STATUS
+@options.REQUEST_FILTER_SUCCESS
+@options.REQUEST_FILTER_START_DATE
+@options.REQUEST_FILTER_END_DATE
+@options.REQUEST_FILTER_SEARCH_ID
+@options.REQUEST_FILTER_IN_PIPELINE
+@options.LIST_FORMATS
 def requests_list(deployment_name, version_name, limit, format_, **kwargs):
     """
     List stored deployment requests.
@@ -716,15 +736,17 @@ def requests_list(deployment_name, version_name, limit, format_, **kwargs):
         try:
             kwargs['start_date'] = format_datetime(parse_datetime(kwargs['start_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
-            raise Exception("Failed to parse start_date. Please use iso-format, "
-                            "for example, '2020-01-01T00:00:00.000000Z'")
+            raise UbiOpsException(
+                "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
+            )
 
     if 'end_date' in kwargs and kwargs['end_date']:
         try:
             kwargs['end_date'] = format_datetime(parse_datetime(kwargs['end_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
-            raise Exception("Failed to parse end_date. Please use iso-format, "
-                            "for example, '2020-01-01T00:00:00.000000Z'")
+            raise UbiOpsException(
+                "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
+            )
 
     client = init_client()
     if version_name is not None:
@@ -742,12 +764,12 @@ def requests_list(deployment_name, version_name, limit, format_, **kwargs):
         click.echo("\n(Use the <offset> and <limit> options to load more)")
 
 
-@commands.command("request", short_help="[DEPRECATED] Create deployment direct requests")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_DATA
-@REQUEST_DEPLOYMENT_TIMEOUT_DEPRECATED
-@REQUESTS_FORMATS
+@commands.command(name="request", short_help="[DEPRECATED] Create deployment direct requests")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_DATA
+@options.REQUEST_DEPLOYMENT_TIMEOUT_DEPRECATED
+@options.REQUESTS_FORMATS
 def deprecated_deployments_request(deployment_name, version_name, data, timeout, format_):
     """
     [DEPRECATED] Create a deployment request and retrieve the result.
@@ -803,20 +825,21 @@ def deprecated_deployments_request(deployment_name, version_name, data, timeout,
         click.echo(format_requests_reference([response]))
 
 
-@commands.group("batch_requests", short_help="[DEPRECATED] Manage your deployment batch requests")
+@commands.group(name="batch_requests", short_help="[DEPRECATED] Manage your deployment batch requests")
 def deprecated_batch_requests():
     """
     [DEPRECATED] Manage your deployment batch requests.
     """
-    pass
+
+    return
 
 
-@deprecated_batch_requests.command("create", short_help="[DEPRECATED] Create deployment batch request")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_DATA_MULTI
-@REQUEST_TIMEOUT
-@REQUESTS_FORMATS
+@deprecated_batch_requests.command(name="create", short_help="[DEPRECATED] Create deployment batch request")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_DATA_MULTI
+@options.REQUEST_TIMEOUT
+@options.REQUESTS_FORMATS
 def deprecated_batch_requests_create(deployment_name, version_name, data, timeout, format_):
     """
     [DEPRECATED] Create a deployment batch request and retrieve request IDs to collect the results later.
@@ -853,8 +876,8 @@ def deprecated_batch_requests_create(deployment_name, version_name, data, timeou
 
     if deployment.input_type == STRUCTURED_TYPE:
         input_data = []
-        for d in data:
-            input_data.append(parse_json(d))
+        for data_item in data:
+            input_data.append(parse_json(data=data_item))
     else:
         input_data = data
 
@@ -885,11 +908,11 @@ def deprecated_batch_requests_create(deployment_name, version_name, data, timeou
         click.echo(format_requests_reference(response))
 
 
-@deprecated_batch_requests.command("get", short_help="[DEPRECATED] Get deployment batch request")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@REQUEST_ID_MULTI
-@REQUESTS_FORMATS
+@deprecated_batch_requests.command(name="get", short_help="[DEPRECATED] Get deployment batch request")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_ID_MULTI
+@options.REQUESTS_FORMATS
 def deprecated_batch_requests_get(deployment_name, version_name, request_id, format_):
     """
     [DEPRECATED] Get the results of one or more deployment batch requests.
@@ -933,12 +956,12 @@ def deprecated_batch_requests_get(deployment_name, version_name, request_id, for
         click.echo(format_requests_reference(response))
 
 
-@deprecated_batch_requests.command("list", short_help="[DEPRECATED] List deployment batch requests")
-@DEPLOYMENT_NAME_ARGUMENT
-@VERSION_NAME_OPTIONAL
-@OFFSET
-@REQUEST_LIMIT
-@LIST_FORMATS
+@deprecated_batch_requests.command(name="list", short_help="[DEPRECATED] List deployment batch requests")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.OFFSET
+@options.REQUEST_LIMIT
+@options.LIST_FORMATS
 def deprecated_batch_requests_list(deployment_name, version_name, offset, limit, format_):
     """
     [DEPRECATED] List deployment batch requests.

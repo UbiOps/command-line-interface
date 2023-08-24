@@ -1,21 +1,26 @@
+import click
+
 from ubiops_cli.utils import init_client, get_current_project
 from ubiops_cli.src.helpers.formatting import print_item, print_list
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 
 
 LIST_ITEMS = ['creation_date', 'id', 'revision', 'status']
 
 
-@click.group(["environment_builds", "env_builds"], short_help="Manage your environment builds")
+@click.group(name=["environment_builds", "env_builds"], short_help="Manage your environment builds")
 def commands():
-    """Manage your environment builds."""
-    pass
+    """
+    Manage your environment builds.
+    """
+
+    return
 
 
-@commands.command("list", short_help="List environment builds")
-@ENVIRONMENT_NAME_OPTION
-@ENVIRONMENT_REVISION_ID_OPTION
-@LIST_FORMATS
+@commands.command(name="list", short_help="List environment builds")
+@options.ENVIRONMENT_NAME_OPTION
+@options.ENVIRONMENT_REVISION_ID_OPTION
+@options.LIST_FORMATS
 def builds_list(environment_name, revision_id, format_):
     """
     List the builds of an environment.
@@ -32,11 +37,11 @@ def builds_list(environment_name, revision_id, format_):
     print_list(response, LIST_ITEMS, sorting_col=0, fmt=format_)
 
 
-@commands.command("get", short_help="Get the build of an environment")
-@ENVIRONMENT_NAME_OPTION
-@ENVIRONMENT_REVISION_ID_OPTION
-@ENVIRONMENT_BUILD_ID
-@GET_FORMATS
+@commands.command(name="get", short_help="Get the build of an environment")
+@options.ENVIRONMENT_NAME_OPTION
+@options.ENVIRONMENT_REVISION_ID_OPTION
+@options.ENVIRONMENT_BUILD_ID
+@options.GET_FORMATS
 def builds_get(environment_name, revision_id, build_id, format_):
     """
     Get the build of an environment.

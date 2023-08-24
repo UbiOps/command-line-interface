@@ -52,7 +52,7 @@ def strings_to_dict(input_dict):
 
         for key_value_pair in key.split(","):
             key_value = [kv.strip() for kv in key_value_pair.split(":")]
-            assert len(key_value) == 2, "Expected format key:value, but found: %s" % str(key_value_pair)
+            assert len(key_value) == 2, f"Expected format key:value, but found: {key_value_pair}"
             return_dict[key_value[0]] = key_value[1]
     return return_dict
 
@@ -69,14 +69,14 @@ def json_to_dict(input_string, file_fields):
     try:
         return_dict = json.loads(input_string)
     except json.JSONDecodeError as e:
-        raise Exception("Failed to parse json parameter %s: %s" % (input_string, e))
+        raise ValueError(f"Failed to parse json parameter {input_string}: {e}")
 
     if file_fields:
         for file_field in file_fields:
             if file_field in return_dict:
                 try:
-                    with open(return_dict[file_field]) as f:
+                    with open(return_dict[file_field], encoding='utf-8') as f:
                         return_dict[file_field] = f.read()
                 except FileNotFoundError as e:
-                    raise Exception("Failed to read file for '%s': %s" % (file_field, e))
+                    raise FileNotFoundError(f"Failed to read file for '{file_field}': {e}")
     return return_dict

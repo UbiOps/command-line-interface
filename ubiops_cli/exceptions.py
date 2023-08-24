@@ -1,4 +1,8 @@
 
-class UnAuthorizedException(Exception):
-    def __init__(self, message):
-        super().__init__(message)
+
+class UbiOpsException(Exception):
+    pass
+
+
+class UnAuthorizedException(UbiOpsException):
+    pass

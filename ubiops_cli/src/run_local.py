@@ -2,17 +2,22 @@ import json
 
 from datetime import datetime
 
+import click
+
 from ubiops.utils import run_local
 
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.exceptions import UbiOpsException
+from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import read_json, parse_json
 
 
-@click.command("run_local", short_help="Run a deployment locally in current environment")
-@DEPLOYMENT_DIR
-@REQUEST_DATA_MULTI
-@REQUEST_DATA_FILE
-@REQUEST_DATA_PLAIN
+# pylint: disable=broad-except
+# pylint: disable=too-many-branches
+@click.command(name="run_local", short_help="Run a deployment locally in current environment")
+@options.DEPLOYMENT_DIR
+@options.REQUEST_DATA_MULTI
+@options.REQUEST_DATA_FILE
+@options.REQUEST_DATA_PLAIN
 def deployment_run_local(directory, data, json_file, plain):
     """
     Run a deployment locally and call its request function.
@@ -35,28 +40,28 @@ def deployment_run_local(directory, data, json_file, plain):
     data = list(data)
 
     if json_file and data:
-        raise Exception("Specify data either using the <data> or <json_file> option, not both")
+        raise UbiOpsException("Specify data either using the <data> or <json_file> option, not both")
 
     if json_file:
         input_data = read_json(json_file)
         if plain and isinstance(input_data, list):
-            for d in input_data:
-                if not isinstance(d, str):
-                    raise Exception("Each plain input must be a string")
+            for data_item in input_data:
+                if not isinstance(data_item, str):
+                    raise UbiOpsException("Each plain input must be a string")
 
         elif plain and not isinstance(input_data, str):
-            raise Exception("Plain input must be a string")
+            raise UbiOpsException("Plain input must be a string")
 
     elif data:
         if plain:
             input_data = data
         else:
             input_data = []
-            for d in data:
-                input_data.append(parse_json(d))
+            for data_item in data:
+                input_data.append(parse_json(data=data_item))
 
     else:
-        raise Exception("Missing option <data> or <json_file>")
+        raise UbiOpsException("Missing option <data> or <json_file>")
 
     time_started = datetime.now().isoformat(timespec='milliseconds')
     result = None
@@ -71,16 +76,16 @@ def deployment_run_local(directory, data, json_file, plain):
 
     time_completed = datetime.now().isoformat(timespec='milliseconds')
 
-    click.echo("Start date: %s" % time_started)
-    click.echo("Completion date: %s" % time_completed)
+    click.echo(f"Start date: {time_started}")
+    click.echo(f"Completion date: {time_completed}")
 
     if success:
-        click.echo('Status: %s' % click.style('completed', fg='green'))
+        click.echo(f"Status: {click.style(text='completed', fg='green')}")
     else:
-        click.echo('Status: %s' % click.style('failed', fg='red'))
+        click.echo(f"Status: {click.style(text='failed', fg='red')}")
 
     if error_message:
-        click.echo('Error message: %s' % click.style(error_message, fg='red'))
+        click.echo(f"Error message: {click.style(text=error_message, fg='red')}")
 
-    click.echo("Request data: %s" % ('-' if input_data is None else json.dumps(input_data)))
-    click.echo("Result: %s" % ('-' if result is None else json.dumps(result)))
+    click.echo(f"Request data: {('-' if input_data is None else json.dumps(input_data))}")
+    click.echo(f"Result: {('-' if result is None else json.dumps(result))}")

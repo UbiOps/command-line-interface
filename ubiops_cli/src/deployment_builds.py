@@ -1,22 +1,27 @@
+import click
+
 from ubiops_cli.utils import init_client, get_current_project
 from ubiops_cli.src.helpers.formatting import print_item
-from ubiops_cli.src.helpers.options import *
+from ubiops_cli.src.helpers import options
 
 
 LIST_ITEMS = ['creation_date', 'id', 'revision', 'status']
 
 
-@click.group(["version_builds", "builds"], short_help="Manage your deployment version builds")
+@click.group(name=["version_builds", "builds"], short_help="Manage your deployment version builds")
 def commands():
-    """Manage your deployment version builds."""
-    pass
+    """
+    Manage your deployment version builds.
+    """
+
+    return
 
 
-@commands.command("get", short_help="[DEPRECATED] Get the builds of a deployment version")
-@DEPLOYMENT_NAME_OPTION
-@VERSION_NAME_OPTION
-@BUILD_ID
-@GET_FORMATS
+@commands.command(name="get", short_help="[DEPRECATED] Get the builds of a deployment version")
+@options.DEPLOYMENT_NAME_OPTION
+@options.VERSION_NAME_OPTION
+@options.BUILD_ID
+@options.GET_FORMATS
 def builds_get(deployment_name, version_name, build_id, format_):
     """
     [DEPRECATED] Get the build of a deployment version.
