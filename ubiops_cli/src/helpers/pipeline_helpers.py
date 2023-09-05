@@ -1,4 +1,3 @@
-import ast
 import ubiops as api
 
 from ubiops_cli.utils import set_dict_default, set_object_default
@@ -25,6 +24,42 @@ OBJECT_REQUIRED_FIELDS = ['name', 'reference_name']
 ATTACHMENT_REQUIRED_FIELDS = ['destination_name', 'sources']
 ATTACHMENT_SOURCE_REQUIRED_FIELDS = ['source_name']
 ATTACHMENT_MAPPING_REQUIRED_FIELDS = ['source_field_name', 'destination_field_name']
+
+PIPELINE_VERSION_RESPONSE_FILE = {
+    'required_front': [
+        'pipeline', 'input_type', 'input_fields', 'output_type', 'output_fields',
+        'version', *PIPELINE_VERSION_FIELDS
+    ],
+    'optional': [
+        'objects name', 'objects reference_type', 'objects reference_name', 'objects version',
+
+        'objects configuration batch_size', 'objects configuration error_message',
+        'objects configuration expression', 'objects configuration on_error',
+        'objects configuration input_fields name', 'objects configuration input_fields data_type',
+        'objects configuration output_fields name', 'objects configuration output_fields data_type',
+        'objects configuration output_values name', 'objects configuration output_values value',
+
+        'attachments destination_name', 'attachments sources source_name', 'attachments sources mapping',
+        'input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'
+    ],
+    'rename': {
+        'pipeline': 'pipeline_name',
+        'version': 'version_name',
+        'objects version': 'reference_version',
+        **PIPELINE_VERSION_FIELDS_RENAMED
+    }
+}
+PIPELINE_VERSION_RESPONSE = {
+    'required_front': PIPELINE_VERSION_RESPONSE_FILE['required_front'],
+    'optional': [
+        'creation_date', 'last_updated', *PIPELINE_VERSION_RESPONSE_FILE['optional']
+    ],
+    'rename': {
+        'creation_date': 'version_creation_date',
+        'last_updated': 'version_last_updated',
+        **PIPELINE_VERSION_RESPONSE_FILE['rename']
+    }
+}
 
 
 def define_pipeline(yaml_content, pipeline_name, current_pipeline_name=None):
@@ -220,29 +255,3 @@ def get_changed_pipeline_structure(existing_pipeline, data, is_input=True):
             changed_data[type_fields] = data[type_fields]
 
     return changed_data
-
-
-def format_pipeline_object_configuration(objects):
-    """
-    Format the configuration field of pipeline objects. We need to cast the in/output fields to lists and batch_size
-    to integer. This way, the configuration field will be shown with correct data types.
-    """
-
-    for obj in objects:
-        if hasattr(obj, 'configuration'):
-            # If the configuration is None, default to empty dictionary
-            if obj.configuration is None:
-                obj.configuration = {}
-                continue
-
-            # Cast input_fields, output_fields, output_values and batch_size to correct type
-            if 'input_fields' in obj.configuration and not isinstance(obj.configuration['input_fields'], list):
-                obj.configuration['input_fields'] = ast.literal_eval(obj.configuration['input_fields'])
-            if 'output_fields' in obj.configuration and not isinstance(obj.configuration['output_fields'], list):
-                obj.configuration['output_fields'] = ast.literal_eval(obj.configuration['output_fields'])
-            if 'output_values' in obj.configuration and not isinstance(obj.configuration['output_values'], list):
-                obj.configuration['output_values'] = ast.literal_eval(obj.configuration['output_values'])
-            if 'batch_size' in obj.configuration:
-                obj.configuration['batch_size'] = int(obj.configuration['batch_size'])
-
-    return objects
