@@ -173,13 +173,14 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
     If as_str = True: print in yaml structure.
     If as_str = False: return dictionary, which can be used to write to yaml file.
 
-    :param object item: object to format as yaml, e.g., deployment object
-    :param list required_front: object attributes to show first. If the value is none, it will still be shown
-    :param list optional: object attributes to show after the required_front. If the value is none, the attribute is
-        ignored
-    :param list required_end: object attributes to show after the optional attributes. If the value is none, it will
-    still be shown
-    :param dict rename: dictionary to rename object attributes
+    :param object item: ubiops model to format as yaml, e.g., ubiops.models.DeploymentDetail
+    :param list required_front: ubiops model attributes to show first.
+        If the value is none, it will still be shown
+    :param list optional: ubiops model attributes to show after the required_front.
+        If the value is none, the attribute is ignored
+    :param list required_end: ubiops model attributes to show after the optional attributes.
+        If the value is none, it will still be shown
+    :param dict rename: dictionary to rename attributes
     :param bool as_str: whether to format the yaml dict as string
     """
 
@@ -203,24 +204,26 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
         Set key k (possibly renamed by 'rename') in results_dict to value v.
         If value v is of type list, format each item in list as dictionary too.
 
-        ;param str key: the key in the dict
+        :param str key: the key in the dict
         :param value: the value to put for the key
         :param dict results_dict: the dict to update
         """
 
-        key_name = rename[key] if key in rename else key
+        key_name = rename.get(key, key)
         if key_name in results_dict:
             return
 
+        inner_front = required_front.get(key, None)
+        inner_optional = optional.get(key, None)
+        inner_end = required_end.get(key, None)
+        inner_rename = {
+            " ".join(rename_key.split(' ')[1:]): rename_value
+            for rename_key, rename_value in rename.items()
+            if rename_key.startswith(f"{key} ")
+        }
+
+        # Value is a list of ubiops models
         if isinstance(value, list):
-            inner_front = required_front[key] if key in required_front else None
-            inner_optional = optional[key] if key in optional else None
-            inner_end = required_end[key] if key in required_end else None
-            inner_rename = {
-                " ".join(rename_key.split(' ')[1:]): rename_value
-                for rename_key, rename_value in rename.items()
-                if rename_key.startswith(f"{key} ")
-            }
             results_dict[key_name] = [
                 format_yaml(
                     item=j,
@@ -232,6 +235,16 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
                 )
                 for j in value
             ]
+        # Value is an ubiops model
+        elif inner_front or inner_optional or inner_end:
+            results_dict[key_name] = format_yaml(
+                item=value,
+                as_str=False,
+                required_front=inner_front,
+                optional=inner_optional,
+                required_end=inner_end,
+                rename=inner_rename
+            )
         else:
             results_dict[key_name] = value
 
@@ -284,10 +297,10 @@ def format_datetime_attrs(items, prettify=True):
 # pylint: disable=too-many-branches
 def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse=False, fmt='table', pager=False):
     """
-    Print a list of objects returned from the client library
+    Print a list of ubiops models returned from the client library
 
     :param list[object] items: the items to print
-    :param list[str] attrs: the attributes to print for each object
+    :param list[str] attrs: the attributes to print for each ubiops model
     :param dict rename_cols: if provided, attributes to rename in the columns of the table, in the form of;
         <attribute name>: <column name>
     :param int sorting_col: index of the attributes list to sort on
@@ -355,7 +368,13 @@ def print_projects_list(projects, current, attrs, fmt='simple'):
     """
 
     if fmt == 'simple':
-        table = [[click.style(text='*', fg='yellow') if i.name == current else None, i.name] for i in projects]
+        table = [
+            [
+                # Print yellow star in front of current project
+                click.style(text='*', fg='yellow') if getattr(i, 'name') == current else None,
+                getattr(i, 'name')
+            ] for i in projects
+        ]
         sorted_table = sorted(table, key=lambda x: x[1])
         click.echo(tabulate(sorted_table, tablefmt="plain"))
     else:
@@ -365,7 +384,7 @@ def print_projects_list(projects, current, attrs, fmt='simple'):
 # pylint: disable=too-many-arguments
 def print_item(item, row_attrs, required_front=None, optional=None, required_end=None, rename=None, fmt='row'):
     """
-    Print an object returned from the client library
+    Print an ubiops model returned from the client library
 
     :param object item: the item to print
     :param list[str] row_attrs: the object attributes to print as a row of a table
@@ -380,12 +399,23 @@ def print_item(item, row_attrs, required_front=None, optional=None, required_end
     """
 
     if fmt == 'json':
-        click.echo(format_json(item))
+        click.echo(
+            format_json(item)
+        )
     elif fmt == 'yaml':
-        click.echo(format_yaml(item, required_front=required_front, optional=optional,
-                               required_end=required_end, rename=rename))
-    else:  # fmt = 'row'
-        print_list([item], row_attrs, rename_cols=rename, fmt='table')
+        click.echo(
+            format_yaml(
+                item=item,
+                required_front=required_front,
+                optional=optional,
+                required_end=required_end,
+                rename=rename
+            )
+        )
+    elif fmt == 'row':
+        print_list(items=[item], attrs=row_attrs, rename_cols=rename, fmt='table')
+    else:
+        raise NotImplementedError
 
 
 def format_logs_reference(logs, extended=None):

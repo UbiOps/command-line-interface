@@ -3,9 +3,9 @@ import ubiops as api
 
 from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
 from ubiops_cli.src.helpers.pipeline_helpers import rename_pipeline_object_reference_version, \
-    set_pipeline_version_defaults, PIPELINE_VERSION_FIELDS, PIPELINE_VERSION_FIELDS_RENAMED
+    set_pipeline_version_defaults, PIPELINE_VERSION_FIELDS, PIPELINE_VERSION_FIELDS_RENAMED, \
+    PIPELINE_VERSION_RESPONSE_FILE, PIPELINE_VERSION_RESPONSE
 from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.pipeline_helpers import format_pipeline_object_configuration
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers import options
 
@@ -122,28 +122,12 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
     setattr(version, 'input_fields', pipeline.input_fields)
     setattr(version, 'output_type', pipeline.output_type)
     setattr(version, 'output_fields', pipeline.output_fields)
-    version.objects = format_pipeline_object_configuration(objects=version.objects)
 
     if output_path is not None:
         # Store only reusable settings
         dictionary = format_yaml(
             item=version,
-            required_front=[
-                'pipeline', 'input_type', 'input_fields', 'output_type', 'output_fields',
-                'version', *PIPELINE_VERSION_FIELDS
-            ],
-            optional=[
-                'objects name', 'objects reference_name', 'objects reference_type', 'objects version',
-                'objects configuration', 'attachments destination_name', 'attachments sources source_name',
-                'attachments sources mapping', 'input_fields name', 'input_fields data_type', 'output_fields name',
-                'output_fields data_type'
-            ],
-            rename={
-                'pipeline': 'pipeline_name',
-                'version': 'version_name',
-                'objects version': 'reference_version',
-                **PIPELINE_VERSION_FIELDS_RENAMED
-            },
+            **PIPELINE_VERSION_RESPONSE_FILE,
             as_str=False
         )
 
@@ -156,24 +140,7 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
         print_item(
             item=version,
             row_attrs=LIST_ITEMS,
-            required_front=[
-                'pipeline', 'input_type', 'input_fields', 'output_type', 'output_fields',
-                'version', *PIPELINE_VERSION_FIELDS
-            ],
-            optional=[
-                'creation_date', 'last_updated', 'objects name', 'objects reference_type', 'objects reference_name',
-                'objects configuration', 'objects version', 'attachments destination_name',
-                'attachments sources source_name', 'attachments sources mapping', 'input_fields name',
-                'input_fields data_type', 'output_fields name', 'output_fields data_type'
-            ],
-            rename={
-                'creation_date': 'version_creation_date',
-                'last_updated': 'version_last_updated',
-                'pipeline': 'pipeline_name',
-                'version': 'version_name',
-                'objects version': 'reference_version',
-                **PIPELINE_VERSION_FIELDS_RENAMED
-            },
+            **PIPELINE_VERSION_RESPONSE,
             fmt=format_
         )
 
@@ -244,13 +211,12 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
 
     version = api.PipelineVersionCreate(version=version_name, **{k: kwargs[k] for k in PIPELINE_VERSION_FIELDS})
     response = client.pipeline_versions_create(project_name=project_name, pipeline_name=pipeline_name, data=version)
-    response.objects = format_pipeline_object_configuration(objects=response.objects)
     client.api_client.close()
 
     print_item(
         item=response,
         row_attrs=LIST_ITEMS,
-        rename={'pipeline': 'pipeline_name', 'version': 'version_name', **PIPELINE_VERSION_FIELDS_RENAMED},
+        **PIPELINE_VERSION_RESPONSE,
         fmt=format_
     )
 
@@ -315,7 +281,6 @@ def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, q
     kwargs = rename_pipeline_object_reference_version(content=kwargs)
 
     version_data = api.PipelineVersionUpdate(**{'version': new_name, **{k: kwargs[k] for k in PIPELINE_VERSION_FIELDS}})
-    version_data.objects = format_pipeline_object_configuration(objects=version_data.objects)
     client.pipeline_versions_update(
         project_name=project_name,
         pipeline_name=pipeline_name,
