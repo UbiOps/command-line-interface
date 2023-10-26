@@ -520,14 +520,8 @@ def format_requests_reference(requests, split_requests='\n\n'):
         if hasattr(request, 'version'):
             overview += f"Version: {request.version}\n"
 
-        if hasattr(request, 'status') and request.status != 'completed':
+        if hasattr(request, 'status'):
             overview += f"Status: {format_status(status=request.status, success_green=True)}"
-
-        elif hasattr(request, 'success'):
-            if request.success:
-                overview += f"Status: {click.style(text='completed', fg='green')}"
-            else:
-                overview += f"Status: {click.style(text='failed', fg='red')}"
 
         if hasattr(request, 'error_message') and request.error_message:
             overview += f"\nError message: {click.style(str(request.error_message), fg='red')}"
@@ -569,15 +563,9 @@ def format_requests_oneline(requests):
             overview += request.pipeline_object
             overview += ' '
 
-        if hasattr(request, 'status') and request.status != 'completed':
+        if hasattr(request, 'status'):
             overview += format_status(request.status, success_green=True)
             overview += ' '
-
-        elif hasattr(request, 'success'):
-            if request.success:
-                overview += click.style(text='completed ', fg='green')
-            else:
-                overview += click.style(text='failed ', fg='red')
 
         if hasattr(request, 'request_data'):
             overview += '-' if request.request_data is None else json.dumps(request.request_data)
@@ -620,14 +608,8 @@ def format_pipeline_requests_reference(pipeline_requests):
         if hasattr(pipeline_request, 'time_created'):
             overview += f"Creation date: {format_datetime(pipeline_request.time_created)}\n"
 
-        if hasattr(pipeline_request, 'status') and pipeline_request.status != 'completed':
+        if hasattr(pipeline_request, 'status'):
             overview += f"Status: {format_status(pipeline_request.status, success_green=True)}"
-
-        elif hasattr(pipeline_request, 'success'):
-            if pipeline_request.success:
-                overview += f"Status: {click.style('completed', fg='green')}"
-            else:
-                overview += f"Status: {click.style('failed', fg='red')}"
 
         if hasattr(pipeline_request, 'error_message') and pipeline_request.error_message:
             overview += f"\nError message: {click.style(str(pipeline_request.error_message), fg='red')}"
@@ -682,15 +664,8 @@ def format_pipeline_requests_oneline(pipeline_requests):
             overview += click.style(str(pipeline_request.id), fg='yellow')
             overview += ' '
 
-        if hasattr(pipeline_request, 'status') and pipeline_request.status != 'completed':
+        if hasattr(pipeline_request, 'status'):
             overview += format_status(pipeline_request.status, success_green=True)
-            overview += ' '
-
-        elif hasattr(pipeline_request, 'success'):
-            if pipeline_request.success:
-                overview += click.style(text='completed ', fg='green')
-            else:
-                overview += click.style(text='failed ', fg='red')
             overview += ' '
 
         if hasattr(pipeline_request, 'request_data'):

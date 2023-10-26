@@ -323,9 +323,9 @@ REQUEST_FILTER_PIPELINE_STATUS = click.option(
     '--status', required=False, help="Status of the request", default=None,
     type=click.Choice(['pending', 'processing', 'failed', 'completed'], case_sensitive=False)
 )
-REQUEST_FILTER_SUCCESS = click.option(
+REQUEST_FILTER_SUCCESS_DEPRECATED = click.option(
     '--success', required=False, default=None, type=click.BOOL, metavar='[True|False]',
-    help="A boolean value that indicates whether the request was successful"
+    help="[DEPRECATED] A boolean value that indicates whether the request was successful"
 )
 REQUEST_FILTER_START_DATE = click.option(
     '--start_date', required=False, default=None, metavar='<datetime in iso-format>',

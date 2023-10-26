@@ -290,7 +290,7 @@ If not specified, the requests are listed for the default version.
 
 - `--status`<br/>Status of the request
 
-- `--success`<br/>A boolean value that indicates whether the request was successful
+- `--success`<br/>[DEPRECATED] A boolean value that indicates whether the request was successful
 
 - `--start_date`<br/>Start date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
 
