@@ -13,7 +13,7 @@ from ubiops_cli.utils import get_current_project, init_client, read_json, read_y
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
-REQUEST_LIST_ITEMS = ['id', 'status', 'success', 'time_created']
+REQUEST_LIST_ITEMS = ['id', 'status', 'time_created']
 
 
 @click.group(name=["pipelines", "ppl"], short_help="Manage your pipelines")
@@ -432,7 +432,7 @@ def requests_get(pipeline_name, version_name, request_id, format_):
 @options.REQUEST_LIMIT
 @options.REQUEST_SORT
 @options.REQUEST_FILTER_PIPELINE_STATUS
-@options.REQUEST_FILTER_SUCCESS
+@options.REQUEST_FILTER_SUCCESS_DEPRECATED
 @options.REQUEST_FILTER_START_DATE
 @options.REQUEST_FILTER_END_DATE
 @options.REQUEST_FILTER_SEARCH_ID
@@ -463,6 +463,9 @@ def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
             raise UbiOpsException(
                 "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
             )
+
+    if kwargs['success'] is not None:
+        click.secho(message="Deprecation warning: 'success' is deprecated use 'status' instead", fg='red')
 
     client = init_client()
     if version_name is not None:

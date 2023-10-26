@@ -715,7 +715,7 @@ def requests_get(deployment_name, version_name, request_id, format_):
 @options.REQUEST_LIMIT
 @options.REQUEST_SORT
 @options.REQUEST_FILTER_DEPLOYMENT_STATUS
-@options.REQUEST_FILTER_SUCCESS
+@options.REQUEST_FILTER_SUCCESS_DEPRECATED
 @options.REQUEST_FILTER_START_DATE
 @options.REQUEST_FILTER_END_DATE
 @options.REQUEST_FILTER_SEARCH_ID
@@ -747,6 +747,9 @@ def requests_list(deployment_name, version_name, limit, format_, **kwargs):
             raise UbiOpsException(
                 "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
             )
+
+    if kwargs['success'] is not None:
+        click.secho(message="Deprecation warning: 'success' is deprecated use 'status' instead", fg='red')
 
     client = init_client()
     if version_name is not None:
