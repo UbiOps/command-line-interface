@@ -373,7 +373,7 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
     elif format_ == 'oneline':
         click.echo(format_pipeline_requests_oneline(response))
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_pipeline_requests_reference(response))
 
@@ -419,7 +419,7 @@ def requests_get(pipeline_name, version_name, request_id, format_):
         click.echo(format_pipeline_requests_oneline(response))
 
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
 
     else:
         click.echo(format_pipeline_requests_reference(response))
@@ -479,7 +479,7 @@ def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
         )
 
     client.api_client.close()
-    print_list(response, REQUEST_LIST_ITEMS, fmt=format_)
+    print_list(response, REQUEST_LIST_ITEMS, fmt=format_, json_skip=["success"])
     if len(response) == limit:
         click.echo("\n(Use the <offset> and <limit> options to load more)")
 
@@ -541,7 +541,7 @@ def deprecated_pipelines_request(pipeline_name, version_name, data, pipeline_tim
         click.echo(format_pipeline_requests_oneline([response]))
 
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
 
     else:
         click.echo(format_pipeline_requests_reference([response]))
@@ -618,7 +618,7 @@ def deprecated_batch_requests_create(pipeline_name, version_name, data, format_)
     elif format_ == 'oneline':
         click.echo(format_pipeline_requests_oneline(pipeline_requests=response))
     elif format_ == 'json':
-        click.echo(format_json(items=response))
+        click.echo(format_json(items=response, skip_attributes=["success"]))
     else:
         click.echo(format_pipeline_requests_reference(pipeline_requests=response))
 
@@ -670,7 +670,7 @@ def deprecated_batch_requests_get(pipeline_name, version_name, request_id, forma
         click.echo(format_pipeline_requests_oneline(response))
 
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
 
     else:
         click.echo(format_pipeline_requests_reference(response))
@@ -711,6 +711,6 @@ def deprecated_batch_requests_list(pipeline_name, version_name, offset, limit, f
         )
 
     client.api_client.close()
-    print_list(response, REQUEST_LIST_ITEMS, fmt=format_)
+    print_list(response, REQUEST_LIST_ITEMS, fmt=format_, json_skip=["success"])
     if len(response) == limit:
         click.echo("\n(Use the <offset> and <limit> options to load more)")

@@ -121,22 +121,29 @@ def format_log(log, log_level):
     return log
 
 
-def object_to_dict(obj):
+def object_to_dict(obj, skip_attributes=None):
     """
     Convert object to dict
 
     :param object obj: the object to convert
+    :param list[str] skip_attributes: the object attributes to skip
     """
 
     if isinstance(obj, (str, dict)):
         return obj
 
+    if skip_attributes is None:
+        skip_attributes = []
+
     attributes = [k[1:] for k in obj.__dict__.keys() if k.startswith('_')]
     dictionary = {}
     for attr in attributes:
+        if attr in skip_attributes:
+            continue
+
         value = getattr(obj, attr)
         if isinstance(value, list):
-            dictionary[attr] = [object_to_dict(j) for j in value]
+            dictionary[attr] = [object_to_dict(j, skip_attributes=skip_attributes) for j in value]
 
         elif isinstance(value, (date, datetime)):
             dictionary[attr] = str(value)
@@ -151,7 +158,7 @@ def object_to_dict(obj):
     return dictionary
 
 
-def format_json(items):
+def format_json(items, skip_attributes=None):
     """
     Format object(s) as json/dict
 
@@ -161,9 +168,9 @@ def format_json(items):
     items = format_datetime_attrs(items, prettify=False)
 
     if isinstance(items, list):
-        return json.dumps([object_to_dict(i) for i in items])
+        return json.dumps([object_to_dict(obj=i, skip_attributes=skip_attributes) for i in items])
 
-    return json.dumps(object_to_dict(items))
+    return json.dumps(object_to_dict(obj=items, skip_attributes=skip_attributes))
 
 
 # pylint: disable=too-many-arguments
@@ -295,7 +302,8 @@ def format_datetime_attrs(items, prettify=True):
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-branches
-def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse=False, fmt='table', pager=False):
+def print_list(items, attrs, rename_cols=None, json_skip=None, sorting_col=None, sorting_reverse=False, fmt='table',
+               pager=False):
     """
     Print a list of ubiops models returned from the client library
 
@@ -303,6 +311,7 @@ def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse
     :param list[str] attrs: the attributes to print for each ubiops model
     :param dict rename_cols: if provided, attributes to rename in the columns of the table, in the form of;
         <attribute name>: <column name>
+    :param list[str] json_skip: the attributes to skip when formatting to json, used to skip deprecated attributes
     :param int sorting_col: index of the attributes list to sort on
     :param bool sorting_reverse: whether to sort the column in descending order, ascending otherwise
     :param str fmt: how the object should be formatted; 'json', 'yaml' or 'row'
@@ -311,7 +320,7 @@ def print_list(items, attrs, rename_cols=None, sorting_col=None, sorting_reverse
 
     rename_cols = {} if rename_cols is None else rename_cols
     if fmt == 'json':
-        click.echo(format_json(items))
+        click.echo(format_json(items, skip_attributes=json_skip))
     else:  # fmt == 'table'
         if sorting_col is not None:
             items = sorted(items, key=lambda x: getattr(x, attrs[sorting_col], ''), reverse=sorting_reverse)
@@ -382,7 +391,8 @@ def print_projects_list(projects, current, attrs, fmt='simple'):
 
 
 # pylint: disable=too-many-arguments
-def print_item(item, row_attrs, required_front=None, optional=None, required_end=None, rename=None, fmt='row'):
+def print_item(item, row_attrs, required_front=None, optional=None, required_end=None, rename=None, json_skip=None,
+               fmt='row'):
     """
     Print an ubiops model returned from the client library
 
@@ -395,12 +405,13 @@ def print_item(item, row_attrs, required_front=None, optional=None, required_end
     :param list[str] required_end: the object attributes that should be printed last and are required; if they are not
         given or None, they will be printed as none
     :param dict rename: if provided, attributes to rename in the form of; <attribute name>: <renamed key>
+    :param list[str] json_skip: the attributes to skip when formatting to json, used to skip deprecated attributes
     :param str fmt: how the object should be formatted; 'json', 'yaml' or 'row'
     """
 
     if fmt == 'json':
         click.echo(
-            format_json(item)
+            format_json(item, skip_attributes=json_skip)
         )
     elif fmt == 'yaml':
         click.echo(
