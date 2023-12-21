@@ -661,7 +661,7 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
     elif format_ == 'oneline':
         click.echo(format_requests_oneline(response))
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_requests_reference(response))
 
@@ -703,7 +703,7 @@ def requests_get(deployment_name, version_name, request_id, format_):
     elif format_ == 'oneline':
         click.echo(format_requests_oneline(response))
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_requests_reference(response))
 
@@ -762,7 +762,7 @@ def requests_list(deployment_name, version_name, limit, format_, **kwargs):
         )
     client.api_client.close()
 
-    print_list(response, REQUEST_LIST_ITEMS, fmt=format_)
+    print_list(response, REQUEST_LIST_ITEMS, fmt=format_, json_skip=["success"])
     if len(response) == limit:
         click.echo("\n(Use the <offset> and <limit> options to load more)")
 
@@ -823,7 +823,7 @@ def deprecated_deployments_request(deployment_name, version_name, data, timeout,
     elif format_ == 'oneline':
         click.echo(format_requests_oneline([response]))
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_requests_reference([response]))
 
@@ -906,7 +906,7 @@ def deprecated_batch_requests_create(deployment_name, version_name, data, timeou
     elif format_ == 'oneline':
         click.echo(format_requests_oneline(response))
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_requests_reference(response))
 
@@ -954,7 +954,7 @@ def deprecated_batch_requests_get(deployment_name, version_name, request_id, for
     elif format_ == 'oneline':
         click.echo(format_requests_oneline(response))
     elif format_ == 'json':
-        click.echo(format_json(response))
+        click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_requests_reference(response))
 
@@ -993,6 +993,6 @@ def deprecated_batch_requests_list(deployment_name, version_name, offset, limit,
         )
     client.api_client.close()
 
-    print_list(response, REQUEST_LIST_ITEMS, fmt=format_)
+    print_list(response, REQUEST_LIST_ITEMS, fmt=format_, json_skip=["success"])
     if len(response) == limit:
         click.echo("\n(Use the <offset> and <limit> options to load more)")
