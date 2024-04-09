@@ -383,13 +383,11 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @options.IGNORE_FILE
 @options.ZIP_OUTPUT_STORE
 @options.VERSION_YAML_FILE
-@options.LANGUAGE
 @options.ENVIRONMENT
 @options.INSTANCE_TYPE
 @options.MIN_INSTANCES
 @options.MAX_INSTANCES
 @options.MAX_IDLE_TIME
-@options.DEPLOYMENT_MODE_DEPRECATED
 @options.RETENTION_MODE
 @options.RETENTION_TIME
 @options.MAX_QUEUE_SIZE_EXPRESS
@@ -457,15 +455,6 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
                                                                  'yaml file or as a command argument'
     assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either the yaml ' \
                                                            'file or as a command option'
-
-    if not quiet and ('deployment_mode' in yaml_content or kwargs['deployment_mode']):
-        click.secho(
-            "Deprecation warning: 'deployment_mode' is deprecated. From now on, both direct and batch requests can be "
-            "made to the same deployment version.", fg='red'
-        )
-
-    if not quiet and ('language' in yaml_content or kwargs['language']):
-        click.secho("Deprecation warning: 'language' is deprecated. Use 'environment' instead.", fg='red')
 
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')

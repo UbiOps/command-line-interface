@@ -129,8 +129,6 @@ The version name can either be passed as command argument or specified inside th
 
 - `-d`/`--deployment_name`<br/>The deployment name
 
-- `-l`/`--language`<br/>[DEPRECATED] Programming language of code
-
 - `-e`/`--environment`<br/>Environment for the version
 
 - `-inst`/`--instance_type`<br/>Reserved instance type for the version
@@ -140,8 +138,6 @@ The version name can either be passed as command argument or specified inside th
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
-
-- `-dm`/`--deployment_mode`<br/>[DEPRECATED] The type of the deployment version
 
 - `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 

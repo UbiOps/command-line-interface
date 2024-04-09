@@ -163,10 +163,6 @@ VERSION_YAML_OUTPUT = click.option(
     help="Path to file or directory to store version yaml file"
 )
 
-LANGUAGE = click.option(
-    '-l', '--language', required=False, default=None, type=click.STRING, metavar='<string>',
-    help="[DEPRECATED] Programming language of code"
-)
 ENVIRONMENT = click.option(
     '-e', '--environment', required=False, default=None, type=click.STRING, metavar='<string>',
     help="Environment for the version"
@@ -186,11 +182,6 @@ MAX_INSTANCES = click.option(
 MAX_IDLE_TIME = click.option(
     '-t', '--maximum_idle_time', required=False, default=None, type=int, metavar='<int>',
     help="Maximum idle time before shutting down instance (seconds)"
-)
-DEPLOYMENT_MODE_DEPRECATED = click.option(
-    '-dm', '--deployment_mode', required=False, default=None,
-    type=click.Choice(['express', 'batch'], case_sensitive=False),
-    help="[DEPRECATED] The type of the deployment version"
 )
 RETENTION_MODE = click.option(
     '-rtm', '--request_retention_mode', required=False, default=None,
