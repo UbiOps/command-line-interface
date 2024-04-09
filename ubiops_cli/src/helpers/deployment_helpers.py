@@ -7,7 +7,7 @@ from ubiops_cli.src.helpers.helpers import strings_to_dict
 
 DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_CREATE_FIELDS = [
-    'description', 'labels', 'language', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
+    'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
     'maximum_queue_size_batch', 'static_ip'
 ]
@@ -23,7 +23,6 @@ DEPLOYMENT_VERSION_FIELDS_UPDATE = [
 ]
 DEPLOYMENT_VERSION_FIELDS_WAIT = ['instance_type', 'minimum_instances', 'maximum_instances', 'maximum_idle_time']
 DEPLOYMENT_VERSION_FIELD_TYPES = {
-    'language': str,
     'environment': str,
     'instance_type': str,
     'minimum_instances': int,

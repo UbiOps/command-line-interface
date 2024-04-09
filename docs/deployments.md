@@ -343,8 +343,6 @@ either be passed as command argument or specified inside the yaml file using `<d
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
-- `-l`/`--language`<br/>[DEPRECATED] Programming language of code
-
 - `-e`/`--environment`<br/>Environment for the version
 
 - `-inst`/`--instance_type`<br/>Reserved instance type for the version
@@ -354,8 +352,6 @@ either be passed as command argument or specified inside the yaml file using `<d
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
-
-- `-dm`/`--deployment_mode`<br/>[DEPRECATED] The type of the deployment version
 
 - `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 
