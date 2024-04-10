@@ -317,11 +317,21 @@ request_retention_time: 604800
 maximum_queue_size_express: 100
 maximum_queue_size_batch: 100000
 static_ip: false
+ports:
+- public_port: 2222
+  deployment_port: 2222
+  protocol: tcp
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
 the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
 either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
+
+The `ports` to open up for the deployment version can be provided as list of fields `public_port`, `deployment_port`
+and `protocol` inside the yaml file, or one port can be given via command options `--public_port`,
+`--deployment_port` and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both.
+Use a yaml file with empty `ports` list and provide `--overwrite` command option to remove already existing opened
+ports.
 
 **Arguments:**
 
@@ -361,7 +371,13 @@ either be passed as command argument or specified inside the yaml file using `<d
 
 - `-qsb`/`--maximum_queue_size_batch`<br/>Maximum number of queued batch requests to the version
 
-- `--static-ip`<br/>Whether the deployment version should get a static IP
+- `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
+
+- `--public_port`<br/>Public port to open up to
+
+- `--deployment_port`<br/>Deployment port to open up
+
+- `--port_protocol`<br/>Protocol to use for port forwarding
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 

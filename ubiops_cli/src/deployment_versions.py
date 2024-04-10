@@ -142,6 +142,9 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @options.MAX_QUEUE_SIZE_EXPRESS
 @options.MAX_QUEUE_SIZE_BATCH
 @options.VERSION_STATIC_IP
+@options.VERSION_PUBLIC_PORT
+@options.VERSION_DEPLOYMENT_PORT
+@options.VERSION_PORT_PROTOCOL
 @options.VERSION_LABELS
 @options.VERSION_DESCRIPTION
 @options.VERSION_YAML_FILE
@@ -171,11 +174,19 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     maximum_queue_size_express: 100
     maximum_queue_size_batch: 100000
     static_ip: false
+    ports:
+    - public_port: 2222
+      deployment_port: 2222
+      protocol: tcp
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
     options are given, the options defined by `<yaml_file>` will be overwritten by the specified command options.
     The version name can either be passed as command argument or specified inside the yaml file using `<version_name>`.
+
+    The `ports` to open up for the version can be provided as list of fields `public_port`, `deployment_port` and
+    `protocol` inside the yaml file, or one port can be given via command options `--public_port`, `--deployment_port`
+    and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both.
     """
 
     project_name = get_current_project(error=True)
@@ -188,13 +199,27 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either ' \
                                                            'the yaml file or as a command argument'
 
+    # Convert command options for port forwarding to 'ports' list
+    if 'ports' in yaml_content and (kwargs.get('public_port', None) or kwargs.get('deployment_port', None)):
+        raise AssertionError(
+            "Please, specify the ports to open up either in the yaml file or as command options, not both"
+        )
+    if kwargs.get('public_port', None) or kwargs.get('deployment_port', None):
+        if not (kwargs.get('public_port', None) and kwargs.get('deployment_port', None)):
+            raise AssertionError("public_port and deployment_port should be provided together")
+        yaml_content["ports"] = [{
+            "public_port": kwargs.pop("public_port"),
+            "deployment_port": kwargs.pop("deployment_port"),
+            "protocol": kwargs.pop("port_protocol")
+        }]
+
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
 
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
 
     version = api.DeploymentVersionCreate(
-        version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_CREATE_FIELDS}
+        version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_CREATE_FIELDS if k in kwargs}
     )
     response = client.deployment_versions_create(
         project_name=project_name, deployment_name=deployment_name, data=version
@@ -227,6 +252,9 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @options.MAX_QUEUE_SIZE_EXPRESS
 @options.MAX_QUEUE_SIZE_BATCH
 @options.VERSION_STATIC_IP
+@options.VERSION_PUBLIC_PORT
+@options.VERSION_DEPLOYMENT_PORT
+@options.VERSION_PORT_PROTOCOL
 @options.VERSION_LABELS
 @options.VERSION_DESCRIPTION
 @options.QUIET
@@ -251,6 +279,10 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     maximum_queue_size_express: 100
     maximum_queue_size_batch: 100000
     static_ip: false
+    ports:
+    - public_port: 2222
+      deployment_port: 2222
+      protocol: tcp
     ```
 
     You may want to change some deployment options, like, `<maximum_instances>` and
@@ -258,6 +290,11 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     and passing the file path as `<yaml_file>`, or passing the options as command options.
     If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
     will be overwritten by the specified command options.
+
+    The `ports` to open up for the version can be provided as list of fields `public_port`, `deployment_port` and
+    `protocol` inside the yaml file, or one port can be given via command options `--public_port`, `--deployment_port`
+    and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both. Use a yaml file with
+    empty `ports` list to remove already existing opened ports.
     """
 
     project_name = get_current_project(error=True)
@@ -266,11 +303,25 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
 
     yaml_content = read_yaml(yaml_file, required_fields=[])
 
+    # Convert command options for port forwarding to 'ports' list
+    if 'ports' in yaml_content and (kwargs.get('public_port', None) or kwargs.get('deployment_port', None)):
+        raise AssertionError(
+            "Please, specify the ports to open up either in the yaml file or as command options, not both"
+        )
+    if kwargs.get('public_port', None) or kwargs.get('deployment_port', None):
+        if not (kwargs.get('public_port', None) and kwargs.get('deployment_port', None)):
+            raise AssertionError("public_port and deployment_port should be provided together")
+        yaml_content["ports"] = [{
+            "public_port": kwargs.pop("public_port"),
+            "deployment_port": kwargs.pop("deployment_port"),
+            "protocol": kwargs.pop("port_protocol")
+        }]
+
     kwargs['version_name'] = new_name
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
 
     version = api.DeploymentVersionUpdate(
-        **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE if kwargs[k] is not None}
+        **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE if kwargs.get(k, None) is not None}
     )
     client.deployment_versions_update(
         project_name=project_name, deployment_name=deployment_name, version=version_name, data=version
