@@ -393,6 +393,9 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @options.MAX_QUEUE_SIZE_EXPRESS
 @options.MAX_QUEUE_SIZE_BATCH
 @options.VERSION_STATIC_IP
+@options.VERSION_PUBLIC_PORT
+@options.VERSION_DEPLOYMENT_PORT
+@options.VERSION_PORT_PROTOCOL
 @options.VERSION_LABELS
 @options.VERSION_DESCRIPTION
 @options.OVERWRITE
@@ -434,11 +437,21 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     maximum_queue_size_express: 100
     maximum_queue_size_batch: 100000
     static_ip: false
+    ports:
+    - public_port: 2222
+      deployment_port: 2222
+      protocol: tcp
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
     the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
     either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
+
+    The `ports` to open up for the deployment version can be provided as list of fields `public_port`, `deployment_port`
+    and `protocol` inside the yaml file, or one port can be given via command options `--public_port`,
+    `--deployment_port` and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both.
+    Use a yaml file with empty `ports` list and provide `--overwrite` command option to remove already existing opened
+    ports.
     """
 
     if output_path is None:
@@ -458,6 +471,20 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
 
     deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
     version_name = set_dict_default(version_name, yaml_content, 'version_name')
+
+    # Convert command options for port forwarding to 'ports' list
+    if 'ports' in yaml_content and (kwargs.get('public_port', None) or kwargs.get('deployment_port', None)):
+        raise AssertionError(
+            "Please, specify the ports to open up either in the yaml file or as command options, not both"
+        )
+    if kwargs.get('public_port', None) or kwargs.get('deployment_port', None):
+        if not (kwargs.get('public_port', None) and kwargs.get('deployment_port', None)):
+            raise AssertionError("public_port and deployment_port should be provided together")
+        yaml_content["ports"] = [{
+            "public_port": kwargs.pop("public_port"),
+            "deployment_port": kwargs.pop("deployment_port"),
+            "protocol": kwargs.pop("port_protocol")
+        }]
 
     existing_version = None
     if overwrite:

@@ -201,8 +201,20 @@ MAX_QUEUE_SIZE_BATCH = click.option(
     help="Maximum number of queued batch requests to the version"
 )
 VERSION_STATIC_IP = click.option(
-    '--static-ip', required=False, metavar='<bool>', default=False, type=click.BOOL,
+    '--static-ip', '--static_ip', required=False, metavar='<bool>', default=False, type=click.BOOL,
     help="Whether the deployment version should get a static IP"
+)
+VERSION_PUBLIC_PORT = click.option(
+    '--public_port', required=False, metavar='<int>', default=None, type=int,
+    help="Public port to open up to"
+)
+VERSION_DEPLOYMENT_PORT = click.option(
+    '--deployment_port', required=False, metavar='<int>', default=None, type=int,
+    help="Deployment port to open up"
+)
+VERSION_PORT_PROTOCOL = click.option(
+    '--port_protocol', required=False, metavar='<string>', default="tcp", type=str,
+    help="Protocol to use for port forwarding", show_default=True
 )
 
 VERSION_LABELS = click.option(

@@ -9,17 +9,17 @@ DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
 DEPLOYMENT_VERSION_CREATE_FIELDS = [
     'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
-    'maximum_queue_size_batch', 'static_ip'
+    'maximum_queue_size_batch', 'static_ip', 'ports'
 ]
 DEPLOYMENT_VERSION_GET_FIELDS = [
     'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
-    'maximum_queue_size_batch', 'has_request_method', 'has_requests_method', 'static_ip'
+    'maximum_queue_size_batch', 'has_request_method', 'has_requests_method', 'static_ip', 'ports'
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = [
     'version', 'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
     'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
-    'maximum_queue_size_batch', 'static_ip'
+    'maximum_queue_size_batch', 'static_ip', 'ports'
 ]
 DEPLOYMENT_VERSION_FIELDS_WAIT = ['instance_type', 'minimum_instances', 'maximum_instances', 'maximum_idle_time']
 DEPLOYMENT_VERSION_FIELD_TYPES = {
@@ -36,7 +36,8 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     'maximum_queue_size_batch': int,
     'has_request_method': bool,
     'has_requests_method': bool,
-    'static_ip': bool
+    'static_ip': bool,
+    'ports': None
 }
 DEPLOYMENT_VERSION_FIELDS_RENAMED = {
     'version': 'version_name', 'description': 'version_description', 'labels': 'version_labels'
