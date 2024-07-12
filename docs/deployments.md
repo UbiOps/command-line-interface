@@ -88,8 +88,8 @@ The deployment name can either be passed as argument or specified inside the yam
 file. If it is both passed as argument and specified inside the yaml file, the value
 passed as argument is used.
 
-Possible input/output types: [structured, plain]. Possible data_types: [blob, int,
-string, double, bool, array_string, array_int, array_double].
+Possible input/output types: [structured, plain]. Possible data_types: [int,
+string, double, bool, dict, file, array_string, array_int, array_double, array_file].
 
 **Arguments:**
 
@@ -308,7 +308,7 @@ version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
 environment: python3-8
-instance_type: 2048mb
+instance_type_group_name: 2048 MB + 0.5 vCPU
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 300
@@ -355,7 +355,11 @@ ports.
 
 - `-e`/`--environment`<br/>Environment for the version
 
-- `-inst`/`--instance_type`<br/>Reserved instance type for the version
+- `-inst`/`--instance_type`<br/>[DEPRECATED] Reserved instance type for the version
+
+- `--instance_type_group_id`<br/>ID of the reserved instance type group for the version
+
+- `--instance_type_group_name`<br/>Name of the reserved instance type group for the version
 
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 
@@ -525,159 +529,6 @@ If not specified, the requests are listed for the default version.
 - `--search_id`<br/>A string to search inside request ids. It will filter all request ids that contain this string.
 
 - `--pipeline`<br/>A boolean value that indicates whether the deployment request was part of a pipeline request
-
-- `-fmt`/`--format`<br/>The output format
-
-
-<br/>
-
-### ubiops deployments request
-
-**Command:** `ubiops deployments request`
-
-**Description:**
-
-[DEPRECATED] Create a deployment request and retrieve the result.
-
-Use the version option to make a request to a specific deployment version:
-`ubiops deployments request <my-deployment> -v <my-version> --data <input>`
-
-If not specified, a request is made to the default version:
-`ubiops deployments request <my-deployment> --data <input>`
-
-For structured input, specify the data as JSON formatted string. For example:
-`ubiops deployments request <my-deployment> --data "{\"param1\": 1, \"param2\": \"two\"}"`
-
-**Arguments:**
-
-- [required] `deployment_name`
-
-
-
-**Options:**
-
-- `-v`/`--version_name`<br/>The version name
-
-- [required] `-d`/`--data`<br/>The input data of the request
-
-- `-t`/`--timeout`<br/>Timeout in seconds
-
-- `-fmt`/`--format`<br/>The output format
-
-
-<br/>
-
-
-***
-<br/>
-
-### ubiops deployments batch_requests
-
-**Command:** `ubiops deployments batch_requests`
-
-
-<br/>
-
-#### ubiops deployments batch_requests create
-
-**Command:** `ubiops deployments batch_requests create`
-
-**Description:**
-
-[DEPRECATED] Create a deployment batch request and retrieve request IDs to collect the results later.
-Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
-
-Use the option `timeout` to specify the timeout of the request. The minimum value is 10 seconds. The maximum value
-is 345600 (96 hours). The default value is 14400 (4 hours).
-
-Use the version option to make a batch request to a specific deployment version:
-`ubiops deployments batch_requests create <my-deployment> -v <my-version> --data <input>`
-
-If not specified, a batch request is made to the default version:
-`ubiops deployments batch_requests create <my-deployment> --data <input>`
-
-Multiple data inputs can be specified at ones by using the '--data' options multiple times:
-`ubiops deployments batch_requests create <my-deployment> --data <input-1> --data <input-2> --data <input-3>`
-
-For structured input, specify each data input as JSON formatted string. For example:
-`ubiops deployments batch_requests create <my-deployment> --data "{\"param1\": 1, \"param2\": \"two\"}"`
-
-**Arguments:**
-
-- [required] `deployment_name`
-
-
-
-**Options:**
-
-- `-v`/`--version_name`<br/>The version name
-
-- `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
-
-- `-t`/`--timeout`<br/>Timeout in seconds
-
-- `-fmt`/`--format`<br/>The output format
-
-
-<br/>
-
-#### ubiops deployments batch_requests get
-
-**Command:** `ubiops deployments batch_requests get`
-
-**Description:**
-
-[DEPRECATED] Get the results of one or more deployment batch requests.
-Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
-
-Use the version option to get a batch request for a specific deployment version.
-If not specified, the batch request is retrieved for the default version.
-
-Multiple request ids can be specified at ones by using the '-id' options multiple times:
-`ubiops deployments batch_requests get <my-deployment> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
-
-**Arguments:**
-
-- [required] `deployment_name`
-
-
-
-**Options:**
-
-- `-v`/`--version_name`<br/>The version name
-
-- [required] `-id`/`--request_id`<br/>The ID of the request<br/>This option can be provided multiple times in a single command
-
-- `-fmt`/`--format`<br/>The output format
-
-
-<br/>
-
-#### ubiops deployments batch_requests list
-
-**Command:** `ubiops deployments batch_requests list`
-
-**Description:**
-
-[DEPRECATED] List deployment batch requests.
-Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
-
-Use the version option to list the batch requests for a specific deployment version.
-If not specified, the batch requests are listed for the default version.
-
-**Arguments:**
-
-- [required] `deployment_name`
-
-
-
-**Options:**
-
-- `-v`/`--version_name`<br/>The version name
-
-- `--offset`<br/>The starting point: if offset equals 2, then the first 2 records will be omitted
-
-- `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 
 - `-fmt`/`--format`<br/>The output format
 

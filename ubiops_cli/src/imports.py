@@ -130,7 +130,7 @@ def imports_confirm(import_id, yaml_file, format_):
             maximum_idle_time: 300
             minimum_instances: 0
             maximum_instances: 5
-            instance_type: 512mb
+            instance_type_group_name: 512 MB + 0.125 vCPU
             request_retention_mode: full
             request_retention_time: 604800
             environment_variables:

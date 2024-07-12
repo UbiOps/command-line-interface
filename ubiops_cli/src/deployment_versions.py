@@ -86,7 +86,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
       my-key-1: my-label-1
       my-key-2: my-label-2
     environment: python3-8
-    instance_type: 2048mb
+    instance_type_group_name: 2048 MB + 0.5 vCPU
     minimum_instances: 0
     maximum_instances: 5
     maximum_idle_time: 300
@@ -134,6 +134,8 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @options.VERSION_NAME_OVERRULE
 @options.ENVIRONMENT
 @options.INSTANCE_TYPE
+@options.INSTANCE_TYPE_GROUP_ID
+@options.INSTANCE_TYPE_GROUP_NAME
 @options.MIN_INSTANCES
 @options.MAX_INSTANCES
 @options.MAX_IDLE_TIME
@@ -165,7 +167,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
       my-key-1: my-label-1
       my-key-2: my-label-2
     environment: python3-8
-    instance_type: 2048mb
+    instance_type_group_name: 2048 MB + 0.5 vCPU
     minimum_instances: 0
     maximum_instances: 1
     maximum_idle_time: 300
@@ -244,6 +246,8 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @options.VERSION_YAML_FILE
 @options.ENVIRONMENT
 @options.INSTANCE_TYPE
+@options.INSTANCE_TYPE_GROUP_ID
+@options.INSTANCE_TYPE_GROUP_NAME
 @options.MIN_INSTANCES
 @options.MAX_INSTANCES
 @options.MAX_IDLE_TIME
@@ -270,7 +274,7 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    instance_type: 2048mb
+    instance_type_group_name: 2048 MB + 0.5 vCPU
     minimum_instances: 0
     maximum_instances: 1
     maximum_idle_time: 300
@@ -286,7 +290,7 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     ```
 
     You may want to change some deployment options, like, `<maximum_instances>` and
-    `<instance_Type>`. You can do this by either providing the options in a yaml file
+    `<instance_type_group_name>`. You can do this by either providing the options in a yaml file
     and passing the file path as `<yaml_file>`, or passing the options as command options.
     If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
     will be overwritten by the specified command options.

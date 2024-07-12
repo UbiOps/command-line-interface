@@ -5,9 +5,28 @@ import click
 
 import ubiops as api
 
-from ubiops_cli.src import auth, blobs, buckets, config, deployment_builds, deployment_revisions, deployment_versions, \
-    deployments, environment_builds, environment_revisions, environment_variables, environments, exports, files, \
-    imports, pipelines, pipeline_versions, projects, logs, run_local, request_schedules, validation
+from ubiops_cli.src import (
+    auth,
+    buckets,
+    config,
+    deployment_revisions,
+    deployment_versions,
+    deployments,
+    environment_builds,
+    environment_revisions,
+    environment_variables,
+    environments,
+    exports,
+    files,
+    imports,
+    pipelines,
+    pipeline_versions,
+    projects,
+    logs,
+    run_local,
+    request_schedules,
+    validation,
+)
 from ubiops_cli.src.helpers.click_helpers import CustomGroup
 from ubiops_cli.version import VERSION
 
@@ -32,13 +51,11 @@ cli.add_command(projects.commands)
 cli.add_command(deployments.commands)
 cli.add_command(deployment_versions.commands)
 cli.add_command(deployment_revisions.commands)
-cli.add_command(deployment_builds.commands)
 cli.add_command(environments.commands)
 cli.add_command(environment_revisions.commands)
 cli.add_command(environment_builds.commands)
 cli.add_command(pipelines.commands)
 cli.add_command(pipeline_versions.commands)
-cli.add_command(blobs.commands)
 cli.add_command(buckets.commands)
 cli.add_command(files.commands)
 cli.add_command(environment_variables.commands)
