@@ -169,7 +169,15 @@ ENVIRONMENT = click.option(
 )
 INSTANCE_TYPE = click.option(
     '-inst', '--instance_type', required=False, default=None, type=click.STRING, metavar='<string>',
-    help="Reserved instance type for the version"
+    help="[DEPRECATED] Reserved instance type for the version"
+)
+INSTANCE_TYPE_GROUP_ID = click.option(
+    '--instance_type_group_id', required=False, default=None, type=click.STRING, metavar='<string>',
+    help="ID of the reserved instance type group for the version"
+)
+INSTANCE_TYPE_GROUP_NAME = click.option(
+    '-inst_group', '--instance_type_group_name', required=False, default=None, type=click.STRING, metavar='<string>',
+    help="Name of the reserved instance type group for the version"
 )
 MIN_INSTANCES = click.option(
     '-min', '--minimum_instances', required=False, default=None, type=int, metavar='<int>',
@@ -294,13 +302,6 @@ PIPELINE_REQUEST_ID_OPTIONAL = click.option(
     '-pid', '--pipeline_request_id', required=False, default=None, metavar='<id>', help="The ID of the pipeline request"
 )
 REQUEST_TIMEOUT = click.option('-t', '--timeout', required=False, type=click.INT, help="Timeout in seconds")
-REQUEST_DEPLOYMENT_TIMEOUT_DEPRECATED = click.option(
-    '-t', '--timeout', required=False, type=click.INT, help="Timeout in seconds"
-)
-REQUEST_PIPELINE_TIMEOUT_DEPRECATED = click.option(
-    '-pt', '--pipeline_timeout', required=False, type=click.INT,
-    help="Timeout for the entire pipeline request in seconds"
-)
 REQUEST_OBJECT_TIMEOUT = click.option(
     '-dt', '--deployment_timeout', required=False, type=click.INT,
     help="Timeout for each deployment request in the pipeline in seconds"
@@ -347,17 +348,6 @@ REQUEST_FILTER_SEARCH_ID = click.option(
 REQUEST_FILTER_IN_PIPELINE = click.option(
     '--pipeline', required=False, default=None, type=click.BOOL, metavar='[True|False]',
     help="A boolean value that indicates whether the deployment request was part of a pipeline request"
-)
-
-# Blobs
-BLOB_ID = click.argument('blob_id', required=True, metavar="<id>", nargs=1)
-BLOB_PATH = click.option('-f', '--input_path', required=True, help="Path to file", metavar="<path>")
-BLOB_OUTPUT = click.option(
-    '-o', '--output_path', required=False, default="", metavar="<path>", help="Path to file or directory to store blob"
-)
-BLOB_TTL = click.option(
-    '-ttl', '--time_to_live', 'ttl', required=False, default=259200, type=click.IntRange(1000, 259200),
-    metavar="<seconds>", help="The time to live of the blob in seconds (default = 259200 seconds, 3 days)"
 )
 
 # Buckets

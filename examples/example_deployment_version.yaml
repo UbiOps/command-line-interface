@@ -1,7 +1,7 @@
 deployment_name: demo-example
 version_name: v1
 environment: python3-11
-instance_type: 256mb
+instance_type_group_name: "256 MB + 0.0625 vCPU"
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 1800

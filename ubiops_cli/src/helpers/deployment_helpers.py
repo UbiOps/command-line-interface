@@ -5,42 +5,55 @@ from ubiops_cli.constants import ML_MODEL_FILE_NAME_KEY, ML_MODEL_FILE_NAME_VALU
 from ubiops_cli.src.helpers.helpers import strings_to_dict
 
 
-DEPLOYMENT_REQUIRED_FIELDS = ['input_type', 'output_type']
+DEPLOYMENT_REQUIRED_FIELDS = ["input_type", "output_type"]
 DEPLOYMENT_VERSION_CREATE_FIELDS = [
-    'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
-    'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
-    'maximum_queue_size_batch', 'static_ip', 'ports'
+    "description",
+    "labels",
+    "environment",
+    "instance_type",
+    "instance_type_group_id",
+    "instance_type_group_name",
+    "minimum_instances",
+    "maximum_instances",
+    "maximum_idle_time",
+    "request_retention_mode",
+    "request_retention_time",
+    "maximum_queue_size_express",
+    "maximum_queue_size_batch",
+    "static_ip",
+    "ports",
 ]
-DEPLOYMENT_VERSION_GET_FIELDS = [
-    'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
-    'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
-    'maximum_queue_size_batch', 'has_request_method', 'has_requests_method', 'static_ip', 'ports'
+DEPLOYMENT_VERSION_GET_FIELDS = DEPLOYMENT_VERSION_CREATE_FIELDS + ["has_request_method", "has_requests_method"]
+DEPLOYMENT_VERSION_FIELDS_UPDATE = ["version"] + DEPLOYMENT_VERSION_CREATE_FIELDS
+DEPLOYMENT_VERSION_FIELDS_WAIT = [
+    "instance_type",
+    "instance_type_group_id",
+    "instance_type_group_name",
+    "minimum_instances",
+    "maximum_instances",
+    "maximum_idle_time",
 ]
-DEPLOYMENT_VERSION_FIELDS_UPDATE = [
-    'version', 'description', 'labels', 'environment', 'instance_type', 'minimum_instances', 'maximum_instances',
-    'maximum_idle_time', 'request_retention_mode', 'request_retention_time', 'maximum_queue_size_express',
-    'maximum_queue_size_batch', 'static_ip', 'ports'
-]
-DEPLOYMENT_VERSION_FIELDS_WAIT = ['instance_type', 'minimum_instances', 'maximum_instances', 'maximum_idle_time']
 DEPLOYMENT_VERSION_FIELD_TYPES = {
-    'environment': str,
-    'instance_type': str,
-    'minimum_instances': int,
-    'maximum_instances': int,
-    'maximum_idle_time': int,
-    'description': str,
-    'labels': dict,
-    'request_retention_mode': str,
-    'request_retention_time': int,
-    'maximum_queue_size_express': int,
-    'maximum_queue_size_batch': int,
-    'has_request_method': bool,
-    'has_requests_method': bool,
-    'static_ip': bool,
-    'ports': None
+    "environment": str,
+    "instance_type": str,
+    "instance_type_group_id": str,
+    "instance_type_group_name": str,
+    "minimum_instances": int,
+    "maximum_instances": int,
+    "maximum_idle_time": int,
+    "description": str,
+    "labels": dict,
+    "request_retention_mode": str,
+    "request_retention_time": int,
+    "maximum_queue_size_express": int,
+    "maximum_queue_size_batch": int,
+    "has_request_method": bool,
+    "has_requests_method": bool,
+    "static_ip": bool,
+    "ports": None
 }
 DEPLOYMENT_VERSION_FIELDS_RENAMED = {
-    'version': 'version_name', 'description': 'version_description', 'labels': 'version_labels'
+    "version": "version_name", "description": "version_description", "labels": "version_labels"
 }
 
 
