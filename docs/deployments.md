@@ -359,7 +359,7 @@ ports.
 
 - `--instance_type_group_id`<br/>ID of the reserved instance type group for the version
 
-- `--instance_type_group_name`<br/>Name of the reserved instance type group for the version
+- `-inst_group`/`--instance_type_group_name`<br/>Name of the reserved instance type group for the version
 
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 

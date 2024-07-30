@@ -19,9 +19,13 @@ from ubiops_cli.src import (
     exports,
     files,
     imports,
+    instance_type_groups,
+    instance_types,
+    instances,
     pipelines,
     pipeline_versions,
     projects,
+    project_instances,
     logs,
     run_local,
     request_schedules,
@@ -54,6 +58,10 @@ cli.add_command(deployment_revisions.commands)
 cli.add_command(environments.commands)
 cli.add_command(environment_revisions.commands)
 cli.add_command(environment_builds.commands)
+cli.add_command(instance_type_groups.commands)
+cli.add_command(instance_types.commands)
+cli.add_command(instances.commands)
+cli.add_command(project_instances.commands)
 cli.add_command(pipelines.commands)
 cli.add_command(pipeline_versions.commands)
 cli.add_command(buckets.commands)

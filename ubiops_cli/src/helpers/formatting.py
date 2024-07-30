@@ -149,9 +149,11 @@ def object_to_dict(obj, skip_attributes=None):
             dictionary[attr] = str(value)
 
         else:
-            # Do not add values that are class instances
+            # Do not add values that are class instances except for specific fields
             try:
                 value.__dict__.keys()
+                if attr in ["node", "node_pool", "cluster", "instance_type"]:
+                    dictionary[attr] = value.to_dict()
             except AttributeError:
                 dictionary[attr] = value
 
@@ -163,6 +165,7 @@ def format_json(items, skip_attributes=None):
     Format object(s) as json/dict
 
     :param object|list[object] items: the item(s) to format
+    :param list[str] skip_attributes: the object attributes to skip
     """
 
     items = format_datetime_attrs(items, prettify=False)
@@ -202,9 +205,9 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
     if rename is None:
         rename = {}
 
-    required_front = _split_lower_level_attributes(required_front)
-    optional = _split_lower_level_attributes(optional)
-    required_end = _split_lower_level_attributes(required_end)
+    required_front = _split_lower_level_attributes(attrs=required_front)
+    optional = _split_lower_level_attributes(attrs=optional)
+    required_end = _split_lower_level_attributes(attrs=required_end)
 
     def set_value_in_dict(key, value, results_dict):
         """
@@ -401,7 +404,7 @@ def print_item(item, row_attrs, required_front=None, optional=None, required_end
     :param list[str] required_front: the object attributes that should be printed first and are required; if they are
         not given or None, they will be printed as none
     :param list[str] optional: the object attributes that should be printed after the required_front attributes and are
-        optoinal; if they are not given or None, they will be excluded
+        optional; if they are not given or None, they will be excluded
     :param list[str] required_end: the object attributes that should be printed last and are required; if they are not
         given or None, they will be printed as none
     :param dict rename: if provided, attributes to rename in the form of; <attribute name>: <renamed key>
