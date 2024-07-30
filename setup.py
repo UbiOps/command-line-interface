@@ -34,7 +34,7 @@ UbiOps-cli is compatible with Python 3.7+ and is distributed under the Apache 2.
 """
 
 
-UBIOPS_VERSION = "4.5.0"
+UBIOPS_VERSION = "4.5.1"
 REQUIRES = [
     "requests>=2.17.3",
     "tabulate==0.8.10",

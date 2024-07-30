@@ -92,7 +92,7 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
                 'output_fields data_type', 'creation_date', 'last_updated', 'default_version'
             ],
             rename={'name': 'pipeline_name', 'description': 'pipeline_description'},
-            fmt=format_
+            fmt=format_,
         )
 
 
@@ -148,7 +148,7 @@ def pipelines_create(pipeline_name, yaml_file, format_):
             'output_fields data_type', 'creation_date', 'last_updated'
         ],
         rename={'name': 'pipeline_name', 'description': 'pipeline_description'},
-        fmt=format_
+        fmt=format_,
     )
 
 

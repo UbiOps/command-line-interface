@@ -5,6 +5,7 @@ from ubiops_cli.utils import Config
 from ubiops_cli.constants import SYS_DEPLOYMENT_FILE_NAME_VALUE
 from ubiops_cli.src.helpers.deployment_helpers import DEPLOYMENT_REQUIRED_FIELDS
 from ubiops_cli.src.helpers.pipeline_helpers import PIPELINE_REQUIRED_FIELDS
+from ubiops_cli.src.helpers.instance_type_group_helpers import INSTANCE_TYPE_GROUP_REQUIRED_FIELDS
 
 
 # General
@@ -678,3 +679,44 @@ REQUEST_DATA_PLAIN = click.option(
     "--plain", required=False, is_flag=True, default=False, show_default=True,
     help="Set the input data as plain text"
 )
+
+# Options for instance types and groups
+INSTANCE_TYPE_GROUP_LIMIT = click.option(
+    '--limit', required=False, default=50, type=click.IntRange(1, 250), metavar='[1-250]',
+    show_default=True, help="The maximum number of instance type groups returned, default is 50"
+)
+INSTANCE_TYPE_LIMIT = click.option(
+    '--limit', required=False, default=50, type=click.IntRange(1, 250), metavar='[1-250]',
+    show_default=True, help="The maximum number of instance types returned, default is 50"
+)
+INSTANCE_TYPE_GROUP_ID_ARGUMENT = click.argument(
+    'instance_type_group_id', required=True, metavar='<instance_type_group_id>', nargs=1
+)
+INSTANCE_TYPE_GROUP_YAML_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default=None, metavar='<path>',
+    help="Path to file or directory to store instance type group yaml file"
+)
+INSTANCE_TYPE_GROUP_NAME_OVERRULE = click.argument('name', required=False, metavar='<name>', default=None, nargs=1)
+INSTANCE_TYPE_GROUP_YAML_FILE = click.option(
+    "-f", "--yaml_file", required=True, type=click.Path(), metavar='<path>',
+    help=f"Path to a yaml file that contains at least the following fields: "
+    f"[{', '.join(INSTANCE_TYPE_GROUP_REQUIRED_FIELDS)}]"
+)
+INSTANCE_TYPE_GROUP_YAML_FILE_OPTIONAL = click.option(
+    "-f", "--yaml_file", required=False, default=None, type=click.Path(),
+    help="Path to a yaml file containing instance type group details", metavar='<path>'
+)
+INSTANCE_TYPE_GROUP_NAME_UPDATE = click.option(
+    '-n', '--new_name', required=False, default=None, help="The new instance type group name", metavar='<name>'
+)
+
+# Options for instances
+PROJECT_INSTANCE_LIMIT = click.option(
+    '--limit', required=False, default=10, type=click.IntRange(1, 50), metavar='[1-50]',
+    show_default=True, help="The maximum number of instances returned, default is 10"
+)
+INSTANCE_LIMIT = click.option(
+    '--limit', required=False, default=50, type=click.IntRange(1, 250), metavar='[1-250]',
+    show_default=True, help="The maximum number of instances returned, default is 50"
+)
+INSTANCE_ID_ARGUMENT = click.argument('instance_id', required=True, metavar='<instance_id>', nargs=1)

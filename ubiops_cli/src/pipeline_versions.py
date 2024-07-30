@@ -141,7 +141,7 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
             item=version,
             row_attrs=LIST_ITEMS,
             **PIPELINE_VERSION_RESPONSE,
-            fmt=format_
+            fmt=format_,
         )
 
 

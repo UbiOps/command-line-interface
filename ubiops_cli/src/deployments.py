@@ -90,7 +90,7 @@ def deployments_get(deployment_name, output_path, quiet, format_):
             optional=['input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'],
             required_end=['creation_date', 'last_updated', 'default_version'],
             rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
-            fmt=format_
+            fmt=format_,
         )
 
 
@@ -175,7 +175,7 @@ def deployments_create(deployment_name, yaml_file, format_):
         optional=['input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'],
         required_end=['creation_date', 'last_updated'],
         rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
-        fmt=format_
+        fmt=format_,
     )
 
 
