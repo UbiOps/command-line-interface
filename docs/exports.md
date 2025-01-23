@@ -145,7 +145,7 @@ saved in `export_[export_id]_[datetime.now()].zip`.
 
 **Options:**
 
-- `-o`/`--output_path`<br/>Path to file or directory to store export zip
+- `-o`/`--output_path`<br/>Path to file or directory to store export archive
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 

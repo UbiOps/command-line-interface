@@ -98,7 +98,7 @@ DEPLOYMENT_NAME_OPTIONAL = click.option(
     '-d', '--deployment_name', required=False, metavar='<name>', default=None, help="The deployment name"
 )
 DEPLOYMENT_NAME_ZIP = click.option(
-    '-d', '--deployment_name', required=False, default=None, help="The deployment name used in the ZIP filename",
+    '-d', '--deployment_name', required=False, default=None, help="The deployment name used in the archive filename",
     metavar='<name>'
 )
 DEPLOYMENT_NAME_OVERRULE = click.argument(
@@ -152,7 +152,7 @@ VERSION_NAME_UPDATE = click.option(
 )
 VERSION_NAME_ZIP = click.option(
     '-v', '--version_name', required=False, default=None, metavar='<name>',
-    help="The version name used in the ZIP filename"
+    help="The version name used in the archive filename"
 )
 VERSION_NAME_OVERRULE = click.argument('version_name', required=False, default=None, metavar='<version_name>', nargs=1)
 VERSION_YAML_FILE = click.option(
@@ -180,6 +180,10 @@ INSTANCE_TYPE_GROUP_NAME = click.option(
     '-inst_group', '--instance_type_group_name', required=False, default=None, type=click.STRING, metavar='<string>',
     help="Name of the reserved instance type group for the version"
 )
+SCALING_STRATEGY = click.option(
+    '--scaling_strategy', required=False, default=None, type=click.STRING, metavar='<string>',
+    help="Scaling strategy to use for scaling the instances for the version"
+)
 MIN_INSTANCES = click.option(
     '-min', '--minimum_instances', required=False, default=None, type=int, metavar='<int>',
     help="Minimum number of instances"
@@ -187,6 +191,10 @@ MIN_INSTANCES = click.option(
 MAX_INSTANCES = click.option(
     '-max', '--maximum_instances', required=False, default=None, type=int, metavar='<int>',
     help="Maximum number of instances"
+)
+INSTANCE_PROCESSES = click.option(
+    '--instance_processes', required=False, default=None, type=int, metavar='<int>',
+    help="Number of instance processes (usually 1)"
 )
 MAX_IDLE_TIME = click.option(
     '-t', '--maximum_idle_time', required=False, default=None, type=int, metavar='<int>',
@@ -248,21 +256,14 @@ DEPLOYMENT_FILE = click.option(
     help="Name of deployment file which contains class Deployment. Must be located in the root of the deployment "
          "package directory"
 )
-ZIP_FILE = click.option(
-    '-z', '--zip_path', required=True, type=click.Path(), metavar='<path>', help="Path to deployment version zip file"
+DEPLOYMENT_ARCHIVE_INPUT = click.option(
+    '-a', '-z', '--archive_path', '--zip_path', 'archive_path',
+    required=True, type=click.Path(), metavar='<path>',
+    help="Path to deployment version archive file"
 )
-STORE_ZIP = click.option(
-    '--store_zip', required=False, default=False, is_flag=True,
-    help="Whether you want to store the deployment package zip locally"
-)
-
-ZIP_OUTPUT_STORE = click.option(
+DEPLOYMENT_ARCHIVE_OUTPUT = click.option(
     '-o', '--output_path', required=False, default=None, metavar='<path>',
-    help="Path to file or directory to store local copy of deployment package zip"
-)
-ZIP_OUTPUT = click.option(
-    '-o', '--output_path', required=False, default='', metavar='<path>',
-    help="Path to file or directory to store deployment package zip"
+    help="Path to file or directory to store the deployment package archive file"
 )
 
 # Deployment version revisions
@@ -305,17 +306,13 @@ PIPELINE_REQUEST_ID_OPTIONAL = click.option(
 REQUEST_TIMEOUT = click.option('-t', '--timeout', required=False, type=click.INT, help="Timeout in seconds")
 REQUEST_OBJECT_TIMEOUT = click.option(
     '-dt', '--deployment_timeout', required=False, type=click.INT,
-    help="Timeout for each deployment request in the pipeline in seconds"
+    help="[DEPRECATED] Timeout for each deployment request in the pipeline in seconds"
 )
 
 # Requests list filters
 REQUEST_LIMIT = click.option(
     '--limit', required=False, default=10, type=click.IntRange(1, 50), show_default=True,
     help="Limit of the number of requests. The maximum value is 50.", metavar='[1-50]'
-)
-REQUEST_SORT = click.option(
-    '--sort', required=False, help="Direction of sorting on creation date", default='desc', show_default=True,
-    type=click.Choice(['asc', 'desc'], case_sensitive=False)
 )
 REQUEST_FILTER_DEPLOYMENT_STATUS = click.option(
     '--status', required=False, help="Status of the request",
@@ -327,10 +324,6 @@ REQUEST_FILTER_DEPLOYMENT_STATUS = click.option(
 REQUEST_FILTER_PIPELINE_STATUS = click.option(
     '--status', required=False, help="Status of the request", default=None,
     type=click.Choice(['pending', 'processing', 'failed', 'completed'], case_sensitive=False)
-)
-REQUEST_FILTER_SUCCESS_DEPRECATED = click.option(
-    '--success', required=False, default=None, type=click.BOOL, metavar='[True|False]',
-    help="[DEPRECATED] A boolean value that indicates whether the request was successful"
 )
 REQUEST_FILTER_START_DATE = click.option(
     '--start_date', required=False, default=None, metavar='<datetime in iso-format>',
@@ -345,10 +338,6 @@ REQUEST_FILTER_END_DATE = click.option(
 REQUEST_FILTER_SEARCH_ID = click.option(
     '--search_id', required=False, default=None, metavar='<name>',
     help="A string to search inside request ids. It will filter all request ids that contain this string."
-)
-REQUEST_FILTER_IN_PIPELINE = click.option(
-    '--pipeline', required=False, default=None, type=click.BOOL, metavar='[True|False]',
-    help="A boolean value that indicates whether the deployment request was part of a pipeline request"
 )
 
 # Buckets
@@ -573,7 +562,7 @@ EXPORT_DETAILS_YAML_FILE = click.option(
 )
 EXPORT_ZIP_OUTPUT = click.option(
     '-o', '--output_path', required=False, default='', metavar='<path>',
-    help="Path to file or directory to store export zip"
+    help="Path to file or directory to store export archive"
 )
 EXPORT_STATUS_FILTER = click.option(
     '--status', required=False, default=None, type=str,  metavar='[pending|processing|completed|failed]',
@@ -582,7 +571,7 @@ EXPORT_STATUS_FILTER = click.option(
 
 IMPORT_ID = click.argument('import_id', required=True, metavar='<import_id>', nargs=1)
 IMPORT_ZIP_FILE = click.option(
-    '-z', '--zip_path', required=True, type=click.Path(), metavar='<path>', help="Path to import zip file"
+    '-z', '--zip_path', required=True, type=click.Path(), metavar='<path>', help="Path to import archive file"
 )
 IMPORT_SKIP_CONFIRMATION = click.option(
     '--skip_confirmation', required=False, default=False, is_flag=True,
@@ -590,7 +579,7 @@ IMPORT_SKIP_CONFIRMATION = click.option(
 )
 IMPORT_ZIP_OUTPUT = click.option(
     '-o', '--output_path', required=False, default='', metavar='<path>',
-    help="Path to file or directory to store import zip"
+    help="Path to file or directory to store import archive"
 )
 IMPORT_CONFIRM_YAML_FILE = click.option(
     "-f", "--yaml_file", required=True, type=click.Path(), metavar='<path>',
@@ -614,6 +603,10 @@ ENVIRONMENT_TYPE_FILTER = click.option(
 ENVIRONMENT_NAME_ARGUMENT = click.argument('environment_name', required=True, metavar='<environment_name>', nargs=1)
 ENVIRONMENT_NAME_OPTION = click.option(
     '-e', '--environment_name', required=True, metavar='<name>', help="The environment name"
+)
+ENVIRONMENT_NAME_ZIP = click.option(
+    '-e', '--environment_name', required=False, default=None, metavar='<name>',
+    help="The environment name used in the archive filename"
 )
 ENVIRONMENT_YAML_OUTPUT = click.option(
     '-o', '--output_path', required=False, default=None, metavar='<path>',
@@ -649,12 +642,25 @@ ENVIRONMENT_REVISION_ID_OPTION = click.option(
     '-rid', '--revision_id', required=True, metavar='<revision_id>', help="The environment revision id"
 )
 ENVIRONMENT_BUILD_ID = click.argument('build_id', required=True, metavar='<build_id>', nargs=1)
-ENVIRONMENT_ZIP_FILE = click.option(
-    '-z', '--zip_path', required=True, type=click.Path(), metavar='<path>', help="Path to environment zip file"
+ENVIRONMENT_PACKAGE_DIR = click.option(
+    "-dir", "--directory", required=True, type=click.Path(resolve_path=True), metavar='<path>',
+    help="Path to a directory that contains the environment files"
 )
-ENVIRONMENT_ZIP_OUTPUT = click.option(
-    '-o', '--output_path', required=False, default='', metavar='<path>',
-    help="Path to file or directory to store environment package zip"
+ENVIRONMENT_PACKAGE_DIR_OPTIONAL = click.option(
+    "-dir", "--directory", required=False, default=None, type=click.Path(resolve_path=True),
+    metavar='<path>', help="Path to a directory that contains the environment files"
+)
+ENVIRONMENT_ARCHIVE_INPUT = click.option(
+    '-a', '-z', '--archive_path', '--zip_path', 'archive_path', required=True, type=click.Path(), metavar='<path>',
+    help="Path to environment package archive file"
+)
+ENVIRONMENT_ARCHIVE_INPUT_OPTIONAL = click.option(
+    '-a', '--archive_path', required=False, default=None, type=click.Path(), metavar='<path>',
+    help="Path to environment package archive file"
+)
+ENVIRONMENT_ARCHIVE_OUTPUT = click.option(
+    '-o', '--output_path', required=False, default=None, metavar='<path>',
+    help="Path to file or directory to store the environment package archive file"
 )
 
 REQUIREMENTS_FILE = click.argument(

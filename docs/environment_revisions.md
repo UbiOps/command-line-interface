@@ -57,9 +57,9 @@ Get a revision of an environment.
 
 Download a revision of an environment.
 
-The `<output_path>` option will be used as output location of the zip file. If not specified,
-the current directory will be used. If the `<output_path>` is a directory, the zip will be
-saved in `[environment_name]_[datetime.now()].zip`.
+The `<output_path>` option will be used as output location of the archive file. If not specified,
+the current directory will be used. If the `<output_path>` is a directory, the archive will be
+saved as `[environment_name]_[datetime.now()].zip`.
 
 **Arguments:**
 
@@ -71,7 +71,7 @@ saved in `[environment_name]_[datetime.now()].zip`.
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
-- `-o`/`--output_path`<br/>Path to file or directory to store environment package zip
+- `-o`/`--output_path`<br/>Path to file or directory to store the environment package archive file
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
@@ -84,9 +84,9 @@ saved in `[environment_name]_[datetime.now()].zip`.
 
 **Description:**
 
-Create a revision of an environment by uploading a ZIP.
+Create a revision of an environment by uploading an archive file.
 
-Please, specify the deployment package `<zip_path>` that should be uploaded.
+Please, specify the environment package `<archive_path>` that should be uploaded.
 
 **Arguments:** - 
 
@@ -94,7 +94,7 @@ Please, specify the deployment package `<zip_path>` that should be uploaded.
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
-- [required] `-z`/`--zip_path`<br/>Path to environment zip file
+- [required] `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to environment package archive file
 
 - `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
 

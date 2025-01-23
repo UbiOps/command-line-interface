@@ -13,8 +13,10 @@ DEPLOYMENT_VERSION_CREATE_FIELDS = [
     "instance_type",
     "instance_type_group_id",
     "instance_type_group_name",
+    "scaling_strategy",
     "minimum_instances",
     "maximum_instances",
+    "instance_processes",
     "maximum_idle_time",
     "request_retention_mode",
     "request_retention_time",
@@ -23,7 +25,6 @@ DEPLOYMENT_VERSION_CREATE_FIELDS = [
     "static_ip",
     "ports",
 ]
-DEPLOYMENT_VERSION_GET_FIELDS = DEPLOYMENT_VERSION_CREATE_FIELDS + ["has_request_method", "has_requests_method"]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = ["version"] + DEPLOYMENT_VERSION_CREATE_FIELDS
 DEPLOYMENT_VERSION_FIELDS_WAIT = [
     "instance_type",
@@ -38,8 +39,10 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     "instance_type": str,
     "instance_type_group_id": str,
     "instance_type_group_name": str,
+    "scaling_strategy": str,
     "minimum_instances": int,
     "maximum_instances": int,
+    "instance_processes": int,
     "maximum_idle_time": int,
     "description": str,
     "labels": dict,
@@ -64,7 +67,6 @@ def define_deployment_version(fields, yaml_content, extra_yaml_fields):
     For each field i in [DEPLOYMENT_VERSION_FIELDS + extra_yaml_fields]:
     - Use value in fields if specified
     - If not; Use value in yaml content if specified
-    - If not; Use existing version (this is only used for updating, not creating)
 
     Rename field-key if the key is in DEPLOYMENT_VERSION_FIELDS_RENAMED.values(). This is done to
     solve inconsistencies between CLI options/yaml keys and API parameters.

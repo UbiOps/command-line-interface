@@ -1,6 +1,6 @@
 import click
 
-from ubiops_cli.utils import init_client, get_current_project, environment_revision_zip_name, write_blob
+from ubiops_cli.utils import default_zip_name, get_current_project, init_client, write_blob
 from ubiops_cli.src.helpers.formatting import print_list, print_item
 from ubiops_cli.src.helpers import options
 
@@ -60,16 +60,19 @@ def revisions_get(environment_name, revision_id, format_):
 @commands.command(name="download", short_help="Download a revision of an environment")
 @options.ENVIRONMENT_NAME_OPTION
 @options.ENVIRONMENT_REVISION_ID
-@options.ENVIRONMENT_ZIP_OUTPUT
+@options.ENVIRONMENT_ARCHIVE_OUTPUT
 @options.QUIET
 def revisions_download(environment_name, revision_id, output_path, quiet):
     """
     Download a revision of an environment.
 
-    The `<output_path>` option will be used as output location of the zip file. If not specified,
-    the current directory will be used. If the `<output_path>` is a directory, the zip will be
-    saved in `[environment_name]_[datetime.now()].zip`.
+    The `<output_path>` option will be used as output location of the archive file. If not specified,
+    the current directory will be used. If the `<output_path>` is a directory, the archive will be
+    saved as `[environment_name]_[datetime.now()].zip`.
     """
+
+    if not output_path:
+        output_path = "."
 
     project_name = get_current_project(error=True)
 
@@ -77,7 +80,7 @@ def revisions_download(environment_name, revision_id, output_path, quiet):
     with client.environment_revisions_file_download(
         project_name=project_name, environment_name=environment_name, revision_id=revision_id
     ) as response:
-        filename = environment_revision_zip_name(environment_name=environment_name)
+        filename = default_zip_name(prefix=environment_name)
         output_path = write_blob(response.read(), output_path, filename)
     client.api_client.close()
 
@@ -87,21 +90,21 @@ def revisions_download(environment_name, revision_id, output_path, quiet):
 
 @commands.command(name="upload", short_help="Create a revision of an environment")
 @options.ENVIRONMENT_NAME_OPTION
-@options.ENVIRONMENT_ZIP_FILE
+@options.ENVIRONMENT_ARCHIVE_INPUT
 @options.PROGRESS_BAR
 @options.GET_FORMATS
-def revisions_upload(environment_name, zip_path, progress_bar, format_):
+def revisions_upload(environment_name, archive_path, progress_bar, format_):
     """
-    Create a revision of an environment by uploading a ZIP.
+    Create a revision of an environment by uploading an archive file.
 
-    Please, specify the deployment package `<zip_path>` that should be uploaded.
+    Please, specify the environment package `<archive_path>` that should be uploaded.
     """
 
     project_name = get_current_project(error=True)
 
     client = init_client()
     revision = client.environment_revisions_file_upload(
-        project_name=project_name, environment_name=environment_name, file=zip_path, _progress_bar=progress_bar
+        project_name=project_name, environment_name=environment_name, file=archive_path, _progress_bar=progress_bar
     )
     client.api_client.close()
 

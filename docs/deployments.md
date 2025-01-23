@@ -186,14 +186,14 @@ Delete a deployment.
 
 **Description:**
 
-Package code to ZIP file which is ready to be deployed.
+Package code to archive file which is ready to be deployed.
 
 Please, specify the code `<directory>` that should be deployed. The files in this directory will be zipped.
-Subdirectories and files that shouldn't be contained in the ZIP can be specified in an ignore file, which is by
+Subdirectories and files that shouldn't be contained in the archive can be specified in an ignore file, which is by
 default '.ubiops-ignore'. The structure of this file is assumed to be equal to the well-known .gitignore file.
 
-Use the `<output_path>` option to specify the output location of the zip file. If not specified,
-the current directory will be used. If the `<output_path>` is a directory, the zip will be saved in
+Use the `<output_path>` option to specify the output location of the archive file. If not specified,
+the current directory will be used. If the `<output_path>` is a directory, the archive will be saved as
 `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use the `<assume_yes>` option to overwrite
 without confirmation if file specified in `<output_path>` already exists.
 
@@ -201,13 +201,13 @@ without confirmation if file specified in `<output_path>` already exists.
 
 **Options:**
 
-- `-d`/`--deployment_name`<br/>The deployment name used in the ZIP filename
+- `-d`/`--deployment_name`<br/>The deployment name used in the archive filename
 
-- `-v`/`--version_name`<br/>The version name used in the ZIP filename
+- `-v`/`--version_name`<br/>The version name used in the archive filename
 
 - [required] `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
 
-- `-o`/`--output_path`<br/>Path to file or directory to store deployment package zip
+- `-o`/`--output_path`<br/>Path to file or directory to store the deployment package archive file
 
 - `-i`/`--ignore_file`<br/>File name of ubiops-ignore file located in the root of the specified directory [default = .ubiops-ignore]
 
@@ -224,9 +224,9 @@ without confirmation if file specified in `<output_path>` already exists.
 
 **Description:**
 
-Upload ZIP to a version of a deployment.
+Upload a deployment package archive file to a version of a deployment.
 
-Please, specify the deployment package `<zip_path>` that should be uploaded.
+Please, specify the deployment package `<archive_path>` that should be uploaded.
 Use the `<overwrite>` option to overwrite the deployment package on UbiOps if one already exists for this version.
 
 **Arguments:**
@@ -239,7 +239,7 @@ Use the `<overwrite>` option to overwrite the deployment package on UbiOps if on
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- [required] `-z`/`--zip_path`<br/>Path to deployment version zip file
+- [required] `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to deployment version archive file
 
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
@@ -258,8 +258,8 @@ Use the `<overwrite>` option to overwrite the deployment package on UbiOps if on
 
 Get the version of a deployment.
 
-The `<output_path>` option will be used as output location of the zip file. If not specified,
-the current directory will be used. If the `<output_path>` is a directory, the zip will be
+The `<output_path>` option will be used as output location of the archive file. If not specified,
+the current directory will be used. If the `<output_path>` is a directory, the archive will be
 saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
 
 **Arguments:**
@@ -272,7 +272,7 @@ saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- `-o`/`--output_path`<br/>Path to file or directory to store deployment package zip
+- `-o`/`--output_path`<br/>Path to file or directory to store the deployment package archive file
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
@@ -288,13 +288,13 @@ saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
 Deploy a new version of a deployment.
 
 Please, specify the code `<directory>` that should be deployed. The files in this directory
-will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the
-ZIP can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this
-file is assumed to be equal to the well-known '.gitignore' file.
+will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the archive file can be
+specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this file is assumed to be equal
+to the well-known '.gitignore' file.
 
-If you want to store a local copy of the uploaded zip file, please use the `<output_path>` option.
-The `<output_path>` option will be used as output location of the zip file. If the `<output_path>` is a
-directory, the zip will be saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
+If you want to store a local copy of the uploaded archive file, please use the `<output_path>` option.
+The `<output_path>` option will be used as output location of the archive file. If the `<output_path>` is a
+directory, the archive will be saved as `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
 the `<assume_yes>` option to overwrite without confirmation if file specified in `<output_path>` already exists.
 
 
@@ -309,8 +309,10 @@ version_labels:
   my-key-2: my-label-2
 environment: python3-8
 instance_type_group_name: 2048 MB + 0.5 vCPU
+scaling_strategy: default
 minimum_instances: 0
 maximum_instances: 1
+instance_processes: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
@@ -349,7 +351,7 @@ ports.
 
 - `-i`/`--ignore_file`<br/>File name of ubiops-ignore file located in the root of the specified directory [default = .ubiops-ignore]
 
-- `-o`/`--output_path`<br/>Path to file or directory to store local copy of deployment package zip
+- `-o`/`--output_path`<br/>Path to file or directory to store the deployment package archive file
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
@@ -361,9 +363,13 @@ ports.
 
 - `-inst_group`/`--instance_type_group_name`<br/>Name of the reserved instance type group for the version
 
+- `--scaling_strategy`<br/>Scaling strategy to use for scaling the instances for the version
+
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
+
+- `--instance_processes`<br/>Number of instance processes (usually 1)
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
@@ -516,19 +522,13 @@ If not specified, the requests are listed for the default version.
 
 - `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 
-- `--sort`<br/>Direction of sorting on creation date
-
 - `--status`<br/>Status of the request
-
-- `--success`<br/>[DEPRECATED] A boolean value that indicates whether the request was successful
 
 - `--start_date`<br/>Start date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
 
 - `--end_date`<br/>End date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
 
 - `--search_id`<br/>A string to search inside request ids. It will filter all request ids that contain this string.
-
-- `--pipeline`<br/>A boolean value that indicates whether the deployment request was part of a pipeline request
 
 - `-fmt`/`--format`<br/>The output format
 
