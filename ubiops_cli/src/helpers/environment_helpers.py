@@ -1,3 +1,4 @@
+from ubiops_cli.utils import set_dict_default
 from ubiops_cli.src.helpers.helpers import strings_to_dict
 
 
@@ -17,42 +18,42 @@ ENVIRONMENT_FIELDS_RENAMED = {
 }
 
 
-def define_environment(fields, yaml_content, update=False):
+def define_environment(fields, yaml_content, extra_yaml_fields=None):
     """
-    Define an environment
+    Define environment fields
 
-    :param dict fields: the provided command line fields
+    For each field i in [ENVIRONMENT_INPUT_FIELDS + extra_yaml_fields]:
+    - Use value in fields if specified
+    - If not; Use value in yaml content if specified
+
+    Rename field-key if the key is in ENVIRONMENT_FIELDS_RENAMED.values(). This is done to
+    solve inconsistencies between CLI options/yaml keys and API parameters.
+
+    :param dict fields: the command options
     :param dict yaml_content: the content of the yaml
-    :param bool update: if the definition is for create or update
-    :return dict details of the environment
+    :param list(str) extra_yaml_fields: additional yaml fields that are not Environment parameters, e.g., ignore_file
+    :return dict: a dictionary containing all Environment parameters (+extra yaml fields)
     """
 
-    environment = {}
+    extra_yaml_fields = [] if extra_yaml_fields is None else extra_yaml_fields
 
-    # Iterate through expected input fields and retrieve them from the provided fields and / or yaml content
-    for input_field in ENVIRONMENT_INPUT_FIELDS:
-        input_field_name = ENVIRONMENT_FIELDS_RENAMED.get(input_field, input_field)
+    for k, yaml_key in ENVIRONMENT_FIELDS_RENAMED.items():
+        fields[k] = fields.pop(yaml_key, None)
 
-        # Options provided via the CLI have priority over options provided via YAML file
-        if is_defined(fields, input_field_name):
-            if ENVIRONMENT_INPUT_FIELDS_TYPE[input_field] == dict:
-                environment[input_field] = strings_to_dict(fields[input_field_name])
-            else:
-                environment[input_field] = fields[input_field_name]
+    for k in [k for k, v in ENVIRONMENT_INPUT_FIELDS_TYPE.items() if v == dict]:
+        if k in fields and fields[k] is not None:
+            fields[k] = strings_to_dict(fields[k])
 
-        elif is_defined(yaml_content, input_field_name):
-            environment[input_field] = yaml_content[input_field_name]
-        elif update:
-            continue
-        else:
-            if ENVIRONMENT_INPUT_FIELDS_TYPE[input_field] == dict:
-                environment[input_field] = {}
-            elif ENVIRONMENT_INPUT_FIELDS_TYPE == str:
-                environment[input_field] = ''
-            else:
-                environment[input_field] = None
+    if yaml_content:
+        for k in [*ENVIRONMENT_INPUT_FIELDS, *extra_yaml_fields]:
+            fields[k] = set_dict_default(
+                value=fields.get(k, None),
+                defaults_dict=yaml_content,
+                default_key=ENVIRONMENT_FIELDS_RENAMED.get(k, k),
+                set_type=ENVIRONMENT_INPUT_FIELDS_TYPE.get(k, str)
+            )
 
-    return environment
+    return fields
 
 
 def is_defined(fields, field_name):

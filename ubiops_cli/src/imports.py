@@ -2,7 +2,7 @@ import click
 import ubiops as api
 
 from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, write_blob, import_export_zip_name
+from ubiops_cli.utils import default_zip_name, init_client, read_yaml, write_yaml, get_current_project, write_blob
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers import options
 
@@ -269,7 +269,7 @@ def imports_download(import_id, output_path, quiet):
 
     client = init_client()
     with client.imports_download(project_name=project_name, import_id=import_id) as response:
-        filename = import_export_zip_name(object_id=import_id, object_type='import')
+        filename = default_zip_name(prefix=f"import_{import_id}")
         output_path = write_blob(response.read(), output_path, filename)
     client.api_client.close()
 

@@ -61,9 +61,9 @@ Get a revision of a deployment version.
 
 Download a revision of a deployment version.
 
-The `<output_path>` option will be used as output location of the zip file. If not specified,
-the current directory will be used. If the `<output_path>` is a directory, the zip will be
-saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
+The `<output_path>` option will be used as output location of the archive file. If not specified,
+the current directory will be used. If the `<output_path>` is a directory, the archive will be
+saved as `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
 
 **Arguments:**
 
@@ -77,7 +77,7 @@ saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- `-o`/`--output_path`<br/>Path to file or directory to store deployment package zip
+- `-o`/`--output_path`<br/>Path to file or directory to store the deployment package archive file
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
@@ -90,9 +90,9 @@ saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
 
 **Description:**
 
-Create a revision of a deployment version by uploading a ZIP.
+Create a revision of a deployment version by uploading a deployment package archive file.
 
-Please, specify the deployment package `<zip_path>` that should be uploaded.
+Please, specify the deployment package `<archive_path>` that should be uploaded.
 
 **Arguments:** - 
 
@@ -102,7 +102,7 @@ Please, specify the deployment package `<zip_path>` that should be uploaded.
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- [required] `-z`/`--zip_path`<br/>Path to deployment version zip file
+- [required] `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to deployment version archive file
 
 - `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
 

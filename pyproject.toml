@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=64.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ubiops-cli"
+description = "UbiOps Command Line Interface to interact with the UbiOps API."
+readme = "README.rst"
+license = {text = "Apache 2.0"}
+authors = [
+    {name = "UbiOps"}
+]
+requires-python = ">=3.7"
+keywords = ["UbiOps Command Line Interface"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Intended Audience :: Developers"
+]
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Documentation = "https://ubiops.com/docs"
+Source = "https://github.com/UbiOps/command-line-interface.git"
+
+[project.scripts]
+ubiops = "ubiops_cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests", "tests.*"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "ubiops_cli.version.VERSION" }

@@ -4,7 +4,7 @@ import ubiops as api
 from ubiops_cli.exceptions import UbiOpsException
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, write_blob, import_export_zip_name
+from ubiops_cli.utils import default_zip_name, init_client, read_yaml, write_yaml, get_current_project, write_blob
 
 
 LIST_ITEMS = ['id', 'creation_date', 'status', 'size']
@@ -190,7 +190,7 @@ def exports_download(export_id, output_path, quiet):
 
     client = init_client()
     with client.exports_download(project_name=project_name, export_id=export_id) as response:
-        filename = import_export_zip_name(object_id=export_id, object_type='export')
+        filename = default_zip_name(prefix=f"export_{export_id}")
         output_path = write_blob(response.read(), output_path, filename)
     client.api_client.close()
 

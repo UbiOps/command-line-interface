@@ -4,7 +4,7 @@ import ubiops as api
 from ubiops_cli.src.helpers.formatting import print_list, print_item
 from ubiops_cli.src.helpers.wait_for import wait_for
 from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import init_client, get_current_project, default_version_zip_name, write_blob
+from ubiops_cli.utils import init_client, get_current_project, default_zip_name, write_blob
 
 LIST_ITEMS = ['creation_date', 'id', 'created_by', 'status']
 
@@ -64,16 +64,19 @@ def revisions_get(deployment_name, version_name, revision_id, format_):
 @options.DEPLOYMENT_NAME_OPTION
 @options.VERSION_NAME_OPTION
 @options.REVISION_ID
-@options.ZIP_OUTPUT
+@options.DEPLOYMENT_ARCHIVE_OUTPUT
 @options.QUIET
 def revisions_download(deployment_name, version_name, revision_id, output_path, quiet):
     """
     Download a revision of a deployment version.
 
-    The `<output_path>` option will be used as output location of the zip file. If not specified,
-    the current directory will be used. If the `<output_path>` is a directory, the zip will be
-    saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
+    The `<output_path>` option will be used as output location of the archive file. If not specified,
+    the current directory will be used. If the `<output_path>` is a directory, the archive will be
+    saved as `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
     """
+
+    if not output_path:
+        output_path = "."
 
     project_name = get_current_project(error=True)
 
@@ -81,7 +84,8 @@ def revisions_download(deployment_name, version_name, revision_id, output_path, 
     with client.revisions_file_download(
         project_name=project_name, deployment_name=deployment_name, version=version_name, revision_id=revision_id
     ) as response:
-        filename = default_version_zip_name(deployment_name, version_name)
+        prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
+        filename = default_zip_name(prefix=prefix)
         output_path = write_blob(response.read(), output_path, filename)
     client.api_client.close()
 
@@ -92,21 +96,21 @@ def revisions_download(deployment_name, version_name, revision_id, output_path, 
 @commands.command(name="upload", short_help="Create a revision of a deployment version")
 @options.DEPLOYMENT_NAME_OPTION
 @options.VERSION_NAME_OPTION
-@options.ZIP_FILE
+@options.DEPLOYMENT_ARCHIVE_INPUT
 @options.PROGRESS_BAR
 @options.GET_FORMATS
-def revisions_upload(deployment_name, version_name, zip_path, progress_bar, format_):
+def revisions_upload(deployment_name, version_name, archive_path, progress_bar, format_):
     """
-    Create a revision of a deployment version by uploading a ZIP.
+    Create a revision of a deployment version by uploading a deployment package archive file.
 
-    Please, specify the deployment package `<zip_path>` that should be uploaded.
+    Please, specify the deployment package `<archive_path>` that should be uploaded.
     """
 
     project_name = get_current_project(error=True)
 
     client = init_client()
     revision = client.revisions_file_upload(
-        project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path,
+        project_name=project_name, deployment_name=deployment_name, version=version_name, file=archive_path,
         _progress_bar=progress_bar
     )
     client.api_client.close()

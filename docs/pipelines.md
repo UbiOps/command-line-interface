@@ -217,7 +217,7 @@ For structured input, specify each data input as JSON formatted string. For exam
 
 - `-t`/`--timeout`<br/>Timeout in seconds
 
-- `-dt`/`--deployment_timeout`<br/>Timeout for each deployment request in the pipeline in seconds
+- `-dt`/`--deployment_timeout`<br/>[DEPRECATED] Timeout for each deployment request in the pipeline in seconds
 
 - `--data`<br/>The input data of the request<br/>This option can be provided multiple times in a single command
 
@@ -286,11 +286,7 @@ If not specified, the requests are listed for the default version.
 
 - `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 
-- `--sort`<br/>Direction of sorting on creation date
-
 - `--status`<br/>Status of the request
-
-- `--success`<br/>[DEPRECATED] A boolean value that indicates whether the request was successful
 
 - `--start_date`<br/>Start date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
 

@@ -54,8 +54,10 @@ version_labels:
   my-key-2: my-label-2
 environment: python3-8
 instance_type_group_name: 2048 MB + 0.5 vCPU
+scaling_strategy: default
 minimum_instances: 0
 maximum_instances: 5
+instance_processes: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
@@ -105,8 +107,10 @@ version_labels:
   my-key-2: my-label-2
 environment: python3-8
 instance_type_group_name: 2048 MB + 0.5 vCPU
+scaling_strategy: default
 minimum_instances: 0
 maximum_instances: 1
+instance_processes: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
@@ -145,9 +149,13 @@ and `--port_protocol`. Only one of the options (yaml or command options) can be 
 
 - `-inst_group`/`--instance_type_group_name`<br/>Name of the reserved instance type group for the version
 
+- `--scaling_strategy`<br/>Scaling strategy to use for scaling the instances for the version
+
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
+
+- `--instance_processes`<br/>Number of instance processes (usually 1)
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
@@ -197,8 +205,10 @@ version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
 instance_type_group_name: 2048 MB + 0.5 vCPU
+scaling_strategy: default
 minimum_instances: 0
 maximum_instances: 1
+instance_processes: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
@@ -246,9 +256,13 @@ empty `ports` list to remove already existing opened ports.
 
 - `-inst_group`/`--instance_type_group_name`<br/>Name of the reserved instance type group for the version
 
+- `--scaling_strategy`<br/>Scaling strategy to use for scaling the instances for the version
+
 - `-min`/`--minimum_instances`<br/>Minimum number of instances
 
 - `-max`/`--maximum_instances`<br/>Maximum number of instances
+
+- `--instance_processes`<br/>Number of instance processes (usually 1)
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 

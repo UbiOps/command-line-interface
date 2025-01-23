@@ -4,7 +4,7 @@ from time import sleep
 import click
 import ubiops as api
 
-from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, PLAIN_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME, \
+from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME, \
     IMPLICIT_ENVIRONMENT_FILES
 from ubiops_cli.exceptions import UbiOpsException
 from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
@@ -14,7 +14,7 @@ from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yam
     format_requests_oneline, format_json, parse_datetime, format_datetime
 from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import init_client, read_json, read_yaml, write_yaml, zip_dir, get_current_project, \
-    set_dict_default, write_blob, default_version_zip_name, parse_json
+    set_dict_default, write_blob, default_zip_name, parse_json
 
 
 LIST_ITEMS = ['last_updated', 'name', 'labels']
@@ -269,49 +269,52 @@ def deployments_delete(deployment_name, assume_yes, quiet):
 @options.DEPLOYMENT_NAME_ZIP
 @options.VERSION_NAME_ZIP
 @options.PACKAGE_DIR
-@options.ZIP_OUTPUT
+@options.DEPLOYMENT_ARCHIVE_OUTPUT
 @options.IGNORE_FILE
 @options.ASSUME_YES
 @options.QUIET
 def deployments_package(deployment_name, version_name, directory, output_path, ignore_file, assume_yes, quiet):
     """
-    Package code to ZIP file which is ready to be deployed.
+    Package code to archive file which is ready to be deployed.
 
     Please, specify the code `<directory>` that should be deployed. The files in this directory will be zipped.
-    Subdirectories and files that shouldn't be contained in the ZIP can be specified in an ignore file, which is by
+    Subdirectories and files that shouldn't be contained in the archive can be specified in an ignore file, which is by
     default '.ubiops-ignore'. The structure of this file is assumed to be equal to the well-known .gitignore file.
 
-    Use the `<output_path>` option to specify the output location of the zip file. If not specified,
-    the current directory will be used. If the `<output_path>` is a directory, the zip will be saved in
+    Use the `<output_path>` option to specify the output location of the archive file. If not specified,
+    the current directory will be used. If the `<output_path>` is a directory, the archive will be saved as
     `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use the `<assume_yes>` option to overwrite
     without confirmation if file specified in `<output_path>` already exists.
     """
 
+    if not output_path:
+        output_path = "."
+
     ignore_file = DEFAULT_IGNORE_FILE if ignore_file is None else ignore_file
-    zip_path, _ = zip_dir(
+    prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
+    archive_path, _ = zip_dir(
         directory=directory,
         output_path=output_path,
         ignore_filename=ignore_file,
-        deployment_name=deployment_name,
-        version_name=version_name,
+        prefix=prefix,
         force=assume_yes
     )
     if not quiet:
-        click.echo(f"Created zip: {zip_path}")
+        click.echo(f"Created archive: {archive_path}")
 
 
 @commands.command(name="upload", short_help="Upload a deployment package")
 @options.DEPLOYMENT_NAME_ARGUMENT
 @options.VERSION_NAME_OPTION
-@options.ZIP_FILE
+@options.DEPLOYMENT_ARCHIVE_INPUT
 @options.OVERWRITE
 @options.PROGRESS_BAR
 @options.QUIET
-def deployments_upload(deployment_name, version_name, zip_path, overwrite, progress_bar, quiet):
+def deployments_upload(deployment_name, version_name, archive_path, overwrite, progress_bar, quiet):
     """
-    Upload ZIP to a version of a deployment.
+    Upload a deployment package archive file to a version of a deployment.
 
-    Please, specify the deployment package `<zip_path>` that should be uploaded.
+    Please, specify the deployment package `<archive_path>` that should be uploaded.
     Use the `<overwrite>` option to overwrite the deployment package on UbiOps if one already exists for this version.
     """
 
@@ -324,7 +327,7 @@ def deployments_upload(deployment_name, version_name, zip_path, overwrite, progr
 
     if overwrite or current_version.status == STATUS_UNAVAILABLE:
         client.revisions_file_upload(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path,
+            project_name=project_name, deployment_name=deployment_name, version=version_name, file=archive_path,
             _progress_bar=progress_bar
         )
         client.api_client.close()
@@ -339,16 +342,19 @@ def deployments_upload(deployment_name, version_name, zip_path, overwrite, progr
 @commands.command(name="download", short_help="Download a deployment package")
 @options.DEPLOYMENT_NAME_ARGUMENT
 @options.VERSION_NAME_OPTION
-@options.ZIP_OUTPUT
+@options.DEPLOYMENT_ARCHIVE_OUTPUT
 @options.QUIET
 def deployments_download(deployment_name, version_name, output_path, quiet):
     """
     Get the version of a deployment.
 
-    The `<output_path>` option will be used as output location of the zip file. If not specified,
-    the current directory will be used. If the `<output_path>` is a directory, the zip will be
+    The `<output_path>` option will be used as output location of the archive file. If not specified,
+    the current directory will be used. If the `<output_path>` is a directory, the archive will be
     saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
     """
+
+    if not output_path:
+        output_path = "."
 
     project_name = get_current_project(error=True)
 
@@ -363,32 +369,32 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
             project_name=project_name, deployment_name=deployment_name,
             version=version_name, revision_id=version.active_revision
     ) as response:
-        filename = default_version_zip_name(deployment_name, version_name)
+        prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
+        filename = default_zip_name(prefix=prefix)
         output_path = write_blob(response.read(), output_path, filename)
     client.api_client.close()
 
     if not quiet:
-        click.echo(f"Zip stored in: {output_path}")
+        click.echo(f"Archive stored in: {output_path}")
 
 
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-statements
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-statements
 @commands.command(name="deploy", short_help="Deploy a new version of a deployment")
 @options.DEPLOYMENT_NAME_OVERRULE
 @options.VERSION_NAME_OPTIONAL
 @options.PACKAGE_DIR
 @options.DEPLOYMENT_FILE
 @options.IGNORE_FILE
-@options.ZIP_OUTPUT_STORE
+@options.DEPLOYMENT_ARCHIVE_OUTPUT
 @options.VERSION_YAML_FILE
 @options.ENVIRONMENT
 @options.INSTANCE_TYPE
 @options.INSTANCE_TYPE_GROUP_ID
 @options.INSTANCE_TYPE_GROUP_NAME
+@options.SCALING_STRATEGY
 @options.MIN_INSTANCES
 @options.MAX_INSTANCES
+@options.INSTANCE_PROCESSES
 @options.MAX_IDLE_TIME
 @options.RETENTION_MODE
 @options.RETENTION_TIME
@@ -410,13 +416,13 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     Deploy a new version of a deployment.
 
     Please, specify the code `<directory>` that should be deployed. The files in this directory
-    will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the
-    ZIP can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this
-    file is assumed to be equal to the well-known '.gitignore' file.
+    will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the archive file can be
+    specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this file is assumed to be equal
+    to the well-known '.gitignore' file.
 
-    If you want to store a local copy of the uploaded zip file, please use the `<output_path>` option.
-    The `<output_path>` option will be used as output location of the zip file. If the `<output_path>` is a
-    directory, the zip will be saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
+    If you want to store a local copy of the uploaded archive file, please use the `<output_path>` option.
+    The `<output_path>` option will be used as output location of the archive file. If the `<output_path>` is a
+    directory, the archive will be saved as `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use
     the `<assume_yes>` option to overwrite without confirmation if file specified in `<output_path>` already exists.
 
     \b
@@ -431,8 +437,10 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
       my-key-2: my-label-2
     environment: python3-8
     instance_type_group_name: 2048 MB + 0.5 vCPU
+    scaling_strategy: default
     minimum_instances: 0
     maximum_instances: 1
+    instance_processes: 1
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
@@ -456,11 +464,11 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     ports.
     """
 
-    if output_path is None:
-        store_zip = False
-        output_path = ''
+    if not output_path:
+        store_archive = False
+        output_path = '.'
     else:
-        store_zip = True
+        store_archive = True
 
     project_name = get_current_project(error=True)
     client = init_client()
@@ -501,17 +509,17 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file', 'ignore_file'])
     kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
 
-    zip_path, implicit_environment = zip_dir(
+    prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
+    archive_path, implicit_environment = zip_dir(
         directory=directory,
         output_path=output_path,
         ignore_filename=kwargs['ignore_file'],
-        deployment_name=deployment_name,
-        version_name=version_name,
+        prefix=prefix,
         force=assume_yes
     )
 
     try:
-        has_uploaded_zips = False
+        has_uploaded_archives = False
         has_changed_fields = False
 
         if not (overwrite and existing_version):
@@ -527,9 +535,9 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             revisions = client.revisions_list(
                 project_name=project_name, deployment_name=deployment_name, version=version_name
             )
-            has_uploaded_zips = len(revisions) > 0
+            has_uploaded_archives = len(revisions) > 0
 
-        if implicit_environment and not has_uploaded_zips and kwargs.get('environment', None) is not None:
+        if implicit_environment and not has_uploaded_archives and kwargs.get('environment', None) is not None:
             # We don't show a warning on re-uploads
             try:
                 environment = client.environments_get(
@@ -557,28 +565,28 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             client, project_name, deployment_name, version_name, kwargs['deployment_file']
         )
 
-        if has_uploaded_zips and (has_changed_fields or has_changed_env_vars):
+        if has_uploaded_archives and (has_changed_fields or has_changed_env_vars):
             # Wait for changes being applied
             click.echo(f"Waiting for changes to take effect... This takes {UPDATE_TIME} seconds.")
             sleep(UPDATE_TIME)
 
         client.revisions_file_upload(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, file=zip_path,
+            project_name=project_name, deployment_name=deployment_name, version=version_name, file=archive_path,
             _progress_bar=progress_bar
         )
         client.api_client.close()
     except Exception as e:
-        if os.path.isfile(zip_path) and not store_zip:
-            os.remove(zip_path)
+        if os.path.isfile(archive_path) and not store_archive:
+            os.remove(archive_path)
         client.api_client.close()
         raise e
 
-    if os.path.isfile(zip_path):
-        if store_zip:
+    if os.path.isfile(archive_path):
+        if store_archive:
             if not quiet:
-                click.echo(f"Created zip: {zip_path}")
+                click.echo(f"Created archive: {archive_path}")
         else:
-            os.remove(zip_path)
+            os.remove(archive_path)
 
     if not quiet:
         click.echo("Deployment was successfully deployed")
@@ -593,8 +601,7 @@ def requests():
     return
 
 
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-branches
+# pylint: disable=too-many-arguments,too-many-branches
 @requests.command(name="create", short_help="Create deployment request")
 @options.DEPLOYMENT_NAME_ARGUMENT
 @options.VERSION_NAME_OPTIONAL
@@ -652,25 +659,37 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
     else:
         raise UbiOpsException("Missing option <data> or <json_file>")
 
-    method = "deployment_requests_create"
     params = {'project_name': project_name, 'deployment_name': deployment_name}
-
     if timeout is not None:
         params['timeout'] = timeout
-
     if version_name is not None:
-        method = "deployment_version_requests_create"
         params['version'] = version_name
 
     if batch:
-        response = getattr(client, f"batch_{method}")(**params, data=input_data)
-
-    elif deployment.input_type == PLAIN_TYPE:
-        # We don't support list input for plain type, create the requests one by one
-        response = [getattr(client, method)(**params, data=data) for data in input_data]
+        if version_name is not None:
+            response = getattr(client, "batch_deployment_version_requests_create")(**params, data=input_data)
+        else:
+            response = getattr(client, "batch_deployment_requests_create")(**params, data=input_data)
 
     else:
-        response = [getattr(client, method)(**params, data=input_data)]
+        # We don't support list input for plain type, create the requests one by one
+        if deployment.input_type == STRUCTURED_TYPE:
+            input_data = [input_data]
+
+        response = []
+        for item in input_data:
+            for streaming_update in api.utils.stream_deployment_request(
+                    client=client.api_client,
+                    data=item,
+                    full_response=True,
+                    **params
+            ):
+                if isinstance(streaming_update, str):
+                    # Immediately show streaming updates
+                    click.echo(streaming_update)
+                else:
+                    # Keep the final result to display in the correct format
+                    response.append(streaming_update)
 
     client.api_client.close()
 
@@ -731,13 +750,10 @@ def requests_get(deployment_name, version_name, request_id, format_):
 @options.VERSION_NAME_OPTIONAL
 @options.OFFSET
 @options.REQUEST_LIMIT
-@options.REQUEST_SORT
 @options.REQUEST_FILTER_DEPLOYMENT_STATUS
-@options.REQUEST_FILTER_SUCCESS_DEPRECATED
 @options.REQUEST_FILTER_START_DATE
 @options.REQUEST_FILTER_END_DATE
 @options.REQUEST_FILTER_SEARCH_ID
-@options.REQUEST_FILTER_IN_PIPELINE
 @options.LIST_FORMATS
 def requests_list(deployment_name, version_name, limit, format_, **kwargs):
     """
@@ -765,9 +781,6 @@ def requests_list(deployment_name, version_name, limit, format_, **kwargs):
             raise UbiOpsException(
                 "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
             )
-
-    if kwargs['success'] is not None:
-        click.secho(message="Deprecation warning: 'success' is deprecated use 'status' instead", fg='red')
 
     client = init_client()
     if version_name is not None:

@@ -1,7 +1,7 @@
 import click
 import ubiops as api
 
-from ubiops_cli.constants import STRUCTURED_TYPE, PLAIN_TYPE
+from ubiops_cli.constants import STRUCTURED_TYPE
 from ubiops_cli.exceptions import UbiOpsException
 from ubiops_cli.src.helpers.pipeline_helpers import define_pipeline, get_changed_pipeline_structure, \
     PIPELINE_REQUIRED_FIELDS
@@ -271,9 +271,7 @@ def requests():
     return
 
 
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-statements
 @requests.command(name="create", short_help="Create pipeline request")
 @options.PIPELINE_NAME_ARGUMENT
 @options.VERSION_NAME_OPTIONAL
@@ -340,31 +338,37 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
     else:
         raise UbiOpsException("Missing option <data> or <json_file>")
 
-    method = "pipeline_requests_create"
     params = {'project_name': project_name, 'pipeline_name': pipeline_name}
-
     if version_name is not None:
-        method = "pipeline_version_requests_create"
         params['version'] = version_name
+    if timeout is not None:
+        params['timeout'] = timeout
 
     if batch:
-        if timeout is not None:
-            params['timeout'] = timeout
+        if version_name is not None:
+            response = getattr(client, "batch_pipeline_version_requests_create")(**params, data=input_data)
+        else:
+            response = getattr(client, "batch_pipeline_requests_create")(**params, data=input_data)
+
     else:
-        if timeout is not None:
-            params['pipeline_timeout'] = timeout
-        if deployment_timeout is not None:
-            params['deployment_timeout'] = deployment_timeout
-
-    if batch:
-        response = getattr(client, f"batch_{method}")(**params, data=input_data)
-
-    elif pipeline.input_type == PLAIN_TYPE:
         # We don't support list input for plain type, create the requests one by one
-        response = [getattr(client, method)(**params, data=data) for data in input_data]
+        if pipeline.input_type == STRUCTURED_TYPE:
+            input_data = [input_data]
 
-    else:
-        response = [getattr(client, method)(**params, data=input_data)]
+        response = []
+        for item in input_data:
+            for streaming_update in api.utils.stream_pipeline_request(
+                    client=client.api_client,
+                    data=item,
+                    full_response=True,
+                    **params
+            ):
+                if isinstance(streaming_update, str):
+                    # Immediately show streaming updates
+                    click.echo(streaming_update)
+                else:
+                    # Keep the final result to display in the correct format
+                    response.append(streaming_update)
 
     client.api_client.close()
 
@@ -430,9 +434,7 @@ def requests_get(pipeline_name, version_name, request_id, format_):
 @options.VERSION_NAME_OPTIONAL
 @options.OFFSET
 @options.REQUEST_LIMIT
-@options.REQUEST_SORT
 @options.REQUEST_FILTER_PIPELINE_STATUS
-@options.REQUEST_FILTER_SUCCESS_DEPRECATED
 @options.REQUEST_FILTER_START_DATE
 @options.REQUEST_FILTER_END_DATE
 @options.REQUEST_FILTER_SEARCH_ID
@@ -463,9 +465,6 @@ def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
             raise UbiOpsException(
                 "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
             )
-
-    if kwargs['success'] is not None:
-        click.secho(message="Deprecation warning: 'success' is deprecated use 'status' instead", fg='red')
 
     client = init_client()
     if version_name is not None:

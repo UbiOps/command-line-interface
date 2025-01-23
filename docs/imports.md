@@ -70,7 +70,7 @@ Please, specify the import file `<zip_path>` that should be uploaded.
 
 **Options:**
 
-- [required] `-z`/`--zip_path`<br/>Path to import zip file
+- [required] `-z`/`--zip_path`<br/>Path to import archive file
 
 - `--skip_confirmation`<br/>Whether you want to skip the confirmation step
 
@@ -227,7 +227,7 @@ saved in `import_[import_id]_[datetime.now()].zip`.
 
 **Options:**
 
-- `-o`/`--output_path`<br/>Path to file or directory to store import zip
+- `-o`/`--output_path`<br/>Path to file or directory to store import archive
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 

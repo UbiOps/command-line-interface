@@ -277,17 +277,19 @@ def write_yaml(yaml_file, dictionary, default_file_name):
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
-def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", deployment_name=None, version_name=None,
-            force=False):
+def zip_dir(
+    directory, output_path, ignore_filename=".ubiops-ignore", prefix=None, force=False,
+    package_directory="deployment_package"
+):
     """
     Zip a deployment package and take care of the ignore file if given
 
     :param str directory: the directory that should be zipped
     :param str output_path: the output location of the zip, either a file or directory
     :param str ignore_filename: the name of the ignore file
-    :param str|None deployment_name: the name of the deployment, used for the default zip filename
-    :param str|None version_name: the version of the deployment, used for the default zip filename
+    :param str|None prefix: the prefix of the default filename, only used when output_path is a directory
     :param bool force: whether to overwrite when the file already exists
+    :param str package_directory: the root directory of the zip
     """
 
     path_dir = abs_path(directory)
@@ -296,7 +298,7 @@ def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", deployment
 
     output_path = abs_path(output_path)
     if os.path.isdir(output_path):
-        output_path = os.path.join(output_path, default_version_zip_name(deployment_name, version_name))
+        output_path = os.path.join(output_path, default_zip_name(prefix=prefix))
     if not force and os.path.isfile(output_path):
         click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
 
@@ -317,7 +319,7 @@ def zip_dir(directory, output_path, ignore_filename=".ubiops-ignore", deployment
     with zipfile.ZipFile(output_path, "w") as f:
         for root, _, files in os.walk(path_dir):
             root_subdir = os.path.join('', *root.split(package_path)[1:])
-            package_subdir = os.path.join('deployment_package', root_subdir)
+            package_subdir = os.path.join(package_directory, root_subdir)
             for filename in files:
                 source_file = os.path.join(root, filename)
                 if source_file != output_path and not is_ignored(source_file):
@@ -378,32 +380,17 @@ def set_object_default(value, defaults_object, default_key):
     return value
 
 
-def default_version_zip_name(deployment_name, version_name):
+def default_zip_name(prefix):
     """
-    Obtain the default name for a deployment package zip file based on deployment name and version if given
+    Obtain the default name for a package zip file based on given prefix and the current datetime
 
-    :param str|None deployment_name: name of the deployment
-    :param str|None version_name: the deployment version
-    """
-
-    datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
-    if deployment_name and version_name:
-        return f"{deployment_name}_{version_name}_{datetime_str}.zip"
-    if deployment_name:
-        return f"{deployment_name}_{datetime_str}.zip"
-    return f"{datetime_str}.zip"
-
-
-def environment_revision_zip_name(environment_name):
-    """
-    Generate the name of the zip file for the environment package of the given environment
+    :param str|None prefix: prefix used for the zip
     """
 
     datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
-    if environment_name:
-        return f"{environment_name}_{datetime_str}.zip"
+    if prefix:
+        return f"{prefix}_{datetime_str}.zip"
     return f"{datetime_str}.zip"
-
 
 def check_required_fields_in_list(input_dict, list_name, required_fields):
     """
@@ -452,15 +439,3 @@ def parse_json(data):
         return json.loads(data)
     except (TypeError, ValueError):
         raise ValueError(f"Failed to parse request data. JSON format expected. Input: {data}")
-
-
-def import_export_zip_name(object_id, object_type):
-    """
-    Get the name of the zip file to store import/export depending on the object id and type
-
-    :param str object_id: import or export id
-    :param str object_type: either 'import' or 'export'
-    """
-
-    datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
-    return f"{object_type}_{object_id}_{datetime_str}.zip"

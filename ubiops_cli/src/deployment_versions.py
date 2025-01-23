@@ -2,8 +2,7 @@ import click
 import ubiops as api
 
 from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
-    DEPLOYMENT_VERSION_CREATE_FIELDS, DEPLOYMENT_VERSION_GET_FIELDS, DEPLOYMENT_VERSION_FIELDS_UPDATE, \
-    DEPLOYMENT_VERSION_FIELDS_RENAMED
+    DEPLOYMENT_VERSION_CREATE_FIELDS, DEPLOYMENT_VERSION_FIELDS_UPDATE, DEPLOYMENT_VERSION_FIELDS_RENAMED
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.wait_for import wait_for
@@ -87,8 +86,10 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
       my-key-2: my-label-2
     environment: python3-8
     instance_type_group_name: 2048 MB + 0.5 vCPU
+    scaling_strategy: default
     minimum_instances: 0
     maximum_instances: 5
+    instance_processes: 1
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
@@ -111,9 +112,14 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 
     if output_path is not None:
         # Store only reusable settings
+        # Keep only instance_type_group_name; drop instance_type and instance_type_group_id
+        reusable_fields = [
+            field for field in DEPLOYMENT_VERSION_CREATE_FIELDS
+            if field not in ["instance_type", "instance_type_group_id"]
+        ]
         dictionary = format_yaml(
             item=version,
-            required_front=['version', 'deployment', *DEPLOYMENT_VERSION_GET_FIELDS],
+            required_front=['version', 'deployment', *reusable_fields],
             rename={'deployment': 'deployment_name', 'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
             as_str=False
         )
@@ -136,8 +142,10 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @options.INSTANCE_TYPE
 @options.INSTANCE_TYPE_GROUP_ID
 @options.INSTANCE_TYPE_GROUP_NAME
+@options.SCALING_STRATEGY
 @options.MIN_INSTANCES
 @options.MAX_INSTANCES
+@options.INSTANCE_PROCESSES
 @options.MAX_IDLE_TIME
 @options.RETENTION_MODE
 @options.RETENTION_TIME
@@ -168,8 +176,10 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
       my-key-2: my-label-2
     environment: python3-8
     instance_type_group_name: 2048 MB + 0.5 vCPU
+    scaling_strategy: default
     minimum_instances: 0
     maximum_instances: 1
+    instance_processes: 1
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
@@ -248,8 +258,10 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @options.INSTANCE_TYPE
 @options.INSTANCE_TYPE_GROUP_ID
 @options.INSTANCE_TYPE_GROUP_NAME
+@options.SCALING_STRATEGY
 @options.MIN_INSTANCES
 @options.MAX_INSTANCES
+@options.INSTANCE_PROCESSES
 @options.MAX_IDLE_TIME
 @options.RETENTION_MODE
 @options.RETENTION_TIME
@@ -275,8 +287,10 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
       my-key-1: my-label-1
       my-key-2: my-label-2
     instance_type_group_name: 2048 MB + 0.5 vCPU
+    scaling_strategy: default
     minimum_instances: 0
     maximum_instances: 1
+    instance_processes: 1
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
