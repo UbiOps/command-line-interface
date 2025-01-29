@@ -299,6 +299,10 @@ def zip_dir(
     output_path = abs_path(output_path)
     if os.path.isdir(output_path):
         output_path = os.path.join(output_path, default_zip_name(prefix=prefix))
+
+    # Normalize the output path to remove intermediate directories like '.' - this is necessary to prevent zip-inception
+    output_path = os.path.normpath(output_path)
+
     if not force and os.path.isfile(output_path):
         click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
 
