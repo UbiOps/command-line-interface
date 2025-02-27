@@ -21,7 +21,7 @@ def wait_for(func, **kwargs):
         success = False
         error_message = str(e)
 
-    if not kwargs.get('quiet'):
+    if not kwargs.get("quiet"):
         time_completed = datetime.now()
         click.echo(f"Start date: {time_started.isoformat(timespec='milliseconds')}")
         click.echo(f"Completion date: {time_completed.isoformat(timespec='milliseconds')}")

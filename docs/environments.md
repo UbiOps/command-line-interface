@@ -90,6 +90,7 @@ environment_description: Environment created via command line.
 environment_labels:
     my-key-1: my-label-1
     my-key-2: my-label-2
+environment_supports_request_format: true
 base_environment: python3-11
 ```
 
@@ -108,7 +109,9 @@ The environment name can either be passed as command argument or specified insid
 
 - `-base-env`/`--base_environment`<br/>Base environment to use for the environment
 
-- `--environment_display_name`<br/>Human readable name for the environment
+- `-requests`/`--supports_request_format`<br/>A boolean indicating whether the environment supports the request format
+
+- `--display_name`/`--environment_display_name`<br/>Human readable name for the environment
 
 - `-desc`/`--environment_description`<br/>The environment description
 
@@ -155,7 +158,7 @@ the specified command options.
 
 - `-n`/`--new_name`<br/>The new environment name
 
-- `--environment_display_name`<br/>Human readable name for the environment
+- `--display_name`/`--environment_display_name`<br/>Human readable name for the environment
 
 - `-desc`/`--environment_description`<br/>The environment description
 
@@ -282,6 +285,7 @@ environment_description: Environment created via command line.
 environment_labels:
     my-key-1: my-label-1
     my-key-2: my-label-2
+environment_supports_request_format: true
 base_environment: python3-11
 ```
 
@@ -309,7 +313,9 @@ either be passed as command argument or specified inside the yaml file using `<e
 
 - `-base-env`/`--base_environment`<br/>Base environment to use for the environment
 
-- `--environment_display_name`<br/>Human readable name for the environment
+- `-requests`/`--supports_request_format`<br/>A boolean indicating whether the environment supports the request format
+
+- `--display_name`/`--environment_display_name`<br/>Human readable name for the environment
 
 - `-desc`/`--environment_description`<br/>The environment description
 

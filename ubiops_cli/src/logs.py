@@ -4,8 +4,15 @@ import click
 import ubiops as api
 
 from ubiops_cli.utils import init_client, get_current_project
-from ubiops_cli.src.helpers.formatting import print_item, format_logs_reference, format_logs_oneline, parse_datetime, \
-    print_list, format_json, format_datetime
+from ubiops_cli.src.helpers.formatting import (
+    print_item,
+    format_logs_reference,
+    format_logs_oneline,
+    parse_datetime,
+    print_list,
+    format_json,
+    format_datetime,
+)
 from ubiops_cli.src.helpers import options
 
 
@@ -38,9 +45,23 @@ def commands():
 @options.DATE_RANGE
 @options.LOGS_LIMIT
 @options.LOGS_FORMATS
-def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_version_name, pipeline_object_name,
-              request_id, pipeline_request_id, build_id, system, level, start_date, start_log, date_range, limit,
-              format_):
+def logs_list(
+    deployment_name,
+    deployment_version_name,
+    pipeline_name,
+    pipeline_version_name,
+    pipeline_object_name,
+    request_id,
+    pipeline_request_id,
+    build_id,
+    system,
+    level,
+    start_date,
+    start_log,
+    date_range,
+    limit,
+    format_,
+):
     """
     Get the logs of your project.
 
@@ -52,29 +73,29 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
 
     filters = {}
     if deployment_name:
-        filters['deployment_name'] = deployment_name
+        filters["deployment_name"] = deployment_name
     if deployment_version_name:
-        filters['deployment_version'] = deployment_version_name
+        filters["deployment_version"] = deployment_version_name
     if pipeline_name:
-        filters['pipeline_name'] = pipeline_name
+        filters["pipeline_name"] = pipeline_name
     if pipeline_version_name:
-        filters['pipeline_version'] = pipeline_version_name
+        filters["pipeline_version"] = pipeline_version_name
     if pipeline_object_name:
-        filters['pipeline_object_name'] = pipeline_object_name
+        filters["pipeline_object_name"] = pipeline_object_name
     if build_id:
-        filters['build_id'] = build_id
+        filters["build_id"] = build_id
     if request_id:
-        filters['deployment_request_id'] = request_id
+        filters["deployment_request_id"] = request_id
     if pipeline_request_id:
-        filters['pipeline_request_id'] = pipeline_request_id
+        filters["pipeline_request_id"] = pipeline_request_id
     if system is not None:
-        filters['system'] = system
+        filters["system"] = system
     if level:
-        filters['level'] = level
+        filters["level"] = level
 
     if start_date is not None:
         try:
-            start_date = format_datetime(parse_datetime(start_date), fmt='%Y-%m-%dT%H:%M:%SZ')
+            start_date = format_datetime(parse_datetime(start_date), fmt="%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
             raise ValueError(
                 "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
@@ -86,24 +107,33 @@ def logs_list(deployment_name, deployment_version_name, pipeline_name, pipeline_
     logs = client.projects_log_list(project_name=project_name, data=log_filters)
     client.api_client.close()
 
-    if format_ == 'json':
+    if format_ == "json":
         click.echo(format_json(logs))
         return
 
     if len(logs) > 0:
-        if format_ == 'oneline':
+        if format_ == "oneline":
             # Make sure logs are sorted old to new
             logs = list(reversed(logs)) if date_range < 0 else logs
             lines = format_logs_oneline(logs)
             click.echo(lines)
-        elif format_ == 'reference':
+        elif format_ == "reference":
             lines = format_logs_reference(logs)
             click.echo_via_pager(lines)
-        elif format_ == 'extended':
+        elif format_ == "extended":
             lines = format_logs_reference(
                 logs,
-                extended=['deployment_request_id', 'pipeline_request_id', 'deployment_name', 'deployment_version',
-                          'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id', 'level']
+                extended=[
+                    "deployment_request_id",
+                    "pipeline_request_id",
+                    "deployment_name",
+                    "deployment_version",
+                    "pipeline_name",
+                    "pipeline_version",
+                    "pipeline_object_name",
+                    "build_id",
+                    "level",
+                ],
             )
             click.echo_via_pager(lines)
         else:
@@ -148,13 +178,22 @@ def logs_get(log_id, format_):
 
     print_item(
         log,
-        row_attrs=['id', 'date', 'log', 'level'],
-        required_front=['id', 'date', 'system'],
-        optional=['deployment_request_id', 'pipeline_request_id', 'deployment_name', 'deployment_version',
-                  'pipeline_name', 'pipeline_version', 'pipeline_object_name', 'build_id', 'level'],
-        required_end=['log'],
-        rename={'deployment_version': 'deployment_version_name', 'pipeline_version': 'pipeline_version_name'},
-        fmt=format_
+        row_attrs=["id", "date", "log", "level"],
+        required_front=["id", "date", "system"],
+        optional=[
+            "deployment_request_id",
+            "pipeline_request_id",
+            "deployment_name",
+            "deployment_version",
+            "pipeline_name",
+            "pipeline_version",
+            "pipeline_object_name",
+            "build_id",
+            "level",
+        ],
+        required_end=["log"],
+        rename={"deployment_version": "deployment_version_name", "pipeline_version": "pipeline_version_name"},
+        fmt=format_,
     )
 
 
@@ -197,4 +236,4 @@ def audit_list(deployment_name, pipeline_name, format_, **kwargs):
         events = client.project_audit_events_list(project_name=project_name, **kwargs)
     client.api_client.close()
 
-    print_list(items=events, attrs=['date', 'action', 'user', 'event'], fmt=format_, pager=len(events) > 10)
+    print_list(items=events, attrs=["date", "action", "user", "event"], fmt=format_, pager=len(events) > 10)

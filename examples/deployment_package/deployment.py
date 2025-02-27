@@ -9,7 +9,6 @@ import random
 
 
 class Deployment:
-
     def __init__(self, base_directory, context):
         """
         Initialisation method for the deployment. It can for example be used for loading modules that have to be kept in
@@ -48,6 +47,4 @@ class Deployment:
 
         # For a structured deployment, we return a Python dict with output. In this example, we are assuming this
         # deployment receives one input field called 'input' and outputs one field called 'output'
-        return {
-            "output": data['input'] * random.random()
-        }
+        return {"output": data["input"] * random.random()}

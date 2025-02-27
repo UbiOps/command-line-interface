@@ -18,13 +18,13 @@ from ubiops_cli.version import VERSION
 
 
 class Config:
-    REQUIRED_SECTIONS = ['auth', 'default']
+    REQUIRED_SECTIONS = ["auth", "default"]
     DEFAULT_API_VERSION = "v2.1"
     DEFAULT_API = f"https://api.ubiops.com/{DEFAULT_API_VERSION}/"
 
     def __init__(self):
         basedir = os.path.dirname(os.path.abspath(__file__))
-        self.config_file = os.path.join(basedir, '.config')
+        self.config_file = os.path.join(basedir, ".config")
 
         self.dictionary = configparser.ConfigParser()
         self.load()
@@ -35,7 +35,7 @@ class Config:
             options = dict(self.dictionary[section])
             for option, value in options.items():
                 key = f"{section}.{option}"
-                if key not in ['auth.tmp_access_token', 'auth.service_token']:
+                if key not in ["auth.tmp_access_token", "auth.service_token"]:
                     string_list.append(f"{key}: {value}")
         return "\n".join(string_list)
 
@@ -49,8 +49,8 @@ class Config:
             self.check_section(section)
 
         # Set defaults
-        if not self.dictionary.has_option('auth', 'api'):
-            self.dictionary.set('auth', 'api', self.DEFAULT_API)
+        if not self.dictionary.has_option("auth", "api"):
+            self.dictionary.set("auth", "api", self.DEFAULT_API)
 
     def set(self, key, value):
         """
@@ -63,11 +63,11 @@ class Config:
         section, option = self.split_key(key)
         self.check_section(section)
 
-        if section == 'auth' and option == 'email':
-            current_email = self.get('auth.email')
+        if section == "auth" and option == "email":
+            current_email = self.get("auth.email")
             if current_email and value != current_email:
-                self.delete_option('auth.tmp_access_token')
-                self.delete_option('auth.service_token')
+                self.delete_option("auth.tmp_access_token")
+                self.delete_option("auth.service_token")
 
         self.dictionary.set(section, option, value)
 
@@ -104,7 +104,7 @@ class Config:
         Write config to file
         """
 
-        with open(self.config_file, 'w', encoding='utf-8') as f:
+        with open(self.config_file, "w", encoding="utf-8") as f:
             self.dictionary.write(f)
 
     def check_section(self, section):
@@ -124,7 +124,7 @@ class Config:
         :param str key: the key to split
         """
 
-        keys = key.split('.')
+        keys = key.split(".")
         assert len(keys) > 1, f"key does not contain a section: {key}"
         section = self.format_section(keys)
         option = keys[-1]
@@ -151,20 +151,20 @@ def init_client():
     Initialize the client library with the credentials in the config
     """
 
-    config_access_token = Config().get('auth.tmp_access_token')
-    config_service_token = Config().get('auth.service_token')
-    config_api = Config().get('auth.api')
+    config_access_token = Config().get("auth.tmp_access_token")
+    config_service_token = Config().get("auth.service_token")
+    config_api = Config().get("auth.api")
 
     try:
         configuration = api.Configuration()
         configuration.host = config_api
 
         if config_access_token and len(config_access_token) > 0:
-            configuration.api_key_prefix['Authorization'] = 'Bearer'
-            configuration.api_key['Authorization'] = config_access_token
+            configuration.api_key_prefix["Authorization"] = "Bearer"
+            configuration.api_key["Authorization"] = config_access_token
         elif config_service_token and len(config_service_token) > 0:
-            configuration.api_key_prefix['Authorization'] = ''
-            configuration.api_key['Authorization'] = config_service_token
+            configuration.api_key_prefix["Authorization"] = ""
+            configuration.api_key["Authorization"] = config_service_token
         else:
             raise UbiOpsException("No access or service token found.")
 
@@ -172,7 +172,7 @@ def init_client():
         client.user_agent = f"UbiOps/cli/{VERSION}"
 
         core_api = api.CoreApi(client)
-        assert core_api.service_status().status == 'ok'
+        assert core_api.service_status().status == "ok"
         return core_api
     except Exception:
         raise UnAuthorizedException("Unauthorized. Please, use 'ubiops signin' first.")
@@ -189,7 +189,7 @@ def get_current_project(error=False, check_existing=False):
     """
 
     user_config = Config()
-    current = user_config.get('default.project')
+    current = user_config.get("default.project")
     if not current or check_existing:
         client = init_client()
         projects = client.projects_list()
@@ -210,8 +210,8 @@ def get_current_project(error=False, check_existing=False):
             pass
 
         # Select first project in list
-        if len(projects) > 0 and hasattr(projects[0], 'name') and hasattr(projects[0], 'organization_name'):
-            user_config.set(key='default.project', value=projects[0].name)
+        if len(projects) > 0 and hasattr(projects[0], "name") and hasattr(projects[0], "organization_name"):
+            user_config.set(key="default.project", value=projects[0].name)
             user_config.write()
             return projects[0].name
 
@@ -245,7 +245,7 @@ def read_yaml(yaml_file, required_fields=None):
     if yaml_file is None:
         return {}
 
-    with open(yaml_file, encoding='utf-8') as f:
+    with open(yaml_file, encoding="utf-8") as f:
         content = yaml.safe_load(f)
 
     if content is None:
@@ -253,7 +253,7 @@ def read_yaml(yaml_file, required_fields=None):
 
     if required_fields:
         for field_name in required_fields:
-            assert (field_name in content), f"Missing field name '{field_name}' in given file."
+            assert field_name in content, f"Missing field name '{field_name}' in given file."
     return content
 
 
@@ -270,7 +270,7 @@ def write_yaml(yaml_file, dictionary, default_file_name):
     if os.path.isdir(yaml_file):
         yaml_file = os.path.join(yaml_file, default_file_name)
 
-    with open(yaml_file, 'w', encoding='utf-8') as f:
+    with open(yaml_file, "w", encoding="utf-8") as f:
         yaml.dump(dictionary, f, sort_keys=False)
     return yaml_file
 
@@ -278,8 +278,12 @@ def write_yaml(yaml_file, dictionary, default_file_name):
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 def zip_dir(
-    directory, output_path, ignore_filename=".ubiops-ignore", prefix=None, force=False,
-    package_directory="deployment_package"
+    directory,
+    output_path,
+    ignore_filename=".ubiops-ignore",
+    prefix=None,
+    force=False,
+    package_directory="deployment_package",
 ):
     """
     Zip a deployment package and take care of the ignore file if given
@@ -306,23 +310,24 @@ def zip_dir(
     if not force and os.path.isfile(output_path):
         click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
 
-    implicit_environment = False
-
-    # Initialize 'is_ignored' function. It will be overwritten with `parse_ignore` if a .ubiops-ignore file is present.
+    # Initialize 'is_ignored' function. It will be overwritten if a .ubiops-ignore file is present.
     def is_ignored(_):
         """
-        If no ignore file is present, we will not ignore anything
+        If no ignore file is present, nothing will be ignored
         """
         return False
 
     if has_ignore_file:
-        # Overwrite the 'is_ignored' function so we use what we found in the .ubiops-ignore file
+        # Ignore what we found in the .ubiops-ignore file
         is_ignored = parse_ignore(os.path.join(path_dir, ignore_filename), path_dir)
+
+    # Whether environment files are present in the deployment package
+    implicit_environment = False
 
     package_path = str(os.path.join(path_dir, ""))
     with zipfile.ZipFile(output_path, "w") as f:
         for root, _, files in os.walk(path_dir):
-            root_subdir = os.path.join('', *root.split(package_path)[1:])
+            root_subdir = os.path.join("", *root.split(package_path)[1:])
             package_subdir = os.path.join(package_directory, root_subdir)
             for filename in files:
                 source_file = os.path.join(root, filename)
@@ -347,7 +352,7 @@ def write_blob(blob, output_path, filename=None):
     if os.path.isdir(output_path) and filename:
         output_path = os.path.join(output_path, filename)
 
-    with open(output_path, 'wb') as f:
+    with open(output_path, "wb") as f:
         f.write(blob)
     return output_path
 
@@ -391,10 +396,11 @@ def default_zip_name(prefix):
     :param str|None prefix: prefix used for the zip
     """
 
-    datetime_str = str(datetime.now()).replace(' ', '_').replace('.', '_').replace(':', '-')
+    datetime_str = str(datetime.now()).replace(" ", "_").replace(".", "_").replace(":", "-")
     if prefix:
         return f"{prefix}_{datetime_str}.zip"
     return f"{datetime_str}.zip"
+
 
 def check_required_fields_in_list(input_dict, list_name, required_fields):
     """
@@ -404,9 +410,9 @@ def check_required_fields_in_list(input_dict, list_name, required_fields):
     assert list_name in input_dict, f"No list '{list_name}' found in {str(input_dict)}"
     for list_item in input_dict[list_name]:
         for requirement in required_fields:
-            assert requirement in list_item, (
-                f"No key '{requirement}' found for one of the {list_name}.\nFound: {list_item}"
-            )
+            assert (
+                requirement in list_item
+            ), f"No key '{requirement}' found for one of the {list_name}.\nFound: {list_item}"
 
 
 def read_json(json_file):
@@ -418,7 +424,7 @@ def read_json(json_file):
         return {}
 
     try:
-        with open(json_file, 'rb') as f:
+        with open(json_file, "rb") as f:
             content = json.load(f)
     except ValueError:
         raise ValueError("Failed to parse json file")

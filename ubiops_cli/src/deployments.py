@@ -4,21 +4,55 @@ from time import sleep
 import click
 import ubiops as api
 
-from ubiops_cli.constants import STATUS_UNAVAILABLE, STRUCTURED_TYPE, DEFAULT_IGNORE_FILE, UPDATE_TIME, \
-    IMPLICIT_ENVIRONMENT_FILES
+from ubiops_cli.constants import (
+    STATUS_UNAVAILABLE,
+    STRUCTURED_TYPE,
+    DEFAULT_IGNORE_FILE,
+    UPDATE_TIME,
+    IMPLICIT_ENVIRONMENT_FILES,
+)
 from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
-    update_existing_deployment_version, DEPLOYMENT_VERSION_CREATE_FIELDS, DEPLOYMENT_REQUIRED_FIELDS
+from ubiops_cli.src.helpers.deployment_helpers import (
+    define_deployment,
+    define_deployment_version,
+    set_default_scaling_parameters,
+    update_deployment_file,
+    update_existing_deployment_version,
+    DEPLOYMENT_CREATE_FIELDS,
+    DEPLOYMENT_UPDATE_FIELDS,
+    DEPLOYMENT_DETAILS,
+    DEPLOYMENT_DETAILS_OPTIONAL,
+    DEPLOYMENT_FIELDS_RENAMED,
+    DEPLOYMENT_VERSION_CREATE_FIELDS,
+)
 from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_requests_reference, \
-    format_requests_oneline, format_json, parse_datetime, format_datetime
+from ubiops_cli.src.helpers.formatting import (
+    print_list,
+    print_item,
+    format_yaml,
+    format_requests_reference,
+    format_requests_oneline,
+    format_json,
+    parse_datetime,
+    format_datetime,
+)
 from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import init_client, read_json, read_yaml, write_yaml, zip_dir, get_current_project, \
-    set_dict_default, write_blob, default_zip_name, parse_json
+from ubiops_cli.utils import (
+    init_client,
+    read_json,
+    read_yaml,
+    write_yaml,
+    zip_dir,
+    get_current_project,
+    set_dict_default,
+    write_blob,
+    default_zip_name,
+    parse_json,
+)
 
 
-LIST_ITEMS = ['last_updated', 'name', 'labels']
-REQUEST_LIST_ITEMS = ['id', 'status', 'success', 'time_created']
+LIST_ITEMS = ["last_updated", "name", "labels"]
+REQUEST_LIST_ITEMS = ["id", "status", "success", "time_created"]
 
 
 @click.group(name=["deployments", "dpl"], short_help="Manage your deployments")
@@ -74,10 +108,10 @@ def deployments_get(deployment_name, output_path, quiet, format_):
     if output_path is not None:
         dictionary = format_yaml(
             item=deployment,
-            required_front=['name', 'description', 'labels', 'input_type', 'output_type'],
-            optional=['input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'],
-            rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
-            as_str=False
+            required_front=DEPLOYMENT_DETAILS,
+            optional=DEPLOYMENT_DETAILS_OPTIONAL,
+            rename=DEPLOYMENT_FIELDS_RENAMED,
+            as_str=False,
         )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="deployment.yaml")
         if not quiet:
@@ -86,10 +120,10 @@ def deployments_get(deployment_name, output_path, quiet, format_):
         print_item(
             item=deployment,
             row_attrs=LIST_ITEMS,
-            required_front=['id', 'name', 'project', 'description', 'labels', 'input_type', 'output_type'],
-            optional=['input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'],
-            required_end=['creation_date', 'last_updated', 'default_version'],
-            rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
+            required_front=["id", *DEPLOYMENT_DETAILS],
+            optional=DEPLOYMENT_DETAILS_OPTIONAL,
+            required_end=["creation_date", "last_updated", "default_version"],
+            rename=DEPLOYMENT_FIELDS_RENAMED,
             fmt=format_,
         )
 
@@ -111,6 +145,7 @@ def deployments_create(deployment_name, yaml_file, format_):
     deployment_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
+    deployment_supports_request_format: true
     input_type: structured
     input_fields:
       - name: param1
@@ -130,51 +165,26 @@ def deployments_create(deployment_name, yaml_file, format_):
 
     project_name = get_current_project(error=True)
 
-    yaml_content = read_yaml(yaml_file, required_fields=DEPLOYMENT_REQUIRED_FIELDS)
+    yaml_content = read_yaml(yaml_file, required_fields=[])
     client = init_client()
 
-    assert 'deployment_name' in yaml_content or deployment_name, 'Please, specify the deployment name in either the ' \
-                                                                 'yaml file or as a command argument'
-
-    deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
-    description = set_dict_default(None, yaml_content, 'deployment_description')
-
-    if 'input_fields' in yaml_content and isinstance(yaml_content['input_fields'], list):
-        input_fields = [api.DeploymentInputFieldCreate(name=item['name'], data_type=item['data_type'])
-                        for item in yaml_content['input_fields']]
-    else:
-        input_fields = None
-
-    if 'output_fields' in yaml_content and isinstance(yaml_content['output_fields'], list):
-        output_fields = [api.DeploymentInputFieldCreate(name=item['name'], data_type=item['data_type'])
-                         for item in yaml_content['output_fields']]
-    else:
-        output_fields = None
-
-    if 'deployment_labels' in yaml_content:
-        labels = yaml_content['deployment_labels']
-    else:
-        labels = {}
-
-    deployment = api.DeploymentCreate(
-        name=deployment_name,
-        description=description,
-        input_type=yaml_content['input_type'],
-        output_type=yaml_content['output_type'],
-        input_fields=input_fields,
-        output_fields=output_fields,
-        labels=labels
+    assert "deployment_name" in yaml_content or deployment_name, (
+        "Please, specify the deployment name in either the " "yaml file or as a command argument"
     )
+
+    kwargs = define_deployment(fields={"deployment_name": deployment_name}, yaml_content=yaml_content)
+
+    deployment = api.DeploymentCreate(**{k: kwargs[k] for k in DEPLOYMENT_CREATE_FIELDS if k in kwargs})
     response = client.deployments_create(project_name=project_name, data=deployment)
     client.api_client.close()
 
     print_item(
         item=response,
         row_attrs=LIST_ITEMS,
-        required_front=['id', 'name', 'project', 'description', 'labels', 'input_type', 'output_type'],
-        optional=['input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'],
-        required_end=['creation_date', 'last_updated'],
-        rename={'name': 'deployment_name', 'description': 'deployment_description', 'labels': 'deployment_labels'},
+        required_front=["id", *DEPLOYMENT_DETAILS],
+        optional=DEPLOYMENT_DETAILS_OPTIONAL,
+        required_end=["creation_date", "last_updated"],
+        rename=DEPLOYMENT_FIELDS_RENAMED,
         fmt=format_,
     )
 
@@ -189,18 +199,19 @@ def deployments_update(deployment_name, new_name, default_version, yaml_file, qu
     """
     Update a deployment.
 
-    If you only want to update the name of the deployment or the default deployment version,
-    use the options `<new_name>` and `<default_version>`.
-    If you want to update the deployment input/output fields, description or labels, please use a yaml file to define
-    the new deployment.
+    It is possible to define the updated parameter values using a yaml file. Or provide the `<new_name>` or
+    `<default_version>` directly as command options. When both a yaml file and command options are given, the command
+    options are prioritized over the yaml content.
 
     \b
     For example:
     ```
+    deployment_name: new-name
     deployment_description: Deployment created via command line.
     deployment_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
+    deployment_supports_request_format: true
     input_fields:
       - name: param1
         data_type: int
@@ -211,28 +222,22 @@ def deployments_update(deployment_name, new_name, default_version, yaml_file, qu
         data_type: int
       - name: param2
         data_type: string
+    default_version: v1
     ```
     """
 
     project_name = get_current_project(error=True)
 
     yaml_content = read_yaml(yaml_file)
+    kwargs = define_deployment(
+        fields={"deployment_name": new_name, "default_version": default_version},
+        yaml_content=yaml_content,
+        extra_yaml_fields=["default_version"],
+    )
 
-    deployment = api.DeploymentUpdate(name=new_name, default_version=default_version)
-    if 'deployment_description' in yaml_content:
-        deployment.description = yaml_content['deployment_description']
-    if 'deployment_labels' in yaml_content:
-        deployment.labels = yaml_content['deployment_labels']
-    if 'input_fields' in yaml_content and isinstance(yaml_content['input_fields'], list):
-        deployment.input_fields = [
-            api.DeploymentInputFieldCreate(name=item['name'], data_type=item['data_type'])
-            for item in yaml_content['input_fields']
-        ]
-    if 'output_fields' in yaml_content and isinstance(yaml_content['output_fields'], list):
-        deployment.output_fields = [
-            api.DeploymentInputFieldCreate(name=item['name'], data_type=item['data_type'])
-            for item in yaml_content['output_fields']
-        ]
+    deployment = api.DeploymentUpdate(
+        **{k: kwargs[k] for k in DEPLOYMENT_UPDATE_FIELDS if kwargs.get(k, None) is not None}
+    )
 
     client = init_client()
     client.deployments_update(project_name=project_name, deployment_name=deployment_name, data=deployment)
@@ -293,11 +298,7 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
     ignore_file = DEFAULT_IGNORE_FILE if ignore_file is None else ignore_file
     prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
     archive_path, _ = zip_dir(
-        directory=directory,
-        output_path=output_path,
-        ignore_filename=ignore_file,
-        prefix=prefix,
-        force=assume_yes
+        directory=directory, output_path=output_path, ignore_filename=ignore_file, prefix=prefix, force=assume_yes
     )
     if not quiet:
         click.echo(f"Created archive: {archive_path}")
@@ -327,8 +328,11 @@ def deployments_upload(deployment_name, version_name, archive_path, overwrite, p
 
     if overwrite or current_version.status == STATUS_UNAVAILABLE:
         client.revisions_file_upload(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, file=archive_path,
-            _progress_bar=progress_bar
+            project_name=project_name,
+            deployment_name=deployment_name,
+            version=version_name,
+            file=archive_path,
+            _progress_bar=False if not archive_path else progress_bar,
         )
         client.api_client.close()
 
@@ -366,8 +370,10 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
         raise UbiOpsException("No active revision available for this deployment")
 
     with client.revisions_file_download(
-            project_name=project_name, deployment_name=deployment_name,
-            version=version_name, revision_id=version.active_revision
+        project_name=project_name,
+        deployment_name=deployment_name,
+        version=version_name,
+        revision_id=version.active_revision,
     ) as response:
         prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
         filename = default_zip_name(prefix=prefix)
@@ -410,15 +416,27 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @options.ASSUME_YES
 @options.PROGRESS_BAR
 @options.QUIET
-def deployments_deploy(deployment_name, version_name, directory, output_path, yaml_file, overwrite, assume_yes,
-                       progress_bar, quiet, **kwargs):
+def deployments_deploy(
+    deployment_name,
+    version_name,
+    directory,
+    output_path,
+    yaml_file,
+    overwrite,
+    assume_yes,
+    progress_bar,
+    quiet,
+    **kwargs,
+):
     """
     Deploy a new version of a deployment.
 
-    Please, specify the code `<directory>` that should be deployed. The files in this directory
-    will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the archive file can be
-    specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this file is assumed to be equal
-    to the well-known '.gitignore' file.
+    For deployments that support request format, you can specify the code `<directory>` that should be deployed. The
+    files in this directory will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the
+    archive file can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this file
+    is assumed to be equal to the well-known '.gitignore' file.
+    It's also possible to skip `<directory>` and continue with an empty revision. In that case, we assume that your
+    deployment code is part of your environment, e.g. custom docker image.
 
     If you want to store a local copy of the uploaded archive file, please use the `<output_path>` option.
     The `<output_path>` option will be used as output location of the archive file. If the `<output_path>` is a
@@ -466,35 +484,42 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
 
     if not output_path:
         store_archive = False
-        output_path = '.'
+        output_path = "."
     else:
         store_archive = True
 
     project_name = get_current_project(error=True)
-    client = init_client()
+
     yaml_content = read_yaml(yaml_file, required_fields=[])
 
-    assert 'deployment_name' in yaml_content or deployment_name, 'Please, specify the deployment name in either the ' \
-                                                                 'yaml file or as a command argument'
-    assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either the yaml ' \
-                                                           'file or as a command option'
+    assert "deployment_name" in yaml_content or deployment_name, (
+        "Please, specify the deployment name in either the " "yaml file or as a command argument"
+    )
+    assert "version_name" in yaml_content or version_name, (
+        "Please, specify the version name in either the yaml " "file or as a command option"
+    )
 
-    deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
-    version_name = set_dict_default(version_name, yaml_content, 'version_name')
+    deployment_name = set_dict_default(deployment_name, yaml_content, "deployment_name")
+    version_name = set_dict_default(version_name, yaml_content, "version_name")
 
     # Convert command options for port forwarding to 'ports' list
-    if 'ports' in yaml_content and (kwargs.get('public_port', None) or kwargs.get('deployment_port', None)):
+    if "ports" in yaml_content and (kwargs.get("public_port", None) or kwargs.get("deployment_port", None)):
         raise AssertionError(
             "Please, specify the ports to open up either in the yaml file or as command options, not both"
         )
-    if kwargs.get('public_port', None) or kwargs.get('deployment_port', None):
-        if not (kwargs.get('public_port', None) and kwargs.get('deployment_port', None)):
+    if kwargs.get("public_port", None) or kwargs.get("deployment_port", None):
+        if not (kwargs.get("public_port", None) and kwargs.get("deployment_port", None)):
             raise AssertionError("public_port and deployment_port should be provided together")
-        yaml_content["ports"] = [{
-            "public_port": kwargs.pop("public_port"),
-            "deployment_port": kwargs.pop("deployment_port"),
-            "protocol": kwargs.pop("port_protocol")
-        }]
+        yaml_content["ports"] = [
+            {
+                "public_port": kwargs.pop("public_port"),
+                "deployment_port": kwargs.pop("deployment_port"),
+                "protocol": kwargs.pop("port_protocol"),
+            }
+        ]
+
+    client = init_client()
+    deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)
 
     existing_version = None
     if overwrite:
@@ -506,17 +531,21 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             # Do nothing if version doesn't exist
             pass
 
-    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file', 'ignore_file'])
-    kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
+    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=["deployment_file", "ignore_file"])
+    kwargs["ignore_file"] = DEFAULT_IGNORE_FILE if kwargs["ignore_file"] is None else kwargs["ignore_file"]
 
     prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
-    archive_path, implicit_environment = zip_dir(
-        directory=directory,
-        output_path=output_path,
-        ignore_filename=kwargs['ignore_file'],
-        prefix=prefix,
-        force=assume_yes
-    )
+
+    archive_path = None
+    implicit_environment = False
+    if deployment.supports_request_format and directory:
+        archive_path, implicit_environment = zip_dir(
+            directory=directory,
+            output_path=output_path,
+            ignore_filename=kwargs["ignore_file"],
+            prefix=prefix,
+            force=assume_yes,
+        )
 
     try:
         has_uploaded_archives = False
@@ -529,6 +558,10 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
                 if k in kwargs:
                     version_fields[k] = kwargs[k]
 
+            version_fields = set_default_scaling_parameters(
+                details=version_fields, supports_request_format=deployment.supports_request_format
+            )
+
             version = api.DeploymentVersionCreate(version=version_name, **version_fields)
             client.deployment_versions_create(project_name=project_name, deployment_name=deployment_name, data=version)
         else:
@@ -537,32 +570,33 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             )
             has_uploaded_archives = len(revisions) > 0
 
-        if implicit_environment and not has_uploaded_archives and kwargs.get('environment', None) is not None:
+        if implicit_environment and not has_uploaded_archives and kwargs.get("environment", None) is not None:
             # We don't show a warning on re-uploads
             try:
-                environment = client.environments_get(
-                    project_name=project_name, environment_name=kwargs['environment']
-                )
+                environment = client.environments_get(project_name=project_name, environment_name=kwargs["environment"])
                 if environment.base_environment is not None:
                     # A custom environment is used
                     click.secho(
                         message="Warning: You are trying to upload a deployment file containing at least one"
-                                f" environment file (e.g. {IMPLICIT_ENVIRONMENT_FILES[0]}). It's not possible to use"
-                                " a custom environment in combination with an implicitly created environment.\nConsider"
-                                f" adding the environment files to {kwargs['ignore_file']} so no implicit environment"
-                                f" is created on revision file upload.",
-                        fg='yellow'
+                        f" environment file (e.g. {IMPLICIT_ENVIRONMENT_FILES[0]}). It's not possible to use"
+                        " a custom environment in combination with an implicitly created environment.\nConsider"
+                        f" adding the environment files to {kwargs['ignore_file']} so no implicit environment"
+                        f" is created on revision file upload.",
+                        fg="yellow",
                     )
             except api.exceptions.ApiException:
                 pass
 
         if overwrite and existing_version:
+            kwargs = set_default_scaling_parameters(
+                details=kwargs, supports_request_format=deployment.supports_request_format, update=True
+            )
             has_changed_fields = update_existing_deployment_version(
                 client, project_name, deployment_name, version_name, existing_version, kwargs
             )
 
         has_changed_env_vars = update_deployment_file(
-            client, project_name, deployment_name, version_name, kwargs['deployment_file']
+            client, project_name, deployment_name, version_name, kwargs["deployment_file"]
         )
 
         if has_uploaded_archives and (has_changed_fields or has_changed_env_vars):
@@ -570,18 +604,22 @@ def deployments_deploy(deployment_name, version_name, directory, output_path, ya
             click.echo(f"Waiting for changes to take effect... This takes {UPDATE_TIME} seconds.")
             sleep(UPDATE_TIME)
 
-        client.revisions_file_upload(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, file=archive_path,
-            _progress_bar=progress_bar
-        )
+        if deployment.supports_request_format:
+            client.revisions_file_upload(
+                project_name=project_name,
+                deployment_name=deployment_name,
+                version=version_name,
+                file=archive_path,
+                _progress_bar=False if not archive_path else progress_bar,
+            )
         client.api_client.close()
     except Exception as e:
-        if os.path.isfile(archive_path) and not store_archive:
+        if archive_path and os.path.isfile(archive_path) and not store_archive:
             os.remove(archive_path)
         client.api_client.close()
         raise e
 
-    if os.path.isfile(archive_path):
+    if archive_path and os.path.isfile(archive_path):
         if store_archive:
             if not quiet:
                 click.echo(f"Created archive: {archive_path}")
@@ -659,11 +697,11 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
     else:
         raise UbiOpsException("Missing option <data> or <json_file>")
 
-    params = {'project_name': project_name, 'deployment_name': deployment_name}
+    params = {"project_name": project_name, "deployment_name": deployment_name}
     if timeout is not None:
-        params['timeout'] = timeout
+        params["timeout"] = timeout
     if version_name is not None:
-        params['version'] = version_name
+        params["version"] = version_name
 
     if batch:
         if version_name is not None:
@@ -679,10 +717,7 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
         response = []
         for item in input_data:
             for streaming_update in api.utils.stream_deployment_request(
-                    client=client.api_client,
-                    data=item,
-                    full_response=True,
-                    **params
+                client=client.api_client, data=item, full_response=True, **params
             ):
                 if isinstance(streaming_update, str):
                     # Immediately show streaming updates
@@ -693,11 +728,11 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
 
     client.api_client.close()
 
-    if format_ == 'reference':
+    if format_ == "reference":
         click.echo(format_requests_reference(response))
-    elif format_ == 'oneline':
+    elif format_ == "oneline":
         click.echo(format_requests_oneline(response))
-    elif format_ == 'json':
+    elif format_ == "json":
         click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_requests_reference(response))
@@ -735,11 +770,11 @@ def requests_get(deployment_name, version_name, request_id, format_):
         )
     client.api_client.close()
 
-    if format_ == 'reference':
+    if format_ == "reference":
         click.echo(format_requests_reference(response))
-    elif format_ == 'oneline':
+    elif format_ == "oneline":
         click.echo(format_requests_oneline(response))
-    elif format_ == 'json':
+    elif format_ == "json":
         click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_requests_reference(response))
@@ -766,17 +801,17 @@ def requests_list(deployment_name, version_name, limit, format_, **kwargs):
 
     project_name = get_current_project(error=True)
 
-    if 'start_date' in kwargs and kwargs['start_date']:
+    if "start_date" in kwargs and kwargs["start_date"]:
         try:
-            kwargs['start_date'] = format_datetime(parse_datetime(kwargs['start_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
+            kwargs["start_date"] = format_datetime(parse_datetime(kwargs["start_date"]), fmt="%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
             raise UbiOpsException(
                 "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
             )
 
-    if 'end_date' in kwargs and kwargs['end_date']:
+    if "end_date" in kwargs and kwargs["end_date"]:
         try:
-            kwargs['end_date'] = format_datetime(parse_datetime(kwargs['end_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
+            kwargs["end_date"] = format_datetime(parse_datetime(kwargs["end_date"]), fmt="%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
             raise UbiOpsException(
                 "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"

@@ -1,15 +1,23 @@
 import click
 import ubiops as api
 
-from ubiops_cli.src.helpers.deployment_helpers import define_deployment_version, update_deployment_file, \
-    DEPLOYMENT_VERSION_CREATE_FIELDS, DEPLOYMENT_VERSION_FIELDS_UPDATE, DEPLOYMENT_VERSION_FIELDS_RENAMED
+from ubiops_cli.src.helpers.deployment_helpers import (
+    define_deployment_version,
+    set_default_scaling_parameters,
+    update_deployment_file,
+    DEPLOYMENT_VERSION_CREATE_FIELDS,
+    DEPLOYMENT_VERSION_FIELDS_UPDATE,
+    DEPLOYMENT_VERSION_FIELDS_RENAMED,
+    DEPLOYMENT_VERSION_DETAILS,
+    SUPPORTS_REQUEST_FORMAT_DETAILS,
+)
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.wait_for import wait_for
 from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
 
-LIST_ITEMS = ['last_updated', 'version', 'status', 'labels']
+LIST_ITEMS = ["last_updated", "version", "status", "labels"]
 
 
 @click.group(name=["deployment_versions", "versions"], short_help="Manage your deployment versions")
@@ -37,26 +45,24 @@ def versions_list(deployment_name, labels, format_):
     project_name = get_current_project(error=True)
 
     client = init_client()
-    default = client.deployments_get(
-        project_name=project_name, deployment_name=deployment_name
-    ).default_version
+    default = client.deployments_get(project_name=project_name, deployment_name=deployment_name).default_version
     response = client.deployment_versions_list(
         project_name=project_name, deployment_name=deployment_name, labels=label_filter
     )
     client.api_client.close()
 
-    if format_ == 'table':
+    if format_ == "table":
         # Add [DEFAULT] to default version
         for i in response:
-            if default and hasattr(i, 'version') and i.version == default:
+            if default and hasattr(i, "version") and i.version == default:
                 i.version = f"{i.version} {click.style('[DEFAULT]', fg='yellow')}"
 
     print_list(
         items=response,
         attrs=LIST_ITEMS,
-        rename_cols={'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
+        rename_cols={"version": "version_name", **DEPLOYMENT_VERSION_FIELDS_RENAMED},
         sorting_col=0,
-        fmt=format_
+        fmt=format_,
     )
 
 
@@ -105,23 +111,31 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 
     # Show version details
     client = init_client()
+    deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)
     version = client.deployment_versions_get(
         project_name=project_name, deployment_name=deployment_name, version=version_name
     )
     client.api_client.close()
 
+    details = DEPLOYMENT_VERSION_DETAILS
+    if deployment.supports_request_format:
+        details.extend(SUPPORTS_REQUEST_FORMAT_DETAILS)
+
     if output_path is not None:
         # Store only reusable settings
         # Keep only instance_type_group_name; drop instance_type and instance_type_group_id
+        # Drop read-only fields has_request_method and has_requests_method
         reusable_fields = [
-            field for field in DEPLOYMENT_VERSION_CREATE_FIELDS
-            if field not in ["instance_type", "instance_type_group_id"]
+            field
+            for field in details
+            if field not in ["instance_type", "instance_type_group_id", "has_request_method", "has_requests_method"]
         ]
+
         dictionary = format_yaml(
             item=version,
-            required_front=['version', 'deployment', *reusable_fields],
-            rename={'deployment': 'deployment_name', 'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
-            as_str=False
+            required_front=["version", "deployment", *reusable_fields],
+            rename={"deployment": "deployment_name", "version": "version_name", **DEPLOYMENT_VERSION_FIELDS_RENAMED},
+            as_str=False,
         )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="version.yaml")
         if not quiet:
@@ -129,9 +143,10 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     else:
         print_item(
             item=version,
+            required_front=["version", "deployment", *details],
             row_attrs=LIST_ITEMS,
-            rename={'deployment': 'deployment_name', 'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
-            fmt=format_
+            rename={"deployment": "deployment_name", "version": "version_name", **DEPLOYMENT_VERSION_FIELDS_RENAMED},
+            fmt=format_,
         )
 
 
@@ -204,31 +219,39 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     project_name = get_current_project(error=True)
 
     yaml_content = read_yaml(yaml_file, required_fields=[])
-    client = init_client()
 
-    assert 'deployment_name' in yaml_content or deployment_name, 'Please, specify the deployment name in either ' \
-                                                                 'the yaml file or as a command argument'
-    assert 'version_name' in yaml_content or version_name, 'Please, specify the version name in either ' \
-                                                           'the yaml file or as a command argument'
+    assert "deployment_name" in yaml_content or deployment_name, (
+        "Please, specify the deployment name in either " "the yaml file or as a command argument"
+    )
+    assert "version_name" in yaml_content or version_name, (
+        "Please, specify the version name in either " "the yaml file or as a command argument"
+    )
 
     # Convert command options for port forwarding to 'ports' list
-    if 'ports' in yaml_content and (kwargs.get('public_port', None) or kwargs.get('deployment_port', None)):
+    if "ports" in yaml_content and (kwargs.get("public_port", None) or kwargs.get("deployment_port", None)):
         raise AssertionError(
             "Please, specify the ports to open up either in the yaml file or as command options, not both"
         )
-    if kwargs.get('public_port', None) or kwargs.get('deployment_port', None):
-        if not (kwargs.get('public_port', None) and kwargs.get('deployment_port', None)):
+    if kwargs.get("public_port", None) or kwargs.get("deployment_port", None):
+        if not (kwargs.get("public_port", None) and kwargs.get("deployment_port", None)):
             raise AssertionError("public_port and deployment_port should be provided together")
-        yaml_content["ports"] = [{
-            "public_port": kwargs.pop("public_port"),
-            "deployment_port": kwargs.pop("deployment_port"),
-            "protocol": kwargs.pop("port_protocol")
-        }]
+        yaml_content["ports"] = [
+            {
+                "public_port": kwargs.pop("public_port"),
+                "deployment_port": kwargs.pop("deployment_port"),
+                "protocol": kwargs.pop("port_protocol"),
+            }
+        ]
 
-    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
+    client = init_client()
 
-    deployment_name = set_dict_default(deployment_name, yaml_content, 'deployment_name')
-    version_name = set_dict_default(version_name, yaml_content, 'version_name')
+    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=["deployment_file"])
+
+    deployment_name = set_dict_default(deployment_name, yaml_content, "deployment_name")
+    version_name = set_dict_default(version_name, yaml_content, "version_name")
+
+    deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)
+    kwargs = set_default_scaling_parameters(details=kwargs, supports_request_format=deployment.supports_request_format)
 
     version = api.DeploymentVersionCreate(
         version=version_name, **{k: kwargs[k] for k in DEPLOYMENT_VERSION_CREATE_FIELDS if k in kwargs}
@@ -237,14 +260,19 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
         project_name=project_name, deployment_name=deployment_name, data=version
     )
 
-    update_deployment_file(client, project_name, deployment_name, version_name, kwargs['deployment_file'])
+    update_deployment_file(client, project_name, deployment_name, version_name, kwargs["deployment_file"])
     client.api_client.close()
+
+    details = DEPLOYMENT_VERSION_DETAILS
+    if deployment.supports_request_format:
+        details.extend(SUPPORTS_REQUEST_FORMAT_DETAILS)
 
     print_item(
         item=response,
         row_attrs=LIST_ITEMS,
-        rename={'deployment': 'deployment_name', 'version': 'version_name', **DEPLOYMENT_VERSION_FIELDS_RENAMED},
-        fmt=format_
+        required_front=["version", "deployment", *details],
+        rename={"deployment": "deployment_name", "version": "version_name", **DEPLOYMENT_VERSION_FIELDS_RENAMED},
+        fmt=format_,
     )
 
 
@@ -317,26 +345,32 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
 
     project_name = get_current_project(error=True)
 
-    client = init_client()
-
     yaml_content = read_yaml(yaml_file, required_fields=[])
 
     # Convert command options for port forwarding to 'ports' list
-    if 'ports' in yaml_content and (kwargs.get('public_port', None) or kwargs.get('deployment_port', None)):
+    if "ports" in yaml_content and (kwargs.get("public_port", None) or kwargs.get("deployment_port", None)):
         raise AssertionError(
             "Please, specify the ports to open up either in the yaml file or as command options, not both"
         )
-    if kwargs.get('public_port', None) or kwargs.get('deployment_port', None):
-        if not (kwargs.get('public_port', None) and kwargs.get('deployment_port', None)):
+    if kwargs.get("public_port", None) or kwargs.get("deployment_port", None):
+        if not (kwargs.get("public_port", None) and kwargs.get("deployment_port", None)):
             raise AssertionError("public_port and deployment_port should be provided together")
-        yaml_content["ports"] = [{
-            "public_port": kwargs.pop("public_port"),
-            "deployment_port": kwargs.pop("deployment_port"),
-            "protocol": kwargs.pop("port_protocol")
-        }]
+        yaml_content["ports"] = [
+            {
+                "public_port": kwargs.pop("public_port"),
+                "deployment_port": kwargs.pop("deployment_port"),
+                "protocol": kwargs.pop("port_protocol"),
+            }
+        ]
 
-    kwargs['version_name'] = new_name
-    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=['deployment_file'])
+    kwargs["version_name"] = new_name
+    kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=["deployment_file"])
+
+    client = init_client()
+    deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)
+    kwargs = set_default_scaling_parameters(
+        details=kwargs, supports_request_format=deployment.supports_request_format, update=True
+    )
 
     version = api.DeploymentVersionUpdate(
         **{k: kwargs[k] for k in DEPLOYMENT_VERSION_FIELDS_UPDATE if kwargs.get(k, None) is not None}
@@ -344,7 +378,7 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     client.deployment_versions_update(
         project_name=project_name, deployment_name=deployment_name, version=version_name, data=version
     )
-    update_deployment_file(client, project_name, deployment_name, version_name, kwargs['deployment_file'])
+    update_deployment_file(client, project_name, deployment_name, version_name, kwargs["deployment_file"])
     client.api_client.close()
 
     if not quiet:
@@ -361,8 +395,10 @@ def versions_delete(deployment_name, version_name, assume_yes, quiet):
 
     project_name = get_current_project(error=True)
 
-    if assume_yes or click.confirm(f"Are you sure you want to delete deployment version <{version_name}> of"
-                                   f" deployment <{deployment_name}> in project <{project_name}>?"):
+    if assume_yes or click.confirm(
+        f"Are you sure you want to delete deployment version <{version_name}> of"
+        f" deployment <{deployment_name}> in project <{project_name}>?"
+    ):
         client = init_client()
         client.deployment_versions_delete(
             project_name=project_name, deployment_name=deployment_name, version=version_name
@@ -400,6 +436,6 @@ def versions_wait(deployment_name, version_name, revision_id, timeout, stream_lo
         revision_id=revision_id,
         timeout=timeout,
         quiet=quiet,
-        stream_logs=stream_logs
+        stream_logs=stream_logs,
     )
     client.api_client.close()

@@ -3,17 +3,28 @@ import ubiops as api
 
 from ubiops_cli.constants import STRUCTURED_TYPE
 from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.src.helpers.pipeline_helpers import define_pipeline, get_changed_pipeline_structure, \
-    PIPELINE_REQUIRED_FIELDS
+from ubiops_cli.src.helpers.pipeline_helpers import (
+    define_pipeline,
+    get_changed_pipeline_structure,
+    PIPELINE_REQUIRED_FIELDS,
+)
 from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml, format_pipeline_requests_reference, \
-    format_pipeline_requests_oneline, format_json, format_datetime, parse_datetime
+from ubiops_cli.src.helpers.formatting import (
+    print_list,
+    print_item,
+    format_yaml,
+    format_pipeline_requests_reference,
+    format_pipeline_requests_oneline,
+    format_json,
+    format_datetime,
+    parse_datetime,
+)
 from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import get_current_project, init_client, read_json, read_yaml, write_yaml, parse_json
 
 
-LIST_ITEMS = ['last_updated', 'name', 'labels']
-REQUEST_LIST_ITEMS = ['id', 'status', 'time_created']
+LIST_ITEMS = ["last_updated", "name", "labels"]
+REQUEST_LIST_ITEMS = ["id", "status", "time_created"]
 
 
 @click.group(name=["pipelines", "ppl"], short_help="Manage your pipelines")
@@ -69,13 +80,16 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
     if output_path is not None:
         dictionary = format_yaml(
             pipeline,
-            required_front=['name', 'description', 'input_type'],
+            required_front=["name", "description", "input_type"],
             optional=[
-                'input_fields name', 'input_fields data_type', 'output_type', 'output_fields name',
-                'output_fields data_type'
+                "input_fields name",
+                "input_fields data_type",
+                "output_type",
+                "output_fields name",
+                "output_fields data_type",
             ],
-            rename={'name': 'pipeline_name', 'description': 'pipeline_description'},
-            as_str=False
+            rename={"name": "pipeline_name", "description": "pipeline_description"},
+            as_str=False,
         )
 
         yaml_file = write_yaml(output_path, dictionary, default_file_name="pipeline.yaml")
@@ -86,12 +100,18 @@ def pipelines_get(pipeline_name, output_path, quiet, format_):
         print_item(
             pipeline,
             row_attrs=LIST_ITEMS,
-            required_front=['name', 'description', 'input_type'],
+            required_front=["name", "description", "input_type"],
             optional=[
-                'input_fields name', 'input_fields data_type', 'output_type', 'output_fields name',
-                'output_fields data_type', 'creation_date', 'last_updated', 'default_version'
+                "input_fields name",
+                "input_fields data_type",
+                "output_type",
+                "output_fields name",
+                "output_fields data_type",
+                "creation_date",
+                "last_updated",
+                "default_version",
             ],
-            rename={'name': 'pipeline_name', 'description': 'pipeline_description'},
+            rename={"name": "pipeline_name", "description": "pipeline_description"},
             fmt=format_,
         )
 
@@ -131,8 +151,9 @@ def pipelines_create(pipeline_name, yaml_file, format_):
     project_name = get_current_project(error=True)
 
     yaml_content = read_yaml(yaml_file, required_fields=PIPELINE_REQUIRED_FIELDS)
-    assert 'pipeline_name' in yaml_content or pipeline_name, \
-        'Please, specify the pipeline name in either the yaml file or as a command argument'
+    assert (
+        "pipeline_name" in yaml_content or pipeline_name
+    ), "Please, specify the pipeline name in either the yaml file or as a command argument"
 
     pipeline_fields, input_fields, output_fields = define_pipeline(yaml_content, pipeline_name)
     pipeline_data = api.PipelineCreate(**pipeline_fields, **input_fields, **output_fields)
@@ -142,12 +163,17 @@ def pipelines_create(pipeline_name, yaml_file, format_):
     print_item(
         pipeline_response,
         row_attrs=LIST_ITEMS,
-        required_front=['name', 'description', 'input_type'],
+        required_front=["name", "description", "input_type"],
         optional=[
-            'input_fields name', 'input_fields data_type', 'output_type', 'output_fields name',
-            'output_fields data_type', 'creation_date', 'last_updated'
+            "input_fields name",
+            "input_fields data_type",
+            "output_type",
+            "output_fields name",
+            "output_fields data_type",
+            "creation_date",
+            "last_updated",
         ],
-        rename={'name': 'pipeline_name', 'description': 'pipeline_description'},
+        rename={"name": "pipeline_name", "description": "pipeline_description"},
         fmt=format_,
     )
 
@@ -175,9 +201,7 @@ def pipelines_update(pipeline_name, new_name, yaml_file, default_version, quiet)
     project_name = get_current_project(error=True)
 
     # Check if pipeline exists
-    existing_pipeline = client.pipelines_get(
-        project_name=project_name, pipeline_name=pipeline_name
-    )
+    existing_pipeline = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name)
 
     if yaml_file:
         # Update pipeline according to yaml (and default version update if given)
@@ -338,11 +362,11 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
     else:
         raise UbiOpsException("Missing option <data> or <json_file>")
 
-    params = {'project_name': project_name, 'pipeline_name': pipeline_name}
+    params = {"project_name": project_name, "pipeline_name": pipeline_name}
     if version_name is not None:
-        params['version'] = version_name
+        params["version"] = version_name
     if timeout is not None:
-        params['timeout'] = timeout
+        params["timeout"] = timeout
 
     if batch:
         if version_name is not None:
@@ -358,10 +382,7 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
         response = []
         for item in input_data:
             for streaming_update in api.utils.stream_pipeline_request(
-                    client=client.api_client,
-                    data=item,
-                    full_response=True,
-                    **params
+                client=client.api_client, data=item, full_response=True, **params
             ):
                 if isinstance(streaming_update, str):
                     # Immediately show streaming updates
@@ -372,11 +393,11 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
 
     client.api_client.close()
 
-    if format_ == 'reference':
+    if format_ == "reference":
         click.echo(format_pipeline_requests_reference(response))
-    elif format_ == 'oneline':
+    elif format_ == "oneline":
         click.echo(format_pipeline_requests_oneline(response))
-    elif format_ == 'json':
+    elif format_ == "json":
         click.echo(format_json(response, skip_attributes=["success"]))
     else:
         click.echo(format_pipeline_requests_reference(response))
@@ -416,13 +437,13 @@ def requests_get(pipeline_name, version_name, request_id, format_):
 
     client.api_client.close()
 
-    if format_ == 'reference':
+    if format_ == "reference":
         click.echo(format_pipeline_requests_reference(response))
 
-    elif format_ == 'oneline':
+    elif format_ == "oneline":
         click.echo(format_pipeline_requests_oneline(response))
 
-    elif format_ == 'json':
+    elif format_ == "json":
         click.echo(format_json(response, skip_attributes=["success"]))
 
     else:
@@ -450,17 +471,17 @@ def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
 
     project_name = get_current_project(error=True)
 
-    if 'start_date' in kwargs and kwargs['start_date']:
+    if "start_date" in kwargs and kwargs["start_date"]:
         try:
-            kwargs['start_date'] = format_datetime(parse_datetime(kwargs['start_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
+            kwargs["start_date"] = format_datetime(parse_datetime(kwargs["start_date"]), fmt="%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
             raise UbiOpsException(
                 "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
             )
 
-    if 'end_date' in kwargs and kwargs['end_date']:
+    if "end_date" in kwargs and kwargs["end_date"]:
         try:
-            kwargs['end_date'] = format_datetime(parse_datetime(kwargs['end_date']), fmt='%Y-%m-%dT%H:%M:%SZ')
+            kwargs["end_date"] = format_datetime(parse_datetime(kwargs["end_date"]), fmt="%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
             raise UbiOpsException(
                 "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"

@@ -27,9 +27,9 @@ def do_call(method, host, path, data=None, headers=None):
     else:
         headers = {**default_headers, **headers}
 
-    if method == 'post':
+    if method == "post":
         response = requests.post(url, data=json.dumps(data), headers=headers, timeout=10)
-    elif method == 'get':
+    elif method == "get":
         response = requests.get(url, headers=headers, timeout=10)
     else:
         raise NotImplementedError(f"Unknown request method {str(method)}")
@@ -51,10 +51,10 @@ def sign_in(host, email):
 
     data = {"email": email}
     response = do_call(method="post", host=host, path="/oauth/sign-in", data=data)
-    assert 'error' not in response, response['error']
-    assert 'provider' in response, "Could not authorize."
-    assert 'url' in response, "Could not authorize."
-    return response['provider'], response['url']
+    assert "error" not in response, response["error"]
+    assert "provider" in response, "Could not authorize."
+    assert "url" in response, "Could not authorize."
+    return response["provider"], response["url"]
 
 
 def authorize(host, email, password):
@@ -69,19 +69,19 @@ def authorize(host, email, password):
     data = {"email": email, "password": password}
     response = do_call(method="post", host=host, path="/authorize", data=data)
 
-    if 'error' in response and "two factor authentication" in response['error']:
+    if "error" in response and "two factor authentication" in response["error"]:
         return False
-    if 'error' in response:
-        raise UbiOpsException(response['error'])
+    if "error" in response:
+        raise UbiOpsException(response["error"])
 
-    if 'access' not in response:
+    if "access" not in response:
         raise UbiOpsException("Could not authorize")
 
     user_config = Config()
-    user_config.set(key='auth.api', value=host)
-    user_config.set(key='auth.email', value=email)
-    user_config.set(key='auth.tmp_access_token', value=response['access'])
-    user_config.delete_option(key='auth.service_token')
+    user_config.set(key="auth.api", value=host)
+    user_config.set(key="auth.email", value=email)
+    user_config.set(key="auth.tmp_access_token", value=response["access"])
+    user_config.delete_option(key="auth.service_token")
     user_config.write()
     return True
 
@@ -99,17 +99,17 @@ def authorize2fa(host, email, password, token):
     data = {"email": email, "password": password, "token": token}
     response = do_call(method="post", host=host, path="/authorize", data=data)
 
-    if 'error' in response:
-        raise UbiOpsException(response['error'])
+    if "error" in response:
+        raise UbiOpsException(response["error"])
 
-    if 'access' not in response:
+    if "access" not in response:
         raise UbiOpsException("Could not authorize")
 
     user_config = Config()
-    user_config.set(key='auth.api', value=host)
-    user_config.set(key='auth.email', value=email)
-    user_config.set(key='auth.tmp_access_token', value=response['access'])
-    user_config.delete_option(key='auth.service_token')
+    user_config.set(key="auth.api", value=host)
+    user_config.set(key="auth.email", value=email)
+    user_config.set(key="auth.tmp_access_token", value=response["access"])
+    user_config.delete_option(key="auth.service_token")
     user_config.write()
     return True
 
@@ -126,10 +126,10 @@ def sign_in_complete(host, code, provider):
     data = {"code": code, "provider": provider}
     response = do_call(method="post", host=host, path="/oauth/complete", data=data)
 
-    if 'error' in response:
-        raise UbiOpsException(response['error'])
+    if "error" in response:
+        raise UbiOpsException(response["error"])
 
-    if 'access' not in response:
+    if "access" not in response:
         raise UbiOpsException("Could not authorize")
 
     # Get email from token
@@ -137,12 +137,12 @@ def sign_in_complete(host, code, provider):
     oauth_user = user(host=host, token=token)
 
     user_config = Config()
-    user_config.set(key='auth.api', value=host)
-    user_config.set(key='auth.email', value=oauth_user['email'])
-    user_config.set(key='auth.tmp_access_token', value=response['access'])
-    user_config.delete_option(key='auth.service_token')
+    user_config.set(key="auth.api", value=host)
+    user_config.set(key="auth.email", value=oauth_user["email"])
+    user_config.set(key="auth.tmp_access_token", value=response["access"])
+    user_config.delete_option(key="auth.service_token")
     user_config.write()
-    return oauth_user['email']
+    return oauth_user["email"]
 
 
 def raise_for_status(host, token):
@@ -155,21 +155,21 @@ def raise_for_status(host, token):
 
     configuration = api.Configuration()
     configuration.host = host
-    configuration.api_key_prefix['Authorization'] = ''
-    configuration.api_key['Authorization'] = token
+    configuration.api_key_prefix["Authorization"] = ""
+    configuration.api_key["Authorization"] = token
     client = api.CoreApi(api.ApiClient(configuration))
     client.user_agent = f"UbiOps/cli/{VERSION}"
-    assert client.service_status().status == 'ok'
+    assert client.service_status().status == "ok"
     client.api_client.close()
 
     # Get email from token
     service_user = user(host=host, token=token)
 
     user_config = Config()
-    user_config.set(key='auth.api', value=host)
-    user_config.set(key='auth.email', value=service_user['email'])
-    user_config.set(key='auth.service_token', value=token)
-    user_config.delete_option(key='auth.tmp_access_token')
+    user_config.set(key="auth.api", value=host)
+    user_config.set(key="auth.email", value=service_user["email"])
+    user_config.set(key="auth.service_token", value=token)
+    user_config.delete_option(key="auth.tmp_access_token")
     user_config.write()
 
 
@@ -183,10 +183,10 @@ def user(host, token):
 
     response = do_call(method="get", host=host, path="/user", headers={"Authorization": token})
 
-    if 'error' in response:
-        raise UbiOpsException(response['error'])
+    if "error" in response:
+        raise UbiOpsException(response["error"])
 
-    if 'email' not in response:
+    if "email" not in response:
         raise UbiOpsException("Could not authorize")
 
     return response
@@ -198,6 +198,6 @@ def sign_out():
     """
 
     user_config = Config()
-    user_config.delete_option('auth.tmp_access_token')
-    user_config.delete_option('auth.service_token')
+    user_config.delete_option("auth.tmp_access_token")
+    user_config.delete_option("auth.service_token")
     user_config.write()

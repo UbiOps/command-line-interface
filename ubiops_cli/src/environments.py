@@ -6,10 +6,10 @@ import ubiops as api
 from ubiops_cli.constants import DEFAULT_IGNORE_FILE
 from ubiops_cli.src.helpers.environment_helpers import (
     define_environment,
-    ENVIRONMENT_INPUT_FIELDS,
-    ENVIRONMENT_OUTPUT_FIELDS,
+    ENVIRONMENT_CREATE_FIELDS,
+    ENVIRONMENT_DETAILS,
     ENVIRONMENT_FIELDS_RENAMED,
-    ENVIRONMENT_FIELDS_UPDATE,
+    ENVIRONMENT_UPDATE_FIELDS,
 )
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers.helpers import get_label_filter
@@ -17,7 +17,7 @@ from ubiops_cli.src.helpers.wait_for import wait_for
 from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import get_current_project, init_client, read_yaml, set_dict_default, write_yaml, zip_dir
 
-LIST_ITEMS = ['last_updated', 'name', 'base_environment', 'labels']
+LIST_ITEMS = ["last_updated", "name", "base_environment", "labels"]
 
 
 @click.group(name=["environments", "envs"], short_help="Manage your environments")
@@ -49,13 +49,7 @@ def environments_list(labels, environment_type, format_):
     )
     client.api_client.close()
 
-    print_list(
-        items=environments,
-        attrs=LIST_ITEMS,
-        rename_cols=ENVIRONMENT_FIELDS_RENAMED,
-        sorting_col=1,
-        fmt=format_
-    )
+    print_list(items=environments, attrs=LIST_ITEMS, rename_cols=ENVIRONMENT_FIELDS_RENAMED, sorting_col=1, fmt=format_)
 
 
 @commands.command(name="get", short_help="Get details of an environment")
@@ -95,12 +89,7 @@ def environments_get(environment_name, output_path, quiet, format_):
     if output_path is not None:
         # Store only reusable settings
         dictionary = format_yaml(
-            item=environment,
-            required_front=["name", "display_name"],
-            optional=["description", "labels"],
-            required_end=["base_environment"],
-            rename=ENVIRONMENT_FIELDS_RENAMED,
-            as_str=False
+            item=environment, optional=ENVIRONMENT_DETAILS, rename=ENVIRONMENT_FIELDS_RENAMED, as_str=False
         )
 
         yaml_file = write_yaml(output_path, dictionary, default_file_name="environment.yaml")
@@ -108,20 +97,24 @@ def environments_get(environment_name, output_path, quiet, format_):
             click.echo(f"Environment file stored in: {yaml_file}")
 
     else:
+        environment_type = "Dependencies in package" if environment.base_environment else "Docker image"
+        setattr(environment, "environment_type", environment_type)
+
         print_item(
             item=environment,
             row_attrs=LIST_ITEMS,
-            required_front=['id', 'creation_date', 'name'],
-            optional=ENVIRONMENT_OUTPUT_FIELDS,
+            required_front=["id", "creation_date"],
+            optional=ENVIRONMENT_DETAILS,
             required_end=["active_revision", "active_build", "latest_revision", "latest_build"],
             rename=ENVIRONMENT_FIELDS_RENAMED,
-            fmt=format_
+            fmt=format_,
         )
 
 
 @commands.command(name="create", short_help="Create an environment")
 @options.ENVIRONMENT_NAME_OVERRULE
 @options.BASE_ENVIRONMENT
+@options.ENVIRONMENT_SUPPORTS_REQUEST_FORMAT
 @options.ENVIRONMENT_DISPLAY_NAME
 @options.ENVIRONMENT_DESCRIPTION
 @options.ENVIRONMENT_LABELS
@@ -141,6 +134,7 @@ def environments_create(yaml_file, format_, **kwargs):
     environment_labels:
         my-key-1: my-label-1
         my-key-2: my-label-2
+    environment_supports_request_format: true
     base_environment: python3-11
     ```
 
@@ -154,12 +148,13 @@ def environments_create(yaml_file, format_, **kwargs):
 
     yaml_content = read_yaml(yaml_file, required_fields=[])
 
-    assert 'environment_name' in yaml_content or 'environment_name' in kwargs, \
-        'Please, specify the environment name in either the yaml file or as a command argument'
+    assert (
+        "environment_name" in yaml_content or "environment_name" in kwargs
+    ), "Please, specify the environment name in either the yaml file or as a command argument"
 
     kwargs = define_environment(kwargs, yaml_content, extra_yaml_fields=[])
     environment = api.EnvironmentCreate(
-        **{k: kwargs[k] for k in ENVIRONMENT_INPUT_FIELDS if k in kwargs and kwargs[k] is not None}
+        **{k: kwargs[k] for k in ENVIRONMENT_CREATE_FIELDS if k in kwargs and kwargs[k] is not None}
     )
 
     client = init_client()
@@ -169,11 +164,11 @@ def environments_create(yaml_file, format_, **kwargs):
     print_item(
         item=environment_response,
         row_attrs=LIST_ITEMS,
-        required_front=['id', 'name'],
-        optional=ENVIRONMENT_OUTPUT_FIELDS,
+        required_front=["id", "name"],
+        optional=ENVIRONMENT_DETAILS,
         required_end=["active_revision", "active_build", "latest_revision", "latest_build"],
         rename=ENVIRONMENT_FIELDS_RENAMED,
-        fmt=format_
+        fmt=format_,
     )
 
 
@@ -213,9 +208,9 @@ def environments_update(environment_name, new_name, yaml_file, quiet, **kwargs):
     yaml_content = read_yaml(yaml_file, required_fields=[])
 
     kwargs = define_environment(kwargs, yaml_content, extra_yaml_fields=[])
-    kwargs['name'] = new_name
+    kwargs["name"] = new_name
     environment = api.EnvironmentUpdate(
-        **{k: kwargs[k] for k in ENVIRONMENT_FIELDS_UPDATE if k in kwargs and kwargs[k] is not None}
+        **{k: kwargs[k] for k in ENVIRONMENT_UPDATE_FIELDS if k in kwargs and kwargs[k] is not None}
     )
 
     client.environments_update(project_name=project_name, environment_name=environment_name, data=environment)
@@ -266,7 +261,7 @@ def environments_wait(environment_name, timeout, stream_logs, quiet):
         environment_name=environment_name,
         timeout=timeout,
         quiet=quiet,
-        stream_logs=stream_logs
+        stream_logs=stream_logs,
     )
     client.api_client.close()
 
@@ -303,7 +298,7 @@ def environments_package(environment_name, directory, output_path, ignore_file, 
         ignore_filename=ignore_file,
         prefix=environment_name,
         force=assume_yes,
-        package_directory="environment_package"
+        package_directory="environment_package",
     )
     if not quiet:
         click.echo(f"Created archive: {archive_path}")
@@ -318,6 +313,7 @@ def environments_package(environment_name, directory, output_path, ignore_file, 
 @options.ENVIRONMENT_ARCHIVE_OUTPUT
 @options.ENVIRONMENT_YAML_FILE
 @options.BASE_ENVIRONMENT
+@options.ENVIRONMENT_SUPPORTS_REQUEST_FORMAT
 @options.ENVIRONMENT_DISPLAY_NAME
 @options.ENVIRONMENT_DESCRIPTION
 @options.ENVIRONMENT_LABELS
@@ -326,8 +322,16 @@ def environments_package(environment_name, directory, output_path, ignore_file, 
 @options.PROGRESS_BAR
 @options.QUIET
 def environments_deploy(
-    environment_name, directory, archive_path, output_path, yaml_file, overwrite, assume_yes, progress_bar, quiet,
-    **kwargs
+    environment_name,
+    directory,
+    archive_path,
+    output_path,
+    yaml_file,
+    overwrite,
+    assume_yes,
+    progress_bar,
+    quiet,
+    **kwargs,
 ):
     """
     Deploy an environment.
@@ -354,6 +358,7 @@ def environments_deploy(
     environment_labels:
         my-key-1: my-label-1
         my-key-2: my-label-2
+    environment_supports_request_format: true
     base_environment: python3-11
     ```
 
@@ -372,15 +377,18 @@ def environments_deploy(
     client = init_client()
     yaml_content = read_yaml(yaml_file, required_fields=[])
 
-    assert "environment_name" in yaml_content or environment_name, "Please, specify the environment name in either " \
-                                                                   "the yaml file or as a command argument"
-    assert directory or archive_path, "Please, specify either a directory or an archive file for the environment " \
-                                      "package"
-    assert not (directory and archive_path), "Please, specify either a directory or an archive file for the " \
-                                             "environment package, not both"
+    assert "environment_name" in yaml_content or environment_name, (
+        "Please, specify the environment name in either " "the yaml file or as a command argument"
+    )
+    assert directory or archive_path, (
+        "Please, specify either a directory or an archive file for the environment " "package"
+    )
+    assert not (directory and archive_path), (
+        "Please, specify either a directory or an archive file for the " "environment package, not both"
+    )
     assert not (archive_path and store_archive), "The output path option is only used in combination with a directory"
 
-    environment_name = set_dict_default(environment_name, yaml_content, 'environment_name')
+    environment_name = set_dict_default(environment_name, yaml_content, "environment_name")
     kwargs["environment_name"] = environment_name
 
     existing_environment = None
@@ -392,34 +400,31 @@ def environments_deploy(
             pass
 
     kwargs = define_environment(kwargs, yaml_content, extra_yaml_fields=["ignore_file"])
-    kwargs['ignore_file'] = DEFAULT_IGNORE_FILE if kwargs['ignore_file'] is None else kwargs['ignore_file']
+    kwargs["ignore_file"] = DEFAULT_IGNORE_FILE if kwargs["ignore_file"] is None else kwargs["ignore_file"]
 
     if directory:
         archive_path, _ = zip_dir(
             directory=directory,
             output_path=output_path,
-            ignore_filename=kwargs['ignore_file'],
+            ignore_filename=kwargs["ignore_file"],
             prefix=environment_name,
             force=assume_yes,
-            package_directory="environment_package"
+            package_directory="environment_package",
         )
 
     try:
         if not (overwrite and existing_environment):
-            environment = api.EnvironmentCreate(**{k: kwargs[k] for k in ENVIRONMENT_INPUT_FIELDS if k in kwargs})
+            environment = api.EnvironmentCreate(**{k: kwargs[k] for k in ENVIRONMENT_CREATE_FIELDS if k in kwargs})
             client.environments_create(project_name=project_name, data=environment)
 
         if overwrite and existing_environment:
             environment = api.EnvironmentUpdate(
-                **{k: kwargs[k] for k in ENVIRONMENT_FIELDS_UPDATE if kwargs.get(k, None) is not None}
+                **{k: kwargs[k] for k in ENVIRONMENT_UPDATE_FIELDS if kwargs.get(k, None) is not None}
             )
             client.environments_update(project_name=project_name, environment_name=environment_name, data=environment)
 
         client.environment_revisions_file_upload(
-            project_name=project_name,
-            environment_name=environment_name,
-            file=archive_path,
-            _progress_bar=progress_bar
+            project_name=project_name, environment_name=environment_name, file=archive_path, _progress_bar=progress_bar
         )
         client.api_client.close()
     except Exception as e:

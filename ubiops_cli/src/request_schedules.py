@@ -9,8 +9,8 @@ from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import get_current_project, init_client, parse_json
 
 
-LIST_ITEMS = ['id', 'name', 'schedule', 'enabled']
-RENAME_COLUMNS = {'schedule': 'schedule (in UTC)'}
+LIST_ITEMS = ["id", "name", "schedule", "enabled"]
+RENAME_COLUMNS = {"schedule": "schedule (in UTC)"}
 
 
 def get_schedule_object(client, project_name, object_type, object_name):
@@ -23,9 +23,9 @@ def get_schedule_object(client, project_name, object_type, object_name):
     :param str object_name: name of the deployment or pipeline
     """
 
-    if object_type == 'deployment':
+    if object_type == "deployment":
         return client.deployments_get(project_name=project_name, deployment_name=object_name)
-    if object_type == 'pipeline':
+    if object_type == "pipeline":
         return client.pipelines_get(project_name=project_name, pipeline_name=object_name)
     raise UbiOpsException("Object type must be 'deployment' or 'pipeline'")
 
@@ -83,8 +83,12 @@ def schedules_create(schedule_name, object_type, object_name, object_version, da
         data = parse_json(data)
 
     schedule = api.ScheduleCreate(
-        name=schedule_name, object_type=object_type, object_name=object_name,
-        version=object_version, request_data=data, **kwargs
+        name=schedule_name,
+        object_type=object_type,
+        object_name=object_name,
+        version=object_version,
+        request_data=data,
+        **kwargs,
     )
     response = client.request_schedules_create(project_name=project_name, data=schedule)
     client.api_client.close()

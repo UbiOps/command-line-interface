@@ -1,5 +1,3 @@
-
-
 class UbiOpsException(Exception):
     pass
 

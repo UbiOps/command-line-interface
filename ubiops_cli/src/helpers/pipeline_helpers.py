@@ -3,62 +3,82 @@ import ubiops as api
 from ubiops_cli.utils import set_dict_default, set_object_default
 from ubiops_cli.src.helpers.helpers import strings_to_dict
 
-PIPELINE_REQUIRED_FIELDS = ['input_type']
-PIPELINE_FIELDS = ['description', 'labels', 'input_type', 'input_fields', 'output_type', 'output_fields']
-PIPELINE_FIELDS_RENAMED = {'description': 'pipeline_description', 'labels': 'pipeline_labels'}
+PIPELINE_REQUIRED_FIELDS = ["input_type"]
+PIPELINE_FIELDS = ["description", "labels", "input_type", "input_fields", "output_type", "output_fields"]
+PIPELINE_FIELDS_RENAMED = {"description": "pipeline_description", "labels": "pipeline_labels"}
 
 PIPELINE_VERSION_FIELDS = [
-    'description', 'labels', 'request_retention_mode', 'request_retention_time', 'objects', 'attachments'
+    "description",
+    "labels",
+    "request_retention_mode",
+    "request_retention_time",
+    "objects",
+    "attachments",
 ]
 PIPELINE_VERSION_FIELD_TYPES = {
-    'description': str,
-    'labels': dict,
-    'request_retention_mode': str,
-    'request_retention_time': int,
-    'objects': None,
-    'attachments': None
+    "description": str,
+    "labels": dict,
+    "request_retention_mode": str,
+    "request_retention_time": int,
+    "objects": None,
+    "attachments": None,
 }
-PIPELINE_VERSION_FIELDS_RENAMED = {'description': 'version_description', 'labels': 'version_labels'}
+PIPELINE_VERSION_FIELDS_RENAMED = {"description": "version_description", "labels": "version_labels"}
 
-OBJECT_REQUIRED_FIELDS = ['name', 'reference_name']
-ATTACHMENT_REQUIRED_FIELDS = ['destination_name', 'sources']
-ATTACHMENT_SOURCE_REQUIRED_FIELDS = ['source_name']
-ATTACHMENT_MAPPING_REQUIRED_FIELDS = ['source_field_name', 'destination_field_name']
+OBJECT_REQUIRED_FIELDS = ["name", "reference_name"]
+ATTACHMENT_REQUIRED_FIELDS = ["destination_name", "sources"]
+ATTACHMENT_SOURCE_REQUIRED_FIELDS = ["source_name"]
+ATTACHMENT_MAPPING_REQUIRED_FIELDS = ["source_field_name", "destination_field_name"]
 
 PIPELINE_VERSION_RESPONSE_FILE = {
-    'required_front': [
-        'pipeline', 'input_type', 'input_fields', 'output_type', 'output_fields',
-        'version', *PIPELINE_VERSION_FIELDS
+    "required_front": [
+        "pipeline",
+        "input_type",
+        "output_type",
+        "version",
     ],
-    'optional': [
-        'objects name', 'objects reference_type', 'objects reference_name', 'objects version',
-
-        'objects configuration batch_size', 'objects configuration error_message',
-        'objects configuration expression', 'objects configuration on_error',
-        'objects configuration input_fields name', 'objects configuration input_fields data_type',
-        'objects configuration output_fields name', 'objects configuration output_fields data_type',
-        'objects configuration output_values name', 'objects configuration output_values value',
-
-        'attachments destination_name', 'attachments sources source_name', 'attachments sources mapping',
-        'input_fields name', 'input_fields data_type', 'output_fields name', 'output_fields data_type'
+    "optional": [
+        "description",
+        "labels",
+        "request_retention_mode",
+        "request_retention_time",
+        "objects name",
+        "objects reference_type",
+        "objects reference_name",
+        "objects version",
+        "objects configuration batch_size",
+        "objects configuration error_message",
+        "objects configuration expression",
+        "objects configuration on_error",
+        "objects configuration input_fields name",
+        "objects configuration input_fields data_type",
+        "objects configuration output_fields name",
+        "objects configuration output_fields data_type",
+        "objects configuration output_values name",
+        "objects configuration output_values value",
+        "attachments destination_name",
+        "attachments sources source_name",
+        "attachments sources mapping",
+        "input_fields name",
+        "input_fields data_type",
+        "output_fields name",
+        "output_fields data_type",
     ],
-    'rename': {
-        'pipeline': 'pipeline_name',
-        'version': 'version_name',
-        'objects version': 'reference_version',
-        **PIPELINE_VERSION_FIELDS_RENAMED
-    }
+    "rename": {
+        "pipeline": "pipeline_name",
+        "version": "version_name",
+        "objects version": "reference_version",
+        **PIPELINE_VERSION_FIELDS_RENAMED,
+    },
 }
 PIPELINE_VERSION_RESPONSE = {
-    'required_front': PIPELINE_VERSION_RESPONSE_FILE['required_front'],
-    'optional': [
-        'creation_date', 'last_updated', *PIPELINE_VERSION_RESPONSE_FILE['optional']
-    ],
-    'rename': {
-        'creation_date': 'version_creation_date',
-        'last_updated': 'version_last_updated',
-        **PIPELINE_VERSION_RESPONSE_FILE['rename']
-    }
+    "required_front": PIPELINE_VERSION_RESPONSE_FILE["required_front"],
+    "optional": ["creation_date", "last_updated", *PIPELINE_VERSION_RESPONSE_FILE["optional"]],
+    "rename": {
+        "creation_date": "version_creation_date",
+        "last_updated": "version_last_updated",
+        **PIPELINE_VERSION_RESPONSE_FILE["rename"],
+    },
 }
 
 
@@ -77,49 +97,39 @@ def define_pipeline(yaml_content, pipeline_name, current_pipeline_name=None):
     :return dict, dict, dict: the pipeline, and the pipeline input and output parameters
     """
 
-    pipeline_name = set_dict_default(pipeline_name, yaml_content, 'pipeline_name')
+    pipeline_name = set_dict_default(pipeline_name, yaml_content, "pipeline_name")
     if pipeline_name is None and current_pipeline_name:
         pipeline_name = current_pipeline_name
 
-    description = set_dict_default(None, yaml_content, 'pipeline_description')
+    description = set_dict_default(None, yaml_content, "pipeline_description")
 
-    if 'input_fields' in yaml_content and isinstance(yaml_content['input_fields'], list):
+    if "input_fields" in yaml_content and isinstance(yaml_content["input_fields"], list):
         input_fields = [
-            api.PipelineInputFieldCreate(name=item['name'], data_type=item['data_type'])
-            for item in yaml_content['input_fields']
+            api.PipelineInputFieldCreate(name=item["name"], data_type=item["data_type"])
+            for item in yaml_content["input_fields"]
         ]
 
     else:
         input_fields = None
 
-    if 'output_fields' in yaml_content and isinstance(yaml_content['output_fields'], list):
+    if "output_fields" in yaml_content and isinstance(yaml_content["output_fields"], list):
         output_fields = [
-            api.PipelineOutputFieldCreate(name=item['name'], data_type=item['data_type'])
-            for item in yaml_content['output_fields']
+            api.PipelineOutputFieldCreate(name=item["name"], data_type=item["data_type"])
+            for item in yaml_content["output_fields"]
         ]
 
     else:
         output_fields = None
 
-    if 'pipeline_labels' in yaml_content:
-        labels = yaml_content['pipeline_labels']
+    if "pipeline_labels" in yaml_content:
+        labels = yaml_content["pipeline_labels"]
 
     else:
         labels = {}
 
-    pipeline_data = {
-        'name': pipeline_name,
-        'description': description,
-        'labels': labels
-    }
-    input_data = {
-        'input_type': yaml_content['input_type'],
-        'input_fields': input_fields
-    }
-    output_data = {
-        'output_type': yaml_content['output_type'],
-        'output_fields': output_fields
-    }
+    pipeline_data = {"name": pipeline_name, "description": description, "labels": labels}
+    input_data = {"input_type": yaml_content["input_type"], "input_fields": input_fields}
+    output_data = {"output_type": yaml_content["output_type"], "output_fields": output_fields}
     return pipeline_data, input_data, output_data
 
 
@@ -151,8 +161,10 @@ def set_pipeline_version_defaults(fields, yaml_content, existing_version=None):
             input_field = PIPELINE_VERSION_FIELDS_RENAMED[k] if k in PIPELINE_VERSION_FIELDS_RENAMED else k
             value = fields[input_field] if input_field in fields else None
             fields[k] = set_dict_default(
-                value, yaml_content, input_field,
-                set_type=PIPELINE_VERSION_FIELD_TYPES[k] if k in PIPELINE_VERSION_FIELD_TYPES else str
+                value,
+                yaml_content,
+                input_field,
+                set_type=PIPELINE_VERSION_FIELD_TYPES[k] if k in PIPELINE_VERSION_FIELD_TYPES else str,
             )
 
     if existing_version:
@@ -185,8 +197,10 @@ def get_pipeline_and_version_fields_from_yaml(yaml_content):
             # Rename 'version_{k}' to '{k}'
             input_field = PIPELINE_VERSION_FIELDS_RENAMED[k] if k in PIPELINE_VERSION_FIELDS_RENAMED else k
             version_fields[k] = set_dict_default(
-                value=None, defaults_dict=yaml_content, default_key=input_field,
-                set_type=PIPELINE_VERSION_FIELD_TYPES[k] if k in PIPELINE_VERSION_FIELD_TYPES else str
+                value=None,
+                defaults_dict=yaml_content,
+                default_key=input_field,
+                set_type=PIPELINE_VERSION_FIELD_TYPES[k] if k in PIPELINE_VERSION_FIELD_TYPES else str,
             )
 
     return pipeline_fields, input_fields, output_fields, version_fields
@@ -200,25 +214,25 @@ def rename_pipeline_object_reference_version(content):
     return dict: updated pipeline version content
     """
 
-    if 'objects' in content and isinstance(content['objects'], list):
+    if "objects" in content and isinstance(content["objects"], list):
         objects = []
-        for item in content['objects']:
+        for item in content["objects"]:
             if isinstance(item, dict):
                 obj = {}
-                if 'name' in item:
-                    obj['name'] = item['name']
-                if 'reference_name' in item:
-                    obj['reference_name'] = item['reference_name']
-                if 'reference_version' in item:
-                    obj['version'] = item['reference_version']
-                if 'reference_type' in item:
-                    obj['reference_type'] = item['reference_type']
-                if 'configuration' in item:
-                    obj['configuration'] = item['configuration']
+                if "name" in item:
+                    obj["name"] = item["name"]
+                if "reference_name" in item:
+                    obj["reference_name"] = item["reference_name"]
+                if "reference_version" in item:
+                    obj["version"] = item["reference_version"]
+                if "reference_type" in item:
+                    obj["reference_type"] = item["reference_type"]
+                if "configuration" in item:
+                    obj["configuration"] = item["configuration"]
                 objects.append(obj)
             else:
                 objects.append(item)
-        content['objects'] = objects
+        content["objects"] = objects
 
     return content
 
@@ -236,8 +250,8 @@ def get_changed_pipeline_structure(existing_pipeline, data, is_input=True):
     """
     changed_data = {}
 
-    type_key = 'input_type' if is_input else 'output_type'
-    type_fields = 'input_fields' if is_input else 'output_fields'
+    type_key = "input_type" if is_input else "output_type"
+    type_fields = "input_fields" if is_input else "output_fields"
 
     # Input/output type changed
     if type_key in data and getattr(existing_pipeline, type_key) != data[type_key]:

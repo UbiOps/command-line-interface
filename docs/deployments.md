@@ -75,6 +75,7 @@ deployment_description: Deployment created via command line.
 deployment_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
+deployment_supports_request_format: true
 input_type: structured
 input_fields:
   - name: param1
@@ -99,7 +100,7 @@ string, double, bool, dict, file, array_string, array_int, array_double, array_f
 
 **Options:**
 
-- [required] `-f`/`--yaml_file`<br/>Path to a yaml file that contains at least the following fields: [input_type, output_type]
+- [required] `-f`/`--yaml_file`<br/>Path to a yaml file that containing deployment details
 
 - `-fmt`/`--format`<br/>The output format
 
@@ -114,18 +115,19 @@ string, double, bool, dict, file, array_string, array_int, array_double, array_f
 
 Update a deployment.
 
-If you only want to update the name of the deployment or the default deployment version,
-use the options `<new_name>` and `<default_version>`.
-If you want to update the deployment input/output fields, description or labels, please use a yaml file to define
-the new deployment.
+It is possible to define the updated parameter values using a yaml file. Or provide the `<new_name>` or
+`<default_version>` directly as command options. When both a yaml file and command options are given, the command
+options are prioritized over the yaml content.
 
 
 For example:
 ```
+deployment_name: new-name
 deployment_description: Deployment created via command line.
 deployment_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
+deployment_supports_request_format: true
 input_fields:
   - name: param1
     data_type: int
@@ -136,6 +138,7 @@ output_fields:
     data_type: int
   - name: param2
     data_type: string
+default_version: v1
 ```
 
 **Arguments:**
@@ -205,7 +208,7 @@ without confirmation if file specified in `<output_path>` already exists.
 
 - `-v`/`--version_name`<br/>The version name used in the archive filename
 
-- [required] `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
+- `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
 
 - `-o`/`--output_path`<br/>Path to file or directory to store the deployment package archive file
 
@@ -239,7 +242,7 @@ Use the `<overwrite>` option to overwrite the deployment package on UbiOps if on
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- [required] `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to deployment version archive file
+- `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to deployment version archive file
 
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
@@ -287,10 +290,12 @@ saved in `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
 
 Deploy a new version of a deployment.
 
-Please, specify the code `<directory>` that should be deployed. The files in this directory
-will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the archive file can be
-specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this file is assumed to be equal
-to the well-known '.gitignore' file.
+For deployments that support request format, you can specify the code `<directory>` that should be deployed. The
+files in this directory will be zipped and uploaded. Subdirectories and files that shouldn't be contained in the
+archive file can be specified in an ignore file, which is by default '.ubiops-ignore'. The structure of this file
+is assumed to be equal to the well-known '.gitignore' file.
+It's also possible to skip `<directory>` and continue with an empty revision. In that case, we assume that your
+deployment code is part of your environment, e.g. custom docker image.
 
 If you want to store a local copy of the uploaded archive file, please use the `<output_path>` option.
 The `<output_path>` option will be used as output location of the archive file. If the `<output_path>` is a
@@ -345,7 +350,7 @@ ports.
 
 - `-v`/`--version_name`<br/>The version name
 
-- [required] `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
+- `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
 
 - `-deployment_py`/`--deployment_file`<br/>Name of deployment file which contains class Deployment. Must be located in the root of the deployment package directory
 

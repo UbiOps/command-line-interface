@@ -63,7 +63,7 @@ def deployment_run_local(directory, data, json_file, plain):
     else:
         raise UbiOpsException("Missing option <data> or <json_file>")
 
-    time_started = datetime.now().isoformat(timespec='milliseconds')
+    time_started = datetime.now().isoformat(timespec="milliseconds")
     result = None
     success = True
     error_message = ""
@@ -74,7 +74,7 @@ def deployment_run_local(directory, data, json_file, plain):
         success = False
         error_message = str(e)
 
-    time_completed = datetime.now().isoformat(timespec='milliseconds')
+    time_completed = datetime.now().isoformat(timespec="milliseconds")
 
     click.echo(f"Start date: {time_started}")
     click.echo(f"Completion date: {time_completed}")

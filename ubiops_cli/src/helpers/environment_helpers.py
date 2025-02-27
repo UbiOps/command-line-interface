@@ -1,33 +1,50 @@
-from ubiops_cli.utils import set_dict_default
-from ubiops_cli.src.helpers.helpers import strings_to_dict
+from ubiops_cli.src.helpers.helpers import define_object
 
 
-ENVIRONMENT_REQUIRED_FIELDS = ['name', 'base_environment']
-ENVIRONMENT_INPUT_FIELDS = ['name', 'display_name', 'base_environment', 'description', 'labels']
-ENVIRONMENT_FIELDS_UPDATE = ['name', 'display_name', 'description', 'labels']
-ENVIRONMENT_INPUT_FIELDS_TYPE = {
-    'name': str, 'display_name': str, 'base_environment': str, 'description': str, 'labels': dict
-}
-ENVIRONMENT_OUTPUT_FIELDS = [
-    'name', 'display_name', 'project', 'base_environment', 'description', 'labels', 'creation_date', 'last_updated',
-    'gpu_required'
+ENVIRONMENT_CREATE_FIELDS = [
+    "name",
+    "display_name",
+    "supports_request_format",
+    "base_environment",
+    "description",
+    "labels",
 ]
+ENVIRONMENT_UPDATE_FIELDS = ["name", "display_name", "description", "labels"]
+ENVIRONMENT_DETAILS = [
+    "name",
+    "display_name",
+    "project",
+    "supports_request_format",
+    "environment_type",
+    "base_environment",
+    "description",
+    "labels",
+    "creation_date",
+    "last_updated",
+    "gpu_required",
+]
+ENVIRONMENT_FIELD_TYPES = {
+    "name": str,
+    "display_name": str,
+    "supports_request_format": bool,
+    "base_environment": str,
+    "description": str,
+    "labels": dict,
+}
 ENVIRONMENT_FIELDS_RENAMED = {
-    'name': 'environment_name', 'display_name': 'environment_display_name', 'description': 'environment_description',
-    'labels': 'environment_labels'
+    "name": "environment_name",
+    "display_name": "environment_display_name",
+    "description": "environment_description",
+    "labels": "environment_labels",
+    "supports_request_format": "environment_supports_request_format",
 }
 
 
 def define_environment(fields, yaml_content, extra_yaml_fields=None):
     """
-    Define environment fields
-
-    For each field i in [ENVIRONMENT_INPUT_FIELDS + extra_yaml_fields]:
-    - Use value in fields if specified
-    - If not; Use value in yaml content if specified
-
-    Rename field-key if the key is in ENVIRONMENT_FIELDS_RENAMED.values(). This is done to
-    solve inconsistencies between CLI options/yaml keys and API parameters.
+    Define environment fields by combining the given fields and the content of a yaml file. The given fields are
+    prioritized over the content of the yaml file; if they are not given the value in the yaml file is used (if
+    present).
 
     :param dict fields: the command options
     :param dict yaml_content: the content of the yaml
@@ -37,41 +54,10 @@ def define_environment(fields, yaml_content, extra_yaml_fields=None):
 
     extra_yaml_fields = [] if extra_yaml_fields is None else extra_yaml_fields
 
-    for k, yaml_key in ENVIRONMENT_FIELDS_RENAMED.items():
-        fields[k] = fields.pop(yaml_key, None)
-
-    for k in [k for k, v in ENVIRONMENT_INPUT_FIELDS_TYPE.items() if v == dict]:
-        if k in fields and fields[k] is not None:
-            fields[k] = strings_to_dict(fields[k])
-
-    if yaml_content:
-        for k in [*ENVIRONMENT_INPUT_FIELDS, *extra_yaml_fields]:
-            fields[k] = set_dict_default(
-                value=fields.get(k, None),
-                defaults_dict=yaml_content,
-                default_key=ENVIRONMENT_FIELDS_RENAMED.get(k, k),
-                set_type=ENVIRONMENT_INPUT_FIELDS_TYPE.get(k, str)
-            )
-
-    return fields
-
-
-def is_defined(fields, field_name):
-    """
-    Decide if field_name is in fields and has a valid value
-
-    :param dict fields: a dictionary of fields
-    :param str field_name: a field
-    """
-
-    if field_name not in fields:
-        return False
-
-    if isinstance(fields[field_name], str):
-        return fields[field_name] is not None
-    if isinstance(fields[field_name], tuple):
-        return bool(fields[field_name])
-    if isinstance(fields[field_name], dict):
-        return bool(fields[field_name])
-
-    return False
+    return define_object(
+        fields=fields,
+        yaml_content=yaml_content,
+        field_names=[*ENVIRONMENT_CREATE_FIELDS, *extra_yaml_fields],
+        rename_field_names=ENVIRONMENT_FIELDS_RENAMED,
+        field_types=ENVIRONMENT_FIELD_TYPES,
+    )

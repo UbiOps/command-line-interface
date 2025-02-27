@@ -21,12 +21,12 @@ def format_status(status, success_green=False):
 
     if status in SUCCESS_STATUSES:
         if success_green:
-            return click.style(status, fg='green')
+            return click.style(status, fg="green")
         return status
     if status in WARNING_STATUSES:
-        return click.style(status, fg='yellow')
+        return click.style(status, fg="yellow")
     if status in ERROR_STATUSES:
-        return click.style(status, fg='red')
+        return click.style(status, fg="red")
     return status
 
 
@@ -39,8 +39,8 @@ def format_boolean(value):
 
     if isinstance(value, bool):
         if value:
-            return click.style(str(value), fg='green')
-        return click.style(str(value), fg='red')
+            return click.style(str(value), fg="green")
+        return click.style(str(value), fg="red")
     return value
 
 
@@ -51,12 +51,12 @@ def format_action(action):
     :param str action: the action in the audit events
     """
 
-    if action == 'create':
-        return click.style(action, fg='blue')
-    if action == 'update':
-        return click.style(action, fg='yellow')
-    if action == 'delete':
-        return click.style(action, fg='red')
+    if action == "create":
+        return click.style(action, fg="blue")
+    if action == "update":
+        return click.style(action, fg="yellow")
+    if action == "delete":
+        return click.style(action, fg="red")
     return action
 
 
@@ -90,7 +90,7 @@ def parse_datetime(dt):
     return str(dt)
 
 
-def format_datetime(dt, fmt='%a %b %d %Y %H:%M:%S %Z'):
+def format_datetime(dt, fmt="%a %b %d %Y %H:%M:%S %Z"):
     """
     Format datetime human-readable
 
@@ -116,8 +116,8 @@ def format_log(log, log_level):
     :param str log_level: the log level to use; 'info' or 'error'
     """
 
-    if log_level == 'error':
-        return click.style(log, fg='red')
+    if log_level == "error":
+        return click.style(log, fg="red")
     return log
 
 
@@ -135,7 +135,7 @@ def object_to_dict(obj, skip_attributes=None):
     if skip_attributes is None:
         skip_attributes = []
 
-    attributes = [k[1:] for k in obj.__dict__.keys() if k.startswith('_')]
+    attributes = [k[1:] for k in obj.__dict__.keys() if k.startswith("_")]
     dictionary = {}
     for attr in attributes:
         if attr in skip_attributes:
@@ -195,7 +195,7 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
     """
 
     if required_front is None and optional is None and required_end is None:
-        required_front = [k[1:] for k in item.__dict__.keys() if k.startswith('_')]
+        required_front = [k[1:] for k in item.__dict__.keys() if k.startswith("_")]
     if required_front is None:
         required_front = []
     if optional is None:
@@ -227,24 +227,29 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
         inner_optional = optional.get(key, None)
         inner_end = required_end.get(key, None)
         inner_rename = {
-            " ".join(rename_key.split(' ')[1:]): rename_value
+            " ".join(rename_key.split(" ")[1:]): rename_value
             for rename_key, rename_value in rename.items()
             if rename_key.startswith(f"{key} ")
         }
 
-        # Value is a list of ubiops models
         if isinstance(value, list):
-            results_dict[key_name] = [
-                format_yaml(
-                    item=j,
-                    as_str=False,
-                    required_front=inner_front,
-                    optional=inner_optional,
-                    required_end=inner_end,
-                    rename=inner_rename
-                )
-                for j in value
-            ]
+            if value and hasattr(value[0], "__dict__"):
+                # Value is a list of ubiops models
+                results_dict[key_name] = [
+                    format_yaml(
+                        item=j,
+                        as_str=False,
+                        required_front=inner_front,
+                        optional=inner_optional,
+                        required_end=inner_end,
+                        rename=inner_rename,
+                    )
+                    for j in value
+                ]
+            else:
+                # Value is a list of floats/strings/booleans
+                results_dict[key_name] = value
+
         # Value is an ubiops model
         elif inner_front or inner_optional or inner_end:
             results_dict[key_name] = format_yaml(
@@ -253,7 +258,7 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
                 required_front=inner_front,
                 optional=inner_optional,
                 required_end=inner_end,
-                rename=inner_rename
+                rename=inner_rename,
             )
         else:
             results_dict[key_name] = value
@@ -263,6 +268,9 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
         set_value_in_dict(i, getattr(item, i), dictionary)
     for i in optional.keys():
         if hasattr(item, i) and getattr(item, i) is not None:
+            # Don't show empty lists when they are optional
+            if isinstance(getattr(item, i), list) and not getattr(item, i):
+                continue
             set_value_in_dict(i, getattr(item, i), dictionary)
     for i in required_end.keys():
         set_value_in_dict(i, getattr(item, i), dictionary)
@@ -284,7 +292,7 @@ def format_datetime_attrs(items, prettify=True):
     """
 
     def _format_date_fields(obj):
-        attrs = [k[1:] for k in obj.__dict__.keys() if k.startswith('_')]
+        attrs = [k[1:] for k in obj.__dict__.keys() if k.startswith("_")]
         for attr in attrs:
             if hasattr(obj, attr) and isinstance(getattr(obj, attr), (date, datetime)):
                 value = getattr(obj, attr)
@@ -305,8 +313,9 @@ def format_datetime_attrs(items, prettify=True):
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-branches
-def print_list(items, attrs, rename_cols=None, json_skip=None, sorting_col=None, sorting_reverse=False, fmt='table',
-               pager=False):
+def print_list(
+    items, attrs, rename_cols=None, json_skip=None, sorting_col=None, sorting_reverse=False, fmt="table", pager=False
+):
     """
     Print a list of ubiops models returned from the client library
 
@@ -322,42 +331,40 @@ def print_list(items, attrs, rename_cols=None, json_skip=None, sorting_col=None,
     """
 
     rename_cols = {} if rename_cols is None else rename_cols
-    if fmt == 'json':
+    if fmt == "json":
         click.echo(format_json(items, skip_attributes=json_skip))
     else:  # fmt == 'table'
         if sorting_col is not None:
-            items = sorted(items, key=lambda x: getattr(x, attrs[sorting_col], ''), reverse=sorting_reverse)
+            items = sorted(items, key=lambda x: getattr(x, attrs[sorting_col], ""), reverse=sorting_reverse)
 
         items = format_datetime_attrs(items)
 
         if len(items) > 0:
             header = [
                 rename_cols[attr].upper() if attr in rename_cols else attr.upper()
-                for attr in attrs if hasattr(items[0], attr)
+                for attr in attrs
+                if hasattr(items[0], attr)
             ]
         else:
-            header = [
-                rename_cols[attr].upper() if attr in rename_cols else attr.upper()
-                for attr in attrs
-            ]
+            header = [rename_cols[attr].upper() if attr in rename_cols else attr.upper() for attr in attrs]
 
         table = []
         for i in items:
             row = []
             for attr in attrs:
                 if hasattr(i, attr):
-                    if attr == 'status':
+                    if attr == "status":
                         row.append(format_status(getattr(i, attr)))
-                    elif attr in ['enabled', 'success']:
+                    elif attr in ["enabled", "success"]:
                         row.append(format_boolean(getattr(i, attr)))
-                    elif attr == 'action':
+                    elif attr == "action":
                         row.append(format_action(getattr(i, attr)))
-                    elif attr.endswith('labels'):
+                    elif attr.endswith("labels"):
                         row.append(format_labels(getattr(i, attr)))
-                    elif attr == 'log':
-                        row.append(format_log(log=getattr(i, attr), log_level=getattr(i, 'level')))
+                    elif attr == "log":
+                        row.append(format_log(log=getattr(i, attr), log_level=getattr(i, "level")))
                     # Do not show log level in the output
-                    elif attr == 'level':
+                    elif attr == "level":
                         continue
                     else:
                         row.append(getattr(i, attr))
@@ -369,7 +376,7 @@ def print_list(items, attrs, rename_cols=None, json_skip=None, sorting_col=None,
             click.echo(tabulate(table, headers=header))
 
 
-def print_projects_list(projects, current, attrs, fmt='simple'):
+def print_projects_list(projects, current, attrs, fmt="simple"):
     """
     Print the projects returned from the client library
 
@@ -379,13 +386,14 @@ def print_projects_list(projects, current, attrs, fmt='simple'):
     :param str fmt: how the projects should be formatted; 'simple', 'json' or 'table'
     """
 
-    if fmt == 'simple':
+    if fmt == "simple":
         table = [
             [
                 # Print yellow star in front of current project
-                click.style(text='*', fg='yellow') if getattr(i, 'name') == current else None,
-                getattr(i, 'name')
-            ] for i in projects
+                click.style(text="*", fg="yellow") if getattr(i, "name") == current else None,
+                getattr(i, "name"),
+            ]
+            for i in projects
         ]
         sorted_table = sorted(table, key=lambda x: x[1])
         click.echo(tabulate(sorted_table, tablefmt="plain"))
@@ -394,8 +402,9 @@ def print_projects_list(projects, current, attrs, fmt='simple'):
 
 
 # pylint: disable=too-many-arguments
-def print_item(item, row_attrs, required_front=None, optional=None, required_end=None, rename=None, json_skip=None,
-               fmt='row'):
+def print_item(
+    item, row_attrs, required_front=None, optional=None, required_end=None, rename=None, json_skip=None, fmt="row"
+):
     """
     Print an ubiops model returned from the client library
 
@@ -412,22 +421,16 @@ def print_item(item, row_attrs, required_front=None, optional=None, required_end
     :param str fmt: how the object should be formatted; 'json', 'yaml' or 'row'
     """
 
-    if fmt == 'json':
-        click.echo(
-            format_json(item, skip_attributes=json_skip)
-        )
-    elif fmt == 'yaml':
+    if fmt == "json":
+        click.echo(format_json(item, skip_attributes=json_skip))
+    elif fmt == "yaml":
         click.echo(
             format_yaml(
-                item=item,
-                required_front=required_front,
-                optional=optional,
-                required_end=required_end,
-                rename=rename
+                item=item, required_front=required_front, optional=optional, required_end=required_end, rename=rename
             )
         )
-    elif fmt == 'row':
-        print_list(items=[item], attrs=row_attrs, rename_cols=rename, fmt='table')
+    elif fmt == "row":
+        print_list(items=[item], attrs=row_attrs, rename_cols=rename, fmt="table")
     else:
         raise NotImplementedError
 
@@ -440,7 +443,7 @@ def format_logs_reference(logs, extended=None):
     :param list[str] extended: set of extra attributes to show apart from the log and date
     """
 
-    overview = ''
+    overview = ""
     total = len(logs)
     for i, log in enumerate(logs):
         overview += f"Log: {click.style(log.id, fg='yellow')}\n"
@@ -449,19 +452,19 @@ def format_logs_reference(logs, extended=None):
             for attr in extended:
                 if getattr(log, attr) is not None:
                     overview += f"{attr}: {getattr(log, attr)}\n"
-        overview += '\n'
+        overview += "\n"
 
         # Change the color of the log depending on the log level
-        if log.level == 'error':
+        if log.level == "error":
             # Change the color of all lines if the log contains multiple lines
-            log_lines = log.log.split('\n')
-            log_line = '\n'.join([click.style(item, fg='red') for item in log_lines])
+            log_lines = log.log.split("\n")
+            log_line = "\n".join([click.style(item, fg="red") for item in log_lines])
             overview += log_line
         else:
             overview += log.log
 
         if i + 1 < total:
-            overview += '\n\n'
+            overview += "\n\n"
     return overview
 
 
@@ -472,30 +475,30 @@ def format_logs_oneline(logs):
     :param list[object] logs: the logs to format
     """
 
-    overview = ''
+    overview = ""
     total = len(logs)
     for i, log in enumerate(logs):
-        overview += click.style(str(log.id), fg='yellow')
-        overview += ' '
-        overview += click.style(format_datetime(parse_datetime(log.date), '%Y-%m-%d %H:%M:%S %Z'), fg='green')
-        overview += ' '
+        overview += click.style(str(log.id), fg="yellow")
+        overview += " "
+        overview += click.style(format_datetime(parse_datetime(log.date), "%Y-%m-%d %H:%M:%S %Z"), fg="green")
+        overview += " "
 
         # Change the color of the log depending on the log level
-        if log.level == 'error':
+        if log.level == "error":
             # Change the color of all lines if the log contains multiple lines
-            log_lines = log.log.split('\n')
-            log_line = '\n'.join([click.style(item, fg='red') for item in log_lines])
+            log_lines = log.log.split("\n")
+            log_line = "\n".join([click.style(item, fg="red") for item in log_lines])
             overview += log_line
         else:
             overview += log.log
         if i + 1 < total:
-            overview += '\n'
+            overview += "\n"
 
     return overview
 
 
 # pylint: disable=too-many-branches
-def format_requests_reference(requests, split_requests='\n\n'):
+def format_requests_reference(requests, split_requests="\n\n"):
     """
     Format object requests in a pipeline request with references
 
@@ -503,49 +506,49 @@ def format_requests_reference(requests, split_requests='\n\n'):
     :param str split_requests: string with which the requests are separated in the formatted string
     """
 
-    overview = ''
+    overview = ""
     total = len(requests)
 
     for i, request in enumerate(requests):
-        if hasattr(request, 'pipeline_object'):
+        if hasattr(request, "pipeline_object"):
             overview += f"Object: {request.pipeline_object}\n"
 
-        if hasattr(request, 'id') and request.id is not None:
+        if hasattr(request, "id") and request.id is not None:
             overview += f"Request id: {click.style(str(request.id), fg='yellow')}\n"
 
-        if hasattr(request, 'time_created'):
+        if hasattr(request, "time_created"):
             overview += f"Creation date: {format_datetime(request.time_created)}\n"
 
-        if hasattr(request, 'time_started'):
+        if hasattr(request, "time_started"):
             overview += f"Start date: {format_datetime(request.time_started)}\n"
 
-        if hasattr(request, 'time_completed'):
+        if hasattr(request, "time_completed"):
             overview += f"Completion date: {format_datetime(request.time_completed)}\n"
 
-        if hasattr(request, 'operator'):
+        if hasattr(request, "operator"):
             overview += f"Operator: {request.operator}\n"
 
-        if hasattr(request, 'deployment'):
+        if hasattr(request, "deployment"):
             overview += f"Deployment: {request.deployment}\n"
 
-        if hasattr(request, 'pipeline'):
+        if hasattr(request, "pipeline"):
             overview += f"Pipeline: {request.pipeline}\n"
 
-        if hasattr(request, 'version'):
+        if hasattr(request, "version"):
             overview += f"Version: {request.version}\n"
 
-        if hasattr(request, 'status'):
+        if hasattr(request, "status"):
             overview += f"Status: {format_status(status=request.status, success_green=True)}"
 
-        if hasattr(request, 'error_message') and request.error_message:
+        if hasattr(request, "error_message") and request.error_message:
             overview += f"\nError message: {click.style(str(request.error_message), fg='red')}"
 
-        if hasattr(request, 'request_data'):
-            request_data = '-' if request.request_data is None else json.dumps(request.request_data)
+        if hasattr(request, "request_data"):
+            request_data = "-" if request.request_data is None else json.dumps(request.request_data)
             overview += f"\nRequest data: {request_data}"
 
-        if hasattr(request, 'result'):
-            request_result = '-' if request.result is None else json.dumps(request.result)
+        if hasattr(request, "result"):
+            request_result = "-" if request.result is None else json.dumps(request.result)
             overview += f"\nResult: {request_result}"
 
         if i + 1 < total:
@@ -561,39 +564,39 @@ def format_requests_oneline(requests):
     :param list[object] requests: the pipeline object requests to format
     """
 
-    overview = ''
+    overview = ""
     total = len(requests)
 
     for i, request in enumerate(requests):
-        if hasattr(request, 'id') and request.id is not None:
-            overview += click.style(str(request.id), fg='yellow')
-            overview += ' '
+        if hasattr(request, "id") and request.id is not None:
+            overview += click.style(str(request.id), fg="yellow")
+            overview += " "
 
-        elif hasattr(request, 'request_id') and request.request_id is not None:
-            overview += click.style(str(request.request_id), fg='yellow')
-            overview += ' '
+        elif hasattr(request, "request_id") and request.request_id is not None:
+            overview += click.style(str(request.request_id), fg="yellow")
+            overview += " "
 
-        if hasattr(request, 'pipeline_object'):
+        if hasattr(request, "pipeline_object"):
             overview += request.pipeline_object
-            overview += ' '
+            overview += " "
 
-        if hasattr(request, 'status'):
+        if hasattr(request, "status"):
             overview += format_status(request.status, success_green=True)
-            overview += ' '
+            overview += " "
 
-        if hasattr(request, 'request_data'):
-            overview += '-' if request.request_data is None else json.dumps(request.request_data)
-            overview += ' '
+        if hasattr(request, "request_data"):
+            overview += "-" if request.request_data is None else json.dumps(request.request_data)
+            overview += " "
 
-        if hasattr(request, 'result'):
-            overview += '-' if request.result is None else json.dumps(request.result)
+        if hasattr(request, "result"):
+            overview += "-" if request.result is None else json.dumps(request.result)
 
-        if hasattr(request, 'error_message') and request.error_message:
-            overview += ' '
-            overview += click.style(text=str(request.error_message), fg='red')
+        if hasattr(request, "error_message") and request.error_message:
+            overview += " "
+            overview += click.style(text=str(request.error_message), fg="red")
 
         if i + 1 < total:
-            overview += '\n'
+            overview += "\n"
 
     return overview
 
@@ -606,59 +609,58 @@ def format_pipeline_requests_reference(pipeline_requests):
     :param list[object] pipeline_requests: the pipeline requests to format
     """
 
-    overview = ''
+    overview = ""
     total = len(pipeline_requests)
 
     for j, pipeline_request in enumerate(pipeline_requests):
-        if hasattr(pipeline_request, 'id') and pipeline_request.id is not None:
+        if hasattr(pipeline_request, "id") and pipeline_request.id is not None:
             overview += f"Pipeline request id: {click.style(text=str(pipeline_request.id), fg='yellow')}\n"
 
-        if hasattr(pipeline_request, 'pipeline'):
+        if hasattr(pipeline_request, "pipeline"):
             overview += f"Pipeline: {pipeline_request.pipeline}\n"
 
-        if hasattr(pipeline_request, 'version'):
+        if hasattr(pipeline_request, "version"):
             overview += f"Version: {pipeline_request.version}\n"
 
-        if hasattr(pipeline_request, 'time_created'):
+        if hasattr(pipeline_request, "time_created"):
             overview += f"Creation date: {format_datetime(pipeline_request.time_created)}\n"
 
-        if hasattr(pipeline_request, 'status'):
+        if hasattr(pipeline_request, "status"):
             overview += f"Status: {format_status(pipeline_request.status, success_green=True)}"
 
-        if hasattr(pipeline_request, 'error_message') and pipeline_request.error_message:
+        if hasattr(pipeline_request, "error_message") and pipeline_request.error_message:
             overview += f"\nError message: {click.style(str(pipeline_request.error_message), fg='red')}"
 
-        if hasattr(pipeline_request, 'request_data'):
-            request_data = '-' if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
+        if hasattr(pipeline_request, "request_data"):
+            request_data = "-" if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
             overview += f"\nRequest data: {request_data}"
 
-        if hasattr(pipeline_request, 'result'):
-            request_result = '-' if pipeline_request.result is None else json.dumps(pipeline_request.result)
+        if hasattr(pipeline_request, "result"):
+            request_result = "-" if pipeline_request.result is None else json.dumps(pipeline_request.result)
             overview += f"\nResult: {request_result}"
 
         object_requests = []
-        if hasattr(pipeline_request, 'deployment_requests') and isinstance(pipeline_request.deployment_requests, list):
+        if hasattr(pipeline_request, "deployment_requests") and isinstance(pipeline_request.deployment_requests, list):
             object_requests.extend(pipeline_request.deployment_requests)
-        if hasattr(pipeline_request, 'operator_requests') and isinstance(pipeline_request.operator_requests, list):
+        if hasattr(pipeline_request, "operator_requests") and isinstance(pipeline_request.operator_requests, list):
             object_requests.extend(pipeline_request.operator_requests)
-        if hasattr(pipeline_request, 'pipeline_requests') and isinstance(pipeline_request.pipeline_requests, list):
+        if hasattr(pipeline_request, "pipeline_requests") and isinstance(pipeline_request.pipeline_requests, list):
             object_requests.extend(pipeline_request.pipeline_requests)
 
         # Sort object requests on sequence_id
         object_requests = sorted(object_requests, key=lambda k: k.sequence_id)
 
         if len(object_requests) > 0:
-            overview += '\n'
+            overview += "\n"
 
-            requests = format_requests_reference(object_requests, split_requests='\n')
+            requests = format_requests_reference(object_requests, split_requests="\n")
             requests = "\n".join(
-                [f"\n - {line}" if line.startswith('Object') else f"   {line}"
-                 for line in requests.split("\n")]
+                [f"\n - {line}" if line.startswith("Object") else f"   {line}" for line in requests.split("\n")]
             )
             overview += requests
 
         if j + 1 < total:
-            overview += '\n\n'
+            overview += "\n\n"
 
     return overview
 
@@ -670,29 +672,28 @@ def format_pipeline_requests_oneline(pipeline_requests):
     :param list[object] pipeline_requests: the pipeline requests to format
     """
 
-    overview = ''
+    overview = ""
     total = len(pipeline_requests)
     for j, pipeline_request in enumerate(pipeline_requests):
+        if hasattr(pipeline_request, "id") and pipeline_request.id is not None:
+            overview += click.style(str(pipeline_request.id), fg="yellow")
+            overview += " "
 
-        if hasattr(pipeline_request, 'id') and pipeline_request.id is not None:
-            overview += click.style(str(pipeline_request.id), fg='yellow')
-            overview += ' '
-
-        if hasattr(pipeline_request, 'status'):
+        if hasattr(pipeline_request, "status"):
             overview += format_status(pipeline_request.status, success_green=True)
-            overview += ' '
+            overview += " "
 
-        if hasattr(pipeline_request, 'request_data'):
-            request_data = '-' if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
+        if hasattr(pipeline_request, "request_data"):
+            request_data = "-" if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
             overview += request_data
 
-        if hasattr(pipeline_request, 'result'):
-            overview += ' '
-            result = '-' if pipeline_request.result is None else json.dumps(pipeline_request.result)
+        if hasattr(pipeline_request, "result"):
+            overview += " "
+            result = "-" if pipeline_request.result is None else json.dumps(pipeline_request.result)
             overview += result
 
         if j + 1 < total:
-            overview += '\n'
+            overview += "\n"
 
     return overview
 
@@ -709,7 +710,7 @@ def _split_lower_level_attributes(attrs):
     for attribute in attrs:
         attribute_levels = attribute.split(" ")
         if len(attribute_levels) > 1:
-            split_lower_levels.append((attribute_levels[0],  " ".join(attribute_levels[1:])))
+            split_lower_levels.append((attribute_levels[0], " ".join(attribute_levels[1:])))
         else:
             split_lower_levels.append((attribute, None))
 
@@ -724,9 +725,5 @@ def _split_lower_level_attributes(attrs):
             else:
                 grouped[attr] = [inner_attr]
 
-    grouped = {
-        attr: None
-        if len(inner_attr) == 0 else inner_attr
-        for attr, inner_attr in grouped.items()
-    }
+    grouped = {attr: None if len(inner_attr) == 0 else inner_attr for attr, inner_attr in grouped.items()}
     return grouped
