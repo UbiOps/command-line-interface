@@ -5,8 +5,8 @@ from ubiops_cli.src.helpers.formatting import print_list, print_item
 from ubiops_cli.src.helpers import options
 
 
-LIST_ITEMS = ['creation_date', 'id', 'created_by']
-GET_ITEMS = ['creation_date', 'id', 'created_by', 'expired']
+LIST_ITEMS = ["creation_date", "id", "created_by"]
+GET_ITEMS = ["creation_date", "id", "created_by", "expired"]
 
 
 @click.group(name=["environment_revisions", "env_revisions"], short_help="Manage your environment revisions")
@@ -48,9 +48,7 @@ def revisions_get(environment_name, revision_id, format_):
 
     client = init_client()
     revision = client.environment_revisions_get(
-        project_name=project_name,
-        environment_name=environment_name,
-        revision_id=revision_id
+        project_name=project_name, environment_name=environment_name, revision_id=revision_id
     )
     client.api_client.close()
 
@@ -108,4 +106,4 @@ def revisions_upload(environment_name, archive_path, progress_bar, format_):
     )
     client.api_client.close()
 
-    print_item(revision, row_attrs=['revision', 'build'], fmt=format_)
+    print_item(revision, row_attrs=["revision", "build"], fmt=format_)

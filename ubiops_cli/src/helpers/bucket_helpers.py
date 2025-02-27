@@ -1,15 +1,28 @@
 from ubiops_cli.src.helpers.helpers import strings_to_dict, json_to_dict
 
-BUCKET_INPUT_FIELDS = ['name', 'description', 'labels', 'provider', 'credentials', 'configuration', 'ttl']
+BUCKET_INPUT_FIELDS = ["name", "description", "labels", "provider", "credentials", "configuration", "ttl"]
 BUCKET_INPUT_FIELDS_TYPE = {
-    'name': str, 'description': str, 'labels': dict, 'provider': str, 'credentials': 'json', 'configuration': 'json',
-    'ttl': str
+    "name": str,
+    "description": str,
+    "labels": dict,
+    "provider": str,
+    "credentials": "json",
+    "configuration": "json",
+    "ttl": str,
 }
 BUCKET_OUTPUT_FIELDS = [
-    'name', 'project', 'description', 'labels', 'provider', 'configuration', 'ttl', 'creation_date',  'size',
-    'size_measurement_date'
+    "name",
+    "project",
+    "description",
+    "labels",
+    "provider",
+    "configuration",
+    "ttl",
+    "creation_date",
+    "size",
+    "size_measurement_date",
 ]
-BUCKET_FIELDS_RENAMED = {'name': 'bucket_name', 'description': 'bucket_description', 'labels': 'bucket_labels'}
+BUCKET_FIELDS_RENAMED = {"name": "bucket_name", "description": "bucket_description", "labels": "bucket_labels"}
 
 
 def define_bucket(fields, yaml_content, update=False):
@@ -32,8 +45,8 @@ def define_bucket(fields, yaml_content, update=False):
 
         # Options provided via the CLI have priority over options provided via YAML file
         if is_defined(fields, input_field_name):
-            if BUCKET_INPUT_FIELDS_TYPE[input_field] == 'json':
-                bucket[input_field] = json_to_dict(input_string=fields[input_field_name], file_fields=['json_key_file'])
+            if BUCKET_INPUT_FIELDS_TYPE[input_field] == "json":
+                bucket[input_field] = json_to_dict(input_string=fields[input_field_name], file_fields=["json_key_file"])
             elif BUCKET_INPUT_FIELDS_TYPE[input_field] == dict:
                 bucket[input_field] = strings_to_dict(fields[input_field_name])
             else:
@@ -43,10 +56,10 @@ def define_bucket(fields, yaml_content, update=False):
         elif update:
             continue
         else:
-            if BUCKET_INPUT_FIELDS_TYPE[input_field] == 'json' or BUCKET_INPUT_FIELDS_TYPE[input_field] == dict:
+            if BUCKET_INPUT_FIELDS_TYPE[input_field] == "json" or BUCKET_INPUT_FIELDS_TYPE[input_field] == dict:
                 bucket[input_field] = {}
             elif BUCKET_INPUT_FIELDS_TYPE == str:
-                bucket[input_field] = ''
+                bucket[input_field] = ""
             else:
                 bucket[input_field] = None
 

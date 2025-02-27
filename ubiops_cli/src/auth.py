@@ -20,22 +20,22 @@ def signin(method, host, email, password):
     If you want to use a service token, use the `<token>` flag option.
     """
 
-    assert len(host) > 0, 'Please, specify the UbiOps API host'
+    assert len(host) > 0, "Please, specify the UbiOps API host"
     # API host should not end with a '/'
     host = host[:-1] if host[-1] == "/" else host
 
-    if method == 'bearer':
+    if method == "bearer":
         if not email:
-            email = click.prompt(text='Email', default=Config().get("auth.email"))
+            email = click.prompt(text="Email", default=Config().get("auth.email"))
 
         provider, _ = sign_in(host=host, email=email)
 
-        if provider == 'ubiops':
+        if provider == "ubiops":
             if not password:
-                password = click.prompt(text='Password', hide_input=True)
+                password = click.prompt(text="Password", hide_input=True)
             success = authorize(host=host, email=email, password=password)
             if not success:
-                token2fa = click.prompt(text='Two factor authentication token')
+                token2fa = click.prompt(text="Two factor authentication token")
                 authorize2fa(host=host, email=email, password=password, token=token2fa)
 
         else:
@@ -44,19 +44,19 @@ def signin(method, host, email, password):
                 "Please, use an API Token to sign in. You can create one in the WebApp in the Project Admin panel."
             )
 
-    elif method == 'token':
+    elif method == "token":
         if not password:
-            password = click.prompt(text='API Token', hide_input=True)
-        if not password.startswith('Token '):
+            password = click.prompt(text="API Token", hide_input=True)
+        if not password.startswith("Token "):
             click.echo(
                 message=f"{click.style('Warning:', fg='yellow')} Token should be formatted like "
-                        "`\"Token 1abc2def3ghi4jkl5mno6pqr7stu8vwx9yz\"`"
+                '`"Token 1abc2def3ghi4jkl5mno6pqr7stu8vwx9yz"`'
             )
 
         try:
             raise_for_status(host=host, token=password)
         except Exception:
-            raise UnAuthorizedException('Could not authorize')
+            raise UnAuthorizedException("Could not authorize")
 
     click.echo(message="\nWelcome to UbiOps!")
 
@@ -85,7 +85,7 @@ def user_get():
     """
 
     user_config = Config()
-    current_email = user_config.get(key='auth.email')
+    current_email = user_config.get(key="auth.email")
 
     if current_email:
         click.echo(current_email)
@@ -99,7 +99,7 @@ def user_set(email):
     """
 
     user_config = Config()
-    user_config.set(key='auth.email', value=email)
+    user_config.set(key="auth.email", value=email)
     user_config.write()
 
 
@@ -110,11 +110,11 @@ def status():
     """
 
     user_config = Config()
-    api_endpoint = user_config.get(key='auth.api')
-    email = user_config.get(key='auth.email')
+    api_endpoint = user_config.get(key="auth.api")
+    email = user_config.get(key="auth.email")
 
     try:
-        project = get_current_project()
+        project = get_current_project(check_existing=True)
         click.echo("Authorized")
         click.echo(f"email: {email}")
         click.echo(f"api: {api_endpoint}")

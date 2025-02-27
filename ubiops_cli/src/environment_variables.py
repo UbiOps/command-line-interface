@@ -7,7 +7,7 @@ from ubiops_cli.src.helpers.formatting import print_list, print_item
 from ubiops_cli.src.helpers import options
 
 
-LIST_ITEMS = ['id', 'name', 'value', 'secret', 'inheritance_type', 'inheritance_name']
+LIST_ITEMS = ["id", "name", "value", "secret", "inheritance_type", "inheritance_name"]
 WARNING_MSG = "Make sure you provided the right environment variable ID and the right inheritance level."
 
 
@@ -131,16 +131,17 @@ def env_vars_create(env_var_name, env_var_value, secret, deployment_name, versio
         raise UbiOpsException("Missing option <deployment_name>")
 
     if yaml_file:
-        yaml_content = read_yaml(yaml_file, required_fields=['environment_variables'])
+        yaml_content = read_yaml(yaml_file, required_fields=["environment_variables"])
         check_required_fields_in_list(
-            input_dict=yaml_content, list_name='environment_variables', required_fields=['name', 'value']
+            input_dict=yaml_content, list_name="environment_variables", required_fields=["name", "value"]
         )
 
         items = []
-        for env_var in yaml_content['environment_variables']:
-            secret = env_var['secret'] if 'secret' in env_var else False
-            item = create_env_var(project_name, deployment_name, version_name,
-                                  env_var['name'], env_var['value'], secret)
+        for env_var in yaml_content["environment_variables"]:
+            secret = env_var["secret"] if "secret" in env_var else False
+            item = create_env_var(
+                project_name, deployment_name, version_name, env_var["name"], env_var["value"], secret
+            )
             items.append(item)
         print_list(items, LIST_ITEMS, fmt=format_)
     else:
@@ -207,8 +208,9 @@ def env_vars_copy(from_deployment, from_version, to_deployment, to_version, assu
 
     if from_version is None:
         data = api.EnvironmentVariableCopy(source_deployment=from_deployment)
-        env_vars = client.deployment_environment_variables_list(project_name=project_name,
-                                                                deployment_name=from_deployment)
+        env_vars = client.deployment_environment_variables_list(
+            project_name=project_name, deployment_name=from_deployment
+        )
     else:
         data = api.EnvironmentVariableCopy(source_deployment=from_deployment, source_version=from_version)
         env_vars = client.deployment_version_environment_variables_list(
@@ -217,8 +219,8 @@ def env_vars_copy(from_deployment, from_version, to_deployment, to_version, assu
 
     if not assume_yes:
         env_vars = [env for env in env_vars if env.inheritance_type is None]
-        print_list(items=env_vars, attrs=['id', 'name', 'value', 'secret'], sorting_col=1, fmt='table')
-        click.secho("All destination variables with the same name will be overwritten by this action\n", fg='yellow')
+        print_list(items=env_vars, attrs=["id", "name", "value", "secret"], sorting_col=1, fmt="table")
+        click.secho("All destination variables with the same name will be overwritten by this action\n", fg="yellow")
 
     confirm_message = f"Are you sure you want to copy {click.style(text='ALL', fg='red')} these environment variables?"
 
@@ -273,8 +275,11 @@ def env_vars_update(env_var_id, new_name, env_var_value, secret, deployment_name
             )
             new_env_var = define_env_var(current.name, new_name, env_var_value, secret)
             client.deployment_version_environment_variables_update(
-                project_name=project_name, deployment_name=deployment_name, version=version_name,
-                id=env_var_id, data=new_env_var
+                project_name=project_name,
+                deployment_name=deployment_name,
+                version=version_name,
+                id=env_var_id,
+                data=new_env_var,
             )
         elif deployment_name:
             current = client.deployment_environment_variables_get(
@@ -329,8 +334,10 @@ def env_vars_delete(env_var_id, deployment_name, version_name, assume_yes, quiet
             response = client.deployment_version_environment_variables_get(
                 project_name=project_name, deployment_name=deployment_name, version=version_name, id=env_var_id
             )
-            if assume_yes or click.confirm(f"{confirm_message}<{response.name}> of deployment <{deployment_name}>"
-                                           f" version <{version_name}> in project <{project_name}>?"):
+            if assume_yes or click.confirm(
+                f"{confirm_message}<{response.name}> of deployment <{deployment_name}>"
+                f" version <{version_name}> in project <{project_name}>?"
+            ):
                 client.deployment_version_environment_variables_delete(
                     project_name=project_name, deployment_name=deployment_name, version=version_name, id=env_var_id
                 )
@@ -338,8 +345,10 @@ def env_vars_delete(env_var_id, deployment_name, version_name, assume_yes, quiet
             response = client.deployment_environment_variables_get(
                 project_name=project_name, deployment_name=deployment_name, id=env_var_id
             )
-            if assume_yes or click.confirm(f"{confirm_message}<{response.name}> of deployment  <{deployment_name}>"
-                                           f" in project <{project_name}>?"):
+            if assume_yes or click.confirm(
+                f"{confirm_message}<{response.name}> of deployment  <{deployment_name}>"
+                f" in project <{project_name}>?"
+            ):
                 client.deployment_environment_variables_delete(
                     project_name=project_name, deployment_name=deployment_name, id=env_var_id
                 )

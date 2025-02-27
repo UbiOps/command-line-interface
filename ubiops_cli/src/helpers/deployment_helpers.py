@@ -1,11 +1,59 @@
 import ubiops as api
-from ubiops_cli.utils import set_dict_default
-from ubiops_cli.constants import ML_MODEL_FILE_NAME_KEY, ML_MODEL_FILE_NAME_VALUE, SYS_DEPLOYMENT_FILE_NAME_KEY, \
-    SYS_DEPLOYMENT_FILE_NAME_VALUE
-from ubiops_cli.src.helpers.helpers import strings_to_dict
+from ubiops_cli.constants import (
+    ML_MODEL_FILE_NAME_KEY,
+    ML_MODEL_FILE_NAME_VALUE,
+    SYS_DEPLOYMENT_FILE_NAME_KEY,
+    SYS_DEPLOYMENT_FILE_NAME_VALUE,
+)
+from ubiops_cli.src.helpers.helpers import define_object
 
 
-DEPLOYMENT_REQUIRED_FIELDS = ["input_type", "output_type"]
+DEPLOYMENT_DETAILS = ["name", "project", "description", "labels", "supports_request_format"]
+DEPLOYMENT_DETAILS_OPTIONAL = [
+    "input_type",
+    "output_type",
+    "input_fields name",
+    "input_fields data_type",
+    "output_fields name",
+    "output_fields data_type",
+]
+DEPLOYMENT_FIELDS_RENAMED = {
+    "name": "deployment_name",
+    "description": "deployment_description",
+    "labels": "deployment_labels",
+    "supports_request_format": "deployment_supports_request_format",
+}
+DEPLOYMENT_CREATE_FIELDS = [
+    "name",
+    "description",
+    "labels",
+    "supports_request_format",
+    "input_type",
+    "output_type",
+    "input_fields",
+    "output_fields",
+]
+DEPLOYMENT_UPDATE_FIELDS = [
+    "name",
+    "description",
+    "labels",
+    "input_type",
+    "output_type",
+    "input_fields",
+    "output_fields",
+    "default_version",
+]
+DEPLOYMENT_FIELD_TYPES = {
+    "name": str,
+    "description": str,
+    "labels": dict,
+    "supports_request_format": bool,
+    "input_type": str,
+    "output_type": str,
+    "input_fields": None,
+    "output_fields": None,
+}
+
 DEPLOYMENT_VERSION_CREATE_FIELDS = [
     "description",
     "labels",
@@ -24,6 +72,29 @@ DEPLOYMENT_VERSION_CREATE_FIELDS = [
     "maximum_queue_size_batch",
     "static_ip",
     "ports",
+]
+DEPLOYMENT_VERSION_DETAILS = [
+    "description",
+    "labels",
+    "environment",
+    "instance_type",
+    "instance_type_group_id",
+    "instance_type_group_name",
+    "static_ip",
+    "ports",
+    "minimum_instances",
+    "maximum_instances",
+]
+SUPPORTS_REQUEST_FORMAT_DETAILS = [
+    "instance_processes",
+    "maximum_idle_time",
+    "scaling_strategy",
+    "request_retention_mode",
+    "request_retention_time",
+    "maximum_queue_size_express",
+    "maximum_queue_size_batch",
+    "has_request_method",
+    "has_requests_method",
 ]
 DEPLOYMENT_VERSION_FIELDS_UPDATE = ["version"] + DEPLOYMENT_VERSION_CREATE_FIELDS
 DEPLOYMENT_VERSION_FIELDS_WAIT = [
@@ -53,23 +124,44 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     "has_request_method": bool,
     "has_requests_method": bool,
     "static_ip": bool,
-    "ports": None
+    "ports": None,
 }
 DEPLOYMENT_VERSION_FIELDS_RENAMED = {
-    "version": "version_name", "description": "version_description", "labels": "version_labels"
+    "version": "version_name",
+    "description": "version_description",
+    "labels": "version_labels",
 }
+
+
+def define_deployment(fields, yaml_content, extra_yaml_fields=None):
+    """
+    Define deployment fields by combining the given fields and the content of a yaml file. The given fields are
+    prioritized over the content of the yaml file; if they are not given the value in the yaml file is used (if
+    present).
+
+    :param dict fields: the command options
+    :param dict yaml_content: the content of the yaml
+    :param list(str) extra_yaml_fields: additional yaml fields that are not Deployment create parameters,
+        e.g., default_version
+    :return dict: a dictionary containing all Deployment parameters
+    """
+
+    extra_yaml_fields = [] if extra_yaml_fields is None else extra_yaml_fields
+
+    return define_object(
+        fields=fields,
+        yaml_content=yaml_content,
+        field_names=[*DEPLOYMENT_CREATE_FIELDS, *extra_yaml_fields],
+        rename_field_names=DEPLOYMENT_FIELDS_RENAMED,
+        field_types=DEPLOYMENT_FIELD_TYPES,
+    )
 
 
 def define_deployment_version(fields, yaml_content, extra_yaml_fields):
     """
-    Define deployment version fields
-
-    For each field i in [DEPLOYMENT_VERSION_FIELDS + extra_yaml_fields]:
-    - Use value in fields if specified
-    - If not; Use value in yaml content if specified
-
-    Rename field-key if the key is in DEPLOYMENT_VERSION_FIELDS_RENAMED.values(). This is done to
-    solve inconsistencies between CLI options/yaml keys and API parameters.
+    Define deployment version fields by combining the given fields and the content of a yaml file. The given fields are
+    prioritized over the content of the yaml file; if they are not given the value in the yaml file is used (if
+    present).
 
     :param dict fields: the command options
     :param dict yaml_content: the content of the yaml
@@ -78,23 +170,13 @@ def define_deployment_version(fields, yaml_content, extra_yaml_fields):
     :return dict: a dictionary containing all DeploymentVersion parameters (+extra yaml fields)
     """
 
-    for k, yaml_key in DEPLOYMENT_VERSION_FIELDS_RENAMED.items():
-        fields[k] = fields.pop(yaml_key, None)
-
-    for k in [k for k, v in DEPLOYMENT_VERSION_FIELD_TYPES.items() if v == dict]:
-        if k in fields and fields[k] is not None:
-            fields[k] = strings_to_dict(fields[k])
-
-    if yaml_content:
-        for k in [*DEPLOYMENT_VERSION_CREATE_FIELDS, *extra_yaml_fields]:
-            fields[k] = set_dict_default(
-                value=fields.get(k, None),
-                defaults_dict=yaml_content,
-                default_key=DEPLOYMENT_VERSION_FIELDS_RENAMED.get(k, k),
-                set_type=DEPLOYMENT_VERSION_FIELD_TYPES.get(k, str)
-            )
-
-    return fields
+    return define_object(
+        fields=fields,
+        yaml_content=yaml_content,
+        field_names=[*DEPLOYMENT_VERSION_CREATE_FIELDS, *extra_yaml_fields],
+        rename_field_names=DEPLOYMENT_VERSION_FIELDS_RENAMED,
+        field_types=DEPLOYMENT_VERSION_FIELD_TYPES,
+    )
 
 
 def update_deployment_file(client, project, deployment, version, deployment_file):
@@ -138,8 +220,11 @@ def update_deployment_file(client, project, deployment, version, deployment_file
                         name=env_var_name, value=deployment_file, secret=current_env_var[0].secret
                     )
                     client.deployment_version_environment_variables_update(
-                        project_name=project, deployment_name=deployment, version=version,
-                        id=current_env_var[0].id, data=new_env_var
+                        project_name=project,
+                        deployment_name=deployment,
+                        version=version,
+                        id=current_env_var[0].id,
+                        data=new_env_var,
                     )
                 else:
                     # Overwrite inherited environment variable
@@ -147,8 +232,12 @@ def update_deployment_file(client, project, deployment, version, deployment_file
                         project_name=project, deployment_name=deployment, version=version, data=new_env_var
                     )
         elif deployment_file not in [
-            SYS_DEPLOYMENT_FILE_NAME_VALUE, ML_MODEL_FILE_NAME_VALUE, f"{SYS_DEPLOYMENT_FILE_NAME_VALUE}.py",
-            f"{ML_MODEL_FILE_NAME_VALUE}.py", f"{SYS_DEPLOYMENT_FILE_NAME_VALUE}.R", f"{ML_MODEL_FILE_NAME_VALUE}.R"
+            SYS_DEPLOYMENT_FILE_NAME_VALUE,
+            ML_MODEL_FILE_NAME_VALUE,
+            f"{SYS_DEPLOYMENT_FILE_NAME_VALUE}.py",
+            f"{ML_MODEL_FILE_NAME_VALUE}.py",
+            f"{SYS_DEPLOYMENT_FILE_NAME_VALUE}.R",
+            f"{ML_MODEL_FILE_NAME_VALUE}.R",
         ]:
             # Create environment variable
             has_changed_env_vars = True
@@ -192,3 +281,25 @@ def update_existing_deployment_version(client, project_name, deployment_name, ve
         project_name=project_name, deployment_name=deployment_name, version=version_name, data=version
     )
     return has_changed_fields
+
+
+def set_default_scaling_parameters(details, supports_request_format, update=False):
+    """
+    Set the default scaling parameters 'minimum_instances' and 'maximum_instances' based on whether the deployment
+    supports request format
+
+    :param dict details: the details for version creation
+    :param bool supports_request_format: whether the deployment supports request format
+    :param bool update: whether the default is set for updating the deployment version instead of creation
+    """
+
+    if not supports_request_format:
+        # Auto-scaling is only supported for request format, use static 1 instead
+        if details.get("minimum_instances", None) is None:
+            if not update:
+                details["minimum_instances"] = 1
+                details["maximum_instances"] = 1
+        else:
+            details["maximum_instances"] = details["minimum_instances"]
+
+    return details

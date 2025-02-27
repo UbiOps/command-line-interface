@@ -6,7 +6,7 @@ from ubiops_cli.src.helpers.formatting import print_item, print_projects_list
 from ubiops_cli.src.helpers import options
 
 
-LIST_ITEMS = ['creation_date', 'name', 'organization_name']
+LIST_ITEMS = ["creation_date", "name", "organization_name"]
 
 
 @click.group(name=["projects", "prj"], short_help="Manage your projects")
@@ -68,17 +68,17 @@ def projects_create(project_name, organization_name, format_):
 
     if not organization_name:
         response = client.organizations_list()
-        if len(response) == 1 and hasattr(response[0], 'name'):
+        if len(response) == 1 and hasattr(response[0], "name"):
             organization_name = response[0].name
         else:
-            organization_name = click.prompt('Organization name')
+            organization_name = click.prompt("Organization name")
 
     project = api.ProjectCreate(name=project_name, organization_name=organization_name)
     response = client.projects_create(data=project)
     client.api_client.close()
 
     user_config = Config()
-    user_config.set('default.project', response.name)
+    user_config.set("default.project", response.name)
     user_config.write()
 
     print_item(response, row_attrs=LIST_ITEMS, fmt=format_)
@@ -96,10 +96,10 @@ def projects_delete(project_name, assume_yes, quiet):
         client.projects_delete(project_name=project_name)
         client.api_client.close()
 
-        default_project = Config().get('default.project')
+        default_project = Config().get("default.project")
         if default_project and default_project == project_name:
             user_config = Config()
-            user_config.delete_option('default.project')
+            user_config.delete_option("default.project")
             user_config.write()
 
         if not quiet:
@@ -145,6 +145,6 @@ def current_project_set(project_name, format_):
     client.api_client.close()
 
     user_config = Config()
-    user_config.set(key='default.project', value=response.name)
+    user_config.set(key="default.project", value=response.name)
     user_config.write()
     print_projects_list(projects=[response], current=response.name, attrs=LIST_ITEMS, fmt=format_)

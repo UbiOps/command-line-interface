@@ -2,15 +2,20 @@ import click
 import ubiops as api
 
 from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
-from ubiops_cli.src.helpers.pipeline_helpers import rename_pipeline_object_reference_version, \
-    set_pipeline_version_defaults, PIPELINE_VERSION_FIELDS, PIPELINE_VERSION_FIELDS_RENAMED, \
-    PIPELINE_VERSION_RESPONSE_FILE, PIPELINE_VERSION_RESPONSE
+from ubiops_cli.src.helpers.pipeline_helpers import (
+    rename_pipeline_object_reference_version,
+    set_pipeline_version_defaults,
+    PIPELINE_VERSION_FIELDS,
+    PIPELINE_VERSION_FIELDS_RENAMED,
+    PIPELINE_VERSION_RESPONSE_FILE,
+    PIPELINE_VERSION_RESPONSE,
+)
 from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
 from ubiops_cli.src.helpers import options
 
 
-LIST_ITEMS = ['last_updated', 'version', 'labels']
+LIST_ITEMS = ["last_updated", "version", "labels"]
 
 
 @click.group(name=["pipeline_versions", "pversions"], short_help="Manage your pipeline versions")
@@ -38,26 +43,24 @@ def pipeline_versions_list(pipeline_name, labels, format_):
     project_name = get_current_project(error=True)
 
     client = init_client()
-    default = client.pipelines_get(
-        project_name=project_name, pipeline_name=pipeline_name
-    ).default_version
+    default = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name).default_version
     response = client.pipeline_versions_list(
         project_name=project_name, pipeline_name=pipeline_name, labels=label_filter
     )
     client.api_client.close()
 
-    if format_ == 'table':
+    if format_ == "table":
         # Add [DEFAULT] to default version
         for i in response:
-            if default and hasattr(i, 'version') and i.version == default:
+            if default and hasattr(i, "version") and i.version == default:
                 i.version = f"{i.version} {click.style('[DEFAULT]', fg='yellow')}"
 
     print_list(
         items=response,
         attrs=LIST_ITEMS,
-        rename_cols={'version': 'version_name', **PIPELINE_VERSION_FIELDS_RENAMED},
+        rename_cols={"version": "version_name", **PIPELINE_VERSION_FIELDS_RENAMED},
         sorting_col=0,
-        fmt=format_
+        fmt=format_,
     )
 
 
@@ -118,20 +121,15 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
     pipeline = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name)
     client.api_client.close()
 
-    setattr(version, 'input_type', pipeline.input_type)
-    setattr(version, 'input_fields', pipeline.input_fields)
-    setattr(version, 'output_type', pipeline.output_type)
-    setattr(version, 'output_fields', pipeline.output_fields)
+    setattr(version, "input_type", pipeline.input_type)
+    setattr(version, "input_fields", pipeline.input_fields)
+    setattr(version, "output_type", pipeline.output_type)
+    setattr(version, "output_fields", pipeline.output_fields)
 
     if output_path is not None:
         # Store only reusable settings
-        dictionary = format_yaml(
-            item=version,
-            **PIPELINE_VERSION_RESPONSE_FILE,
-            as_str=False
-        )
-
-        yaml_file = write_yaml(output_path, dictionary, default_file_name="pipeline_version.yaml")
+        dictionary = format_yaml(item=version, **PIPELINE_VERSION_RESPONSE_FILE, as_str=False)
+        yaml_file = write_yaml(yaml_file=output_path, dictionary=dictionary, default_file_name="pipeline_version.yaml")
 
         if not quiet:
             click.echo(f"Pipeline version file stored in: {yaml_file}")
@@ -194,14 +192,16 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
     yaml_content = read_yaml(yaml_file, required_fields=[])
     client = init_client()
 
-    assert 'pipeline_name' in yaml_content or pipeline_name, \
-        'Please, specify the pipeline name in either the yaml file or as a command argument'
+    assert (
+        "pipeline_name" in yaml_content or pipeline_name
+    ), "Please, specify the pipeline name in either the yaml file or as a command argument"
 
-    assert 'version_name' in yaml_content or version_name, \
-        'Please, specify the version name in either the yaml file or as a command argument'
+    assert (
+        "version_name" in yaml_content or version_name
+    ), "Please, specify the version name in either the yaml file or as a command argument"
 
-    pipeline_name = set_dict_default(pipeline_name, yaml_content, 'pipeline_name')
-    version_name = set_dict_default(version_name, yaml_content, 'version_name')
+    pipeline_name = set_dict_default(pipeline_name, yaml_content, "pipeline_name")
+    version_name = set_dict_default(version_name, yaml_content, "version_name")
 
     # Define the pipeline version
     kwargs = set_pipeline_version_defaults(kwargs, yaml_content, None)
@@ -213,12 +213,7 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
     response = client.pipeline_versions_create(project_name=project_name, pipeline_name=pipeline_name, data=version)
     client.api_client.close()
 
-    print_item(
-        item=response,
-        row_attrs=LIST_ITEMS,
-        **PIPELINE_VERSION_RESPONSE,
-        fmt=format_
-    )
+    print_item(item=response, row_attrs=LIST_ITEMS, **PIPELINE_VERSION_RESPONSE, fmt=format_)
 
 
 @commands.command(name="update", short_help="Update a pipeline version")
@@ -280,12 +275,9 @@ def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, q
     # Rename objects reference version
     kwargs = rename_pipeline_object_reference_version(content=kwargs)
 
-    version_data = api.PipelineVersionUpdate(**{'version': new_name, **{k: kwargs[k] for k in PIPELINE_VERSION_FIELDS}})
+    version_data = api.PipelineVersionUpdate(**{"version": new_name, **{k: kwargs[k] for k in PIPELINE_VERSION_FIELDS}})
     client.pipeline_versions_update(
-        project_name=project_name,
-        pipeline_name=pipeline_name,
-        version=version_name,
-        data=version_data
+        project_name=project_name, pipeline_name=pipeline_name, version=version_name, data=version_data
     )
     client.api_client.close()
 

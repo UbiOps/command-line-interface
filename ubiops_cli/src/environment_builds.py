@@ -5,7 +5,7 @@ from ubiops_cli.src.helpers.formatting import print_item, print_list
 from ubiops_cli.src.helpers import options
 
 
-LIST_ITEMS = ['creation_date', 'id', 'revision', 'status']
+LIST_ITEMS = ["creation_date", "id", "revision", "status"]
 
 
 @click.group(name=["environment_builds", "env_builds"], short_help="Manage your environment builds")
@@ -51,10 +51,7 @@ def builds_get(environment_name, revision_id, build_id, format_):
 
     client = init_client()
     build = client.environment_builds_get(
-        project_name=project_name,
-        environment_name=environment_name,
-        revision_id=revision_id,
-        build_id=build_id
+        project_name=project_name, environment_name=environment_name, revision_id=revision_id, build_id=build_id
     )
     client.api_client.close()
 

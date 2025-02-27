@@ -9,7 +9,7 @@ from ubiops_cli.src.helpers.formatting import print_list, print_item
 from ubiops_cli.src.helpers import options
 
 
-LIST_ITEMS = ['file', 'size', 'time_created']
+LIST_ITEMS = ["file", "size", "time_created"]
 
 
 @click.group(name="files", short_help="Manage your files")
@@ -57,19 +57,19 @@ def files_list(bucket_name, prefix, delimiter, limit, continuation_token, format
         prefix=prefix,
         delimiter=delimiter,
         limit=limit,
-        continuation_token=continuation_token
+        continuation_token=continuation_token,
     )
     client.api_client.close()
 
     items = file_detail
-    if format_ == 'table':
+    if format_ == "table":
         # If the format is table only the files list is shown
         items = file_detail.files
 
     print_list(items=items, attrs=LIST_ITEMS, sorting_col=0, fmt=format_)
 
     # If format is table print prefixes as well
-    if format_ == 'table':
+    if format_ == "table":
         for detail_prefix in file_detail.prefixes:
             click.echo(detail_prefix)
 
@@ -89,12 +89,7 @@ def files_get(bucket_name, file_name, format_):
     file = client.files_get(project_name=project_name, bucket_name=bucket_name, file=file_name)
     client.api_client.close()
 
-    print_item(
-        file,
-        row_attrs=LIST_ITEMS,
-        required_front=['file', 'size', 'time_created'],
-        fmt=format_
-    )
+    print_item(file, row_attrs=LIST_ITEMS, required_front=["file", "size", "time_created"], fmt=format_)
 
 
 @signedurl_commands.command(name="create", short_help="Generate signed url to upload a file")
@@ -112,11 +107,7 @@ def files_signedurl_create(bucket_name, file_name, format_):
     file_url = client.files_upload(project_name=project_name, bucket_name=bucket_name, file=file_name, data={})
     client.api_client.close()
 
-    print_item(
-        file_url,
-        row_attrs=["url", "provider"],
-        fmt=format_
-    )
+    print_item(file_url, row_attrs=["url", "provider"], fmt=format_)
 
 
 @signedurl_commands.command(name="get", short_help="Generate signed url to download a file")
@@ -134,11 +125,7 @@ def files_signedurl_get(bucket_name, file_name, format_):
     file_url = client.files_download(project_name=project_name, bucket_name=bucket_name, file=file_name)
     client.api_client.close()
 
-    print_item(
-        file_url,
-        row_attrs=["url", "provider"],
-        fmt=format_
-    )
+    print_item(file_url, row_attrs=["url", "provider"], fmt=format_)
 
 
 @commands.command(name="delete", short_help="Delete a file")
@@ -155,7 +142,7 @@ def files_delete(bucket_name, file_name, assume_yes, quiet):
 
     if assume_yes or click.confirm(
         text=f"Are you sure you want to delete file <{file_name}> from bucket <{bucket_name}>"
-             f" of project <{project_name}>?"
+        f" of project <{project_name}>?"
     ):
         client = init_client()
         client.files_delete(project_name=project_name, bucket_name=bucket_name, file=file_name)
@@ -186,7 +173,7 @@ def files_upload(source_file, bucket_name, file_name, progress_bar, quiet):
         bucket_name=bucket_name,
         file_path=source_file,
         file_name=file_name,
-        _progress_bar=progress_bar
+        _progress_bar=progress_bar,
     )
 
     client.api_client.close()
@@ -208,7 +195,7 @@ def files_download(bucket_name, file_name, file_uri, output_path, quiet):
 
     project_name = get_current_project(error=True)
 
-    assert file_name or file_uri, 'Please, specify the file_name or file_uri to download'
+    assert file_name or file_uri, "Please, specify the file_name or file_uri to download"
 
     client = init_client()
 
@@ -224,7 +211,7 @@ def files_download(bucket_name, file_name, file_uri, output_path, quiet):
         bucket_name=bucket_name,
         file_name=file_name,
         file_uri=file_uri,
-        output_path=output_path
+        output_path=output_path,
     )
 
     client.api_client.close()

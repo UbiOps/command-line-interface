@@ -34,7 +34,7 @@ from ubiops_cli.src import (
 from ubiops_cli.src.helpers.click_helpers import CustomGroup
 from ubiops_cli.version import VERSION
 
-CONTEXT_SETTINGS = {'help_option_names': ['-h', '--help']}
+CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
 @click.group(cls=CustomGroup, context_settings=CONTEXT_SETTINGS)
@@ -100,16 +100,16 @@ def main():
     try:
         cli()
     except api.exceptions.ApiException as e:
-        if hasattr(e, 'get_body_message'):
+        if hasattr(e, "get_body_message"):
             print_error(e.get_body_message(), status=getattr(e, "status", None))
 
-        elif hasattr(e, 'body') and e.body is not None:
+        elif hasattr(e, "body") and e.body is not None:
             try:
                 message = json.loads(e.body)
-                if 'error' in message:
-                    print_error(msg=message['error'])
-                elif 'error_message' in message:
-                    print_error(msg=message['error_message'])
+                if "error" in message:
+                    print_error(msg=message["error"])
+                elif "error_message" in message:
+                    print_error(msg=message["error_message"])
                 else:
                     print_error(msg=message)
             except json.JSONDecodeError:
@@ -123,5 +123,5 @@ def main():
         print_error(msg=e)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

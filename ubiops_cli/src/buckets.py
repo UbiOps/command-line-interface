@@ -8,7 +8,7 @@ from ubiops_cli.src.helpers.helpers import get_label_filter
 from ubiops_cli.src.helpers import options
 
 
-LIST_ITEMS = ['name', 'provider', 'labels']
+LIST_ITEMS = ["name", "provider", "labels"]
 
 
 @click.group(name="buckets", short_help="Manage your buckets")
@@ -72,28 +72,26 @@ def buckets_get(bucket_name, output_path, quiet, format_):
     client.api_client.close()
 
     if output_path is not None:
-
         # Store only reusable settings
         dictionary = format_yaml(
             item=bucket,
             required_front=["name"],
             optional=["provider", "configuration", "description", "labels", "ttl"],
             rename=BUCKET_FIELDS_RENAMED,
-            as_str=False
+            as_str=False,
         )
 
         yaml_file = write_yaml(output_path, dictionary, default_file_name="bucket.yaml")
         if not quiet:
             click.echo(f"Bucket file stored in: {yaml_file}")
     else:
-
         print_item(
             bucket,
             row_attrs=LIST_ITEMS,
-            required_front=['id', 'creation_date', 'name'],
+            required_front=["id", "creation_date", "name"],
             optional=BUCKET_OUTPUT_FIELDS,
             rename=BUCKET_FIELDS_RENAMED,
-            fmt=format_
+            fmt=format_,
         )
 
 
@@ -140,8 +138,9 @@ def buckets_create(yaml_file, format_, **kwargs):
     project_name = get_current_project(error=True)
     yaml_content = read_yaml(yaml_file, required_fields=[])
 
-    assert 'bucket_name' in yaml_content or 'bucket_name' in kwargs, \
-        'Please, specify the bucket name in either the yaml file or as a command argument'
+    assert (
+        "bucket_name" in yaml_content or "bucket_name" in kwargs
+    ), "Please, specify the bucket name in either the yaml file or as a command argument"
 
     bucket = define_bucket(fields=kwargs, yaml_content=yaml_content, update=False)
 
@@ -152,10 +151,10 @@ def buckets_create(yaml_file, format_, **kwargs):
     print_item(
         bucket_response,
         row_attrs=LIST_ITEMS,
-        required_front=['name'],
+        required_front=["name"],
         optional=BUCKET_OUTPUT_FIELDS,
         rename=BUCKET_FIELDS_RENAMED,
-        fmt=format_
+        fmt=format_,
     )
 
 
@@ -190,7 +189,7 @@ def buckets_update(yaml_file, quiet, **kwargs):
     bucket_dict = define_bucket(fields=kwargs, yaml_content=yaml_content, update=True)
     bucket = api.BucketUpdate(**bucket_dict)
 
-    client.buckets_update(project_name=project_name, bucket_name=bucket_dict['name'], data=bucket)
+    client.buckets_update(project_name=project_name, bucket_name=bucket_dict["name"], data=bucket)
     client.api_client.close()
 
     if not quiet:

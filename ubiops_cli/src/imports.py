@@ -7,8 +7,8 @@ from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yam
 from ubiops_cli.src.helpers import options
 
 
-LIST_ITEMS = ['id', 'creation_date', 'status', 'size']
-GET_ITEMS = ['id', 'creation_date', 'status', 'error_message', 'size']
+LIST_ITEMS = ["id", "creation_date", "status", "size"]
+GET_ITEMS = ["id", "creation_date", "status", "error_message", "size"]
 
 
 @click.group(name="imports", short_help="Manage your imports")
@@ -61,9 +61,7 @@ def imports_get(import_id, output_path, quiet, format_):
 
     if output_path is not None:
         dictionary = format_yaml(
-            item=_import,
-            required_front=['deployments', 'pipelines', 'environment_variables'],
-            as_str=False
+            item=_import, required_front=["deployments", "pipelines", "environment_variables"], as_str=False
         )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="import.yaml")
         if not quiet:
@@ -189,40 +187,38 @@ def imports_confirm(import_id, yaml_file, format_):
     yaml_content = read_yaml(yaml_file)
     client = init_client()
 
-    if 'deployments' in yaml_content:
-        if not isinstance(yaml_content['deployments'], dict):
+    if "deployments" in yaml_content:
+        if not isinstance(yaml_content["deployments"], dict):
             raise UbiOpsException(
                 "Deployments field should be a dictionary with deployment names as key and deployment and version "
                 "details as value"
             )
-        deployments = yaml_content['deployments']
+        deployments = yaml_content["deployments"]
     else:
         deployments = {}
 
-    if 'pipelines' in yaml_content:
-        if not isinstance(yaml_content['pipelines'], dict):
+    if "pipelines" in yaml_content:
+        if not isinstance(yaml_content["pipelines"], dict):
             raise UbiOpsException(
                 "Pipelines field should be a dictionary with pipelines names as key and pipeline and version "
                 "details as value"
             )
-        pipelines = yaml_content['pipelines']
+        pipelines = yaml_content["pipelines"]
     else:
         pipelines = {}
 
-    if 'environment_variables' in yaml_content:
-        if not isinstance(yaml_content['environment_variables'], dict):
+    if "environment_variables" in yaml_content:
+        if not isinstance(yaml_content["environment_variables"], dict):
             raise UbiOpsException(
                 "Environment_variables field should be a dictionary with environment variable name as key and variable "
                 "details as value"
             )
-        environment_variables = yaml_content['environment_variables']
+        environment_variables = yaml_content["environment_variables"]
     else:
         environment_variables = {}
 
     import_update_data = api.ImportUpdate(
-        deployments=deployments,
-        pipelines=pipelines,
-        environment_variables=environment_variables
+        deployments=deployments, pipelines=pipelines, environment_variables=environment_variables
     )
     response = client.imports_update(project_name=project_name, import_id=import_id, data=import_update_data)
     client.api_client.close()

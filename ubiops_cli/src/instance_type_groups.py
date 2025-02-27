@@ -79,9 +79,7 @@ def instance_type_groups_get(instance_type_group_id, output_path, quiet, format_
     if output_path is not None:
         # Store only reusable settings
         dictionary = format_yaml(
-            item=group,
-            required_front=INSTANCE_TYPE_GROUP_RESPONSE_FILE["required_front"],
-            as_str=False
+            item=group, required_front=INSTANCE_TYPE_GROUP_RESPONSE_FILE["required_front"], as_str=False
         )
         yaml_file = write_yaml(output_path, dictionary, default_file_name="instance_type_group.yaml")
         if not quiet:
@@ -126,8 +124,9 @@ def instance_type_groups_create(name, yaml_file, format_):
     yaml_content = read_yaml(yaml_file=yaml_file)
     client = init_client()
 
-    assert "name" in yaml_content or name, \
-        "Please, specify the instance type group name in either the yaml file or as a command argument"
+    assert (
+        "name" in yaml_content or name
+    ), "Please, specify the instance type group name in either the yaml file or as a command argument"
 
     name = set_dict_default(name, yaml_content, "name")
 
@@ -140,7 +139,7 @@ def instance_type_groups_create(name, yaml_file, format_):
         row_attrs=INSTANCE_TYPE_GROUP_LIST_FIELDS,
         required_front=INSTANCE_TYPE_GROUP_RESPONSE["required_front"],
         optional=INSTANCE_TYPE_GROUP_RESPONSE["optional"],
-        fmt=format_
+        fmt=format_,
     )
 
 

@@ -2,7 +2,6 @@ import click
 
 
 class CustomGroup(click.Group):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.alias_to_original = {}

@@ -26,7 +26,7 @@ def validate_requirements(requirements_file):
     if validate_requirements_file(file_path=requirements_file):
         click.echo("Requirements file is valid")
     else:
-        click.secho("Requirements file is not valid", fg='red')
+        click.secho("Requirements file is not valid", fg="red")
         sys.exit(1)
 
 
@@ -40,5 +40,5 @@ def validate_ubiops_yaml(yaml_file):
     if validate_yaml_file(file_path=yaml_file):
         click.echo("YAML file is valid")
     else:
-        click.secho("YAML file is not valid", fg='red')
+        click.secho("YAML file is not valid", fg="red")
         sys.exit(1)

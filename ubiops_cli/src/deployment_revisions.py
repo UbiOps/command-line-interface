@@ -6,7 +6,7 @@ from ubiops_cli.src.helpers.wait_for import wait_for
 from ubiops_cli.src.helpers import options
 from ubiops_cli.utils import init_client, get_current_project, default_zip_name, write_blob
 
-LIST_ITEMS = ['creation_date', 'id', 'created_by', 'status']
+LIST_ITEMS = ["creation_date", "id", "created_by", "status"]
 
 
 @click.group(name=["version_revisions", "revisions"], short_help="Manage your deployment version revisions")
@@ -50,10 +50,7 @@ def revisions_get(deployment_name, version_name, revision_id, format_):
 
     client = init_client()
     revision = client.revisions_get(
-        project_name=project_name,
-        deployment_name=deployment_name,
-        version=version_name,
-        revision_id=revision_id
+        project_name=project_name, deployment_name=deployment_name, version=version_name, revision_id=revision_id
     )
     client.api_client.close()
 
@@ -110,12 +107,15 @@ def revisions_upload(deployment_name, version_name, archive_path, progress_bar, 
 
     client = init_client()
     revision = client.revisions_file_upload(
-        project_name=project_name, deployment_name=deployment_name, version=version_name, file=archive_path,
-        _progress_bar=progress_bar
+        project_name=project_name,
+        deployment_name=deployment_name,
+        version=version_name,
+        file=archive_path,
+        _progress_bar=False if not archive_path else progress_bar,
     )
     client.api_client.close()
 
-    print_item(revision, row_attrs=['revision', 'build'], fmt=format_)
+    print_item(revision, row_attrs=["revision", "build"], fmt=format_)
 
 
 # pylint: disable=too-many-arguments
@@ -143,6 +143,6 @@ def revisions_wait(deployment_name, version_name, revision_id, timeout, stream_l
         revision_id=revision_id,
         timeout=timeout,
         quiet=quiet,
-        stream_logs=stream_logs
+        stream_logs=stream_logs,
     )
     client.api_client.close()

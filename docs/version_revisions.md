@@ -102,7 +102,7 @@ Please, specify the deployment package `<archive_path>` that should be uploaded.
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- [required] `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to deployment version archive file
+- `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to deployment version archive file
 
 - `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
 
