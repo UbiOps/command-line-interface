@@ -26,7 +26,7 @@ dependencies = [
     "ConfigParser==4.0.2",
     "colorama==0.4.3",
     "pyyaml",
-    "ubiops==4.9.0"
+    "ubiops==4.9.1"
 ]
 dynamic = ["version"]
 
