@@ -325,7 +325,7 @@ either be passed as command argument or specified inside the yaml file using `<e
 
 - `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
-- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+- `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 

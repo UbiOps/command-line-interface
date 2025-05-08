@@ -43,6 +43,8 @@ deployment level.
 
 Create an environment variable.
 
+Use `--overwrite` flag to update the environment variable if it already exists.
+
 
 - When deployment_name and version_name are provided: the environment variable will be created on deployment
 version level.
@@ -83,6 +85,8 @@ The 'secret' parameter is optional, and is `false` by default.
 - `-v`/`--version_name`<br/>The version name
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains environment variables
+
+- `--overwrite`<br/>Whether you want to overwrite if exists
 
 - `-fmt`/`--format`<br/>The output format
 

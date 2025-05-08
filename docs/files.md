@@ -156,7 +156,7 @@ Upload a file to a bucket.
 
 - `-b`/`--bucket_name`<br/>The bucket name
 
-- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+- `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 

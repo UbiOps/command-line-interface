@@ -51,9 +51,11 @@ def projects_get(project_name, format_):
 @commands.command(name="create", short_help="Create a project")
 @options.PROJECT_NAME
 @options.ORGANIZATION_NAME_OPTIONAL
+@options.OVERWRITE
 @options.CREATE_FORMATS
-def projects_create(project_name, organization_name, format_):
-    """Create a new project.
+def projects_create(project_name, organization_name, overwrite, format_):
+    """
+    Create a new project.
 
     The created project will automatically become the current project.
 
@@ -62,21 +64,36 @@ def projects_create(project_name, organization_name, format_):
     to choose the organization.
 
     No organization yet? Please, use the user interface and follow the registration process or contact sales.
+
+    Use the `<overwrite>` flag to not fail when the project already exists. The project will still automatically become
+    the current project.
     """
 
     client = init_client()
 
-    if not organization_name:
-        response = client.organizations_list()
-        if len(response) == 1 and hasattr(response[0], "name"):
-            organization_name = response[0].name
-        else:
-            organization_name = click.prompt("Organization name")
+    response = None
+    if overwrite:
+        try:
+            response = client.projects_get(project_name=project_name)
+        except api.exceptions.ApiException:
+            # Do nothing if project doesn't exist
+            pass
 
-    project = api.ProjectCreate(name=project_name, organization_name=organization_name)
-    response = client.projects_create(data=project)
+    if not response:
+        # Obtain organization name if not given
+        if not organization_name:
+            response = client.organizations_list()
+            if len(response) == 1 and hasattr(response[0], "name"):
+                organization_name = response[0].name
+            else:
+                organization_name = click.prompt("Organization name")
+
+        project = api.ProjectCreate(name=project_name, organization_name=organization_name)
+        response = client.projects_create(data=project)
+
     client.api_client.close()
 
+    # Set the created/retrieved project as current project
     user_config = Config()
     user_config.set("default.project", response.name)
     user_config.write()

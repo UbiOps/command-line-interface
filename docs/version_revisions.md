@@ -104,7 +104,7 @@ Please, specify the deployment package `<archive_path>` that should be uploaded.
 
 - `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to deployment version archive file
 
-- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+- `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
 - `-fmt`/`--format`<br/>The output format
 

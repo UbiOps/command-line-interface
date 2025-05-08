@@ -16,26 +16,134 @@ from ubiops_cli.src.helpers.formatting import (
 from ubiops_cli.src.helpers import options
 
 
-@click.group(name="logs", short_help="View your logs")
-def commands():
+LOG_FILTERS = [
+    "pipeline_name",
+    "pipeline_version",
+    "pipeline_object_name",
+    "deployment_name",
+    "deployment_version",
+    "deployment_version_revision_id",
+    "environment_name",
+    "environment_build_id",
+    "instance_id",
+    "process_id",
+    "pipeline_request_id",
+    "deployment_request_id",
+    "webhook_name",
+    "system",
+    "level",
+]
+LOG_FILTERS_RENAMED = {
+    "deployment_version": "deployment_version_name",
+    "pipeline_version": "pipeline_version_name",
+}
+
+
+# pylint: disable=too-many-arguments
+@click.group(name="logs", short_help="View your logs", invoke_without_command=True)
+@click.pass_context
+@options.LOGS_START
+@options.LOGS_END
+@options.LOGS_QUERY
+@options.LOGS_LIMIT
+@options.LOGS_NO_PAGER
+@options.LOGS_FORMATS
+def commands(ctx, start, end, query, limit, no_pager, format_):
     """
-    View your logs.
+    Get the logs of your project.
+
+    If start < end, the logs are searched forward.
+    If start > end, the logs are searched backward.
+
+    \b
+    Use the `query` option to filter logs.
+    e.g. text search:
+    ```
+    --query '|= "text"'
+    ```
+    e.g. Deployment filters:
+    ```
+    --query '| deployment_name="deployment-1" | deployment_version="v1"'
+    ```
+    e.g. Pipeline filters:
+    ```
+    --query '| pipeline_name="pipeline-1" | pipeline_version="v1"'
+    ```
+    e.g. Text search + request filters
+    ```
+    --query '|= "text" | deployment_request_id="request-id-1"'
+    ```
+
+    \b
+    Available line filters:
+    - `|=` for exact string match
+    - `|~` for regex match
+    - `!=` for negative exact string match (matched logs will be excluded)
+    - `!~` for negative regex match (matched logs will be excluded)
+
+    \b
+    Available label filters (come after `|`):
+    - `=` for exact match
+    - `=~` for regex match
+    - `!=` for negative exact match (matched logs will be excluded)
+    - `!~` for negative regex match (matched logs will be excluded)
+
+    \b
+    Label filters can be chained using connectors `and` (equivalent to `|`) and `or`.
+    e.g. Specific deployment version
+    ```
+    --query '| deployment_name="my-deployment" and deployment_version="v1"'
+    ```
+    e.g. All logs of request 1 and request 2
+    ```
+    --query '| deployment_request_id="request-id-1" or deployment_request_id="request-id-2"'
+    ```
     """
 
-    return
+    # Skip for (deprecated) subcommands 'logs list' and 'logs get'
+    if ctx.invoked_subcommand:
+        return
+
+    project_name = get_current_project(error=True)
+    client = init_client()
+
+    logs = client.logs_list(project_name=project_name, start=start, end=end, query=query, limit=limit)
+    client.api_client.close()
+
+    if format_ == "json":
+        click.echo(format_json(logs))
+        return
+
+    if len(logs) > 0:
+        if format_ == "oneline":
+            lines = format_logs_oneline(logs)
+        elif format_ == "reference":
+            lines = format_logs_reference(logs)
+        else:  # format_ == "extended"
+            lines = format_logs_reference(logs=logs, extended=LOG_FILTERS)
+
+        if no_pager:
+            click.echo(lines)
+        else:
+            click.echo_via_pager(lines)
+
+    elif start and end:
+        click.echo(f"No logs found between <{start}> and <{end}>")
 
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-statements
-@commands.command(name="list", short_help="List logs")
+@commands.command(name="list", short_help="List logs [DEPRECATED]")
 @options.DEPLOYMENT_NAME_OPTIONAL
 @options.DEPLOYMENT_VERSION_OPTIONAL
 @options.PIPELINE_NAME_OPTIONAL
 @options.PIPELINE_VERSION_OPTIONAL
 @options.PIPELINE_OBJECT_NAME
 @options.BUILD_ID_OPTIONAL
+@options.INSTANCE_ID_OPTIONAL
+@options.PROCESS_ID_OPTIONAL
 @options.REQUEST_ID_OPTIONAL
 @options.PIPELINE_REQUEST_ID_OPTIONAL
 @options.SYSTEM
@@ -45,24 +153,17 @@ def commands():
 @options.DATE_RANGE
 @options.LOGS_LIMIT
 @options.LOGS_FORMATS
-def logs_list(
-    deployment_name,
-    deployment_version_name,
-    pipeline_name,
-    pipeline_version_name,
-    pipeline_object_name,
-    request_id,
-    pipeline_request_id,
-    build_id,
-    system,
-    level,
+def logs_list_deprecated(
     start_date,
     start_log,
     date_range,
     limit,
     format_,
+    **kwargs,
 ):
     """
+    [DEPRECATED] This method is deprecated, please use `ubiops logs` instead.
+
     Get the logs of your project.
 
     Use the command options as filters.
@@ -72,26 +173,10 @@ def logs_list(
     client = init_client()
 
     filters = {}
-    if deployment_name:
-        filters["deployment_name"] = deployment_name
-    if deployment_version_name:
-        filters["deployment_version"] = deployment_version_name
-    if pipeline_name:
-        filters["pipeline_name"] = pipeline_name
-    if pipeline_version_name:
-        filters["pipeline_version"] = pipeline_version_name
-    if pipeline_object_name:
-        filters["pipeline_object_name"] = pipeline_object_name
-    if build_id:
-        filters["build_id"] = build_id
-    if request_id:
-        filters["deployment_request_id"] = request_id
-    if pipeline_request_id:
-        filters["pipeline_request_id"] = pipeline_request_id
-    if system is not None:
-        filters["system"] = system
-    if level:
-        filters["level"] = level
+    for filter_option in LOG_FILTERS:
+        input_field = LOG_FILTERS_RENAMED[filter_option] if filter_option in LOG_FILTERS_RENAMED else filter_option
+        if kwargs.get(input_field, ""):
+            filters[filter_option] = kwargs[input_field]
 
     if start_date is not None:
         try:
@@ -121,20 +206,7 @@ def logs_list(
             lines = format_logs_reference(logs)
             click.echo_via_pager(lines)
         elif format_ == "extended":
-            lines = format_logs_reference(
-                logs,
-                extended=[
-                    "deployment_request_id",
-                    "pipeline_request_id",
-                    "deployment_name",
-                    "deployment_version",
-                    "pipeline_name",
-                    "pipeline_version",
-                    "pipeline_object_name",
-                    "build_id",
-                    "level",
-                ],
-            )
+            lines = format_logs_reference(logs=logs, extended=LOG_FILTERS)
             click.echo_via_pager(lines)
         else:
             lines = format_logs_reference(logs)
@@ -149,16 +221,21 @@ def logs_list(
         click.echo(f"No logs found between <{starting_point}> and <{end_point}>")
 
 
-@commands.command(name="get", short_help="Get details of a log")
+@commands.command(name="get", short_help="Get details of a log [DEPRECATED]")
 @options.LOG_ID
 @options.GET_FORMATS
 def logs_get(log_id, format_):
     """
+    [DEPRECATED] This method is deprecated, please use `ubiops logs` instead.
+
     \b
     Get more details of a log:
     - date
     - deployment_name
     - deployment_version_name
+    - build_id
+    - instance_id
+    - process_id
     - pipeline_name
     - pipeline_version_name
     - pipeline_object_name
@@ -166,7 +243,6 @@ def logs_get(log_id, format_):
     - pipeline_request_id
     - system (boolean)
     - level
-    - build_id
     """
 
     project_name = get_current_project(error=True)
@@ -174,25 +250,16 @@ def logs_get(log_id, format_):
 
     log_filters = api.LogsCreate(filters={}, id=log_id, limit=1)
     log = client.projects_log_list(project_name=project_name, data=log_filters)[0]
+    log.log = log.log.strip()
     client.api_client.close()
 
     print_item(
         log,
         row_attrs=["id", "date", "log", "level"],
         required_front=["id", "date", "system"],
-        optional=[
-            "deployment_request_id",
-            "pipeline_request_id",
-            "deployment_name",
-            "deployment_version",
-            "pipeline_name",
-            "pipeline_version",
-            "pipeline_object_name",
-            "build_id",
-            "level",
-        ],
+        optional=LOG_FILTERS,
         required_end=["log"],
-        rename={"deployment_version": "deployment_version_name", "pipeline_version": "pipeline_version_name"},
+        rename=LOG_FILTERS_RENAMED,
         fmt=format_,
     )
 

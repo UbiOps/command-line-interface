@@ -65,6 +65,9 @@ to choose the organization.
 
 No organization yet? Please, use the user interface and follow the registration process or contact sales.
 
+Use the `<overwrite>` flag to not fail when the project already exists. The project will still automatically become
+the current project.
+
 **Arguments:**
 
 - [required] `project_name`
@@ -74,6 +77,8 @@ No organization yet? Please, use the user interface and follow the registration 
 **Options:**
 
 - `-o`/`--organization_name`<br/>The organization name
+
+- `--overwrite`<br/>Whether you want to overwrite if exists
 
 - `-fmt`/`--format`<br/>The output format
 

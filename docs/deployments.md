@@ -66,6 +66,8 @@ stored in `deployment.yaml`.
 
 Create a new deployment.
 
+Use `--overwrite` flag to update the deployment if it already exists.
+
 
 Define the deployment parameters using a yaml file.
 For example:
@@ -101,6 +103,8 @@ string, double, bool, dict, file, array_string, array_int, array_double, array_f
 **Options:**
 
 - [required] `-f`/`--yaml_file`<br/>Path to a yaml file that containing deployment details
+
+- `--overwrite`<br/>Whether you want to overwrite if exists
 
 - `-fmt`/`--format`<br/>The output format
 
@@ -246,7 +250,7 @@ Use the `<overwrite>` option to overwrite the deployment package on UbiOps if on
 
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
-- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+- `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
@@ -402,7 +406,7 @@ ports.
 
 - `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
-- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+- `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
