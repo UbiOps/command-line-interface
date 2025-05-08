@@ -131,10 +131,13 @@ def deployments_get(deployment_name, output_path, quiet, format_):
 @commands.command(name="create", short_help="Create a deployment")
 @options.DEPLOYMENT_NAME_OVERRULE
 @options.DEPLOYMENT_YAML_FILE
+@options.OVERWRITE
 @options.CREATE_FORMATS
-def deployments_create(deployment_name, yaml_file, format_):
+def deployments_create(deployment_name, yaml_file, overwrite, format_):
     """
     Create a new deployment.
+
+    Use `--overwrite` flag to update the deployment if it already exists.
 
     \b
     Define the deployment parameters using a yaml file.
@@ -173,9 +176,27 @@ def deployments_create(deployment_name, yaml_file, format_):
     )
 
     kwargs = define_deployment(fields={"deployment_name": deployment_name}, yaml_content=yaml_content)
+    deployment_name = kwargs["name"]
 
-    deployment = api.DeploymentCreate(**{k: kwargs[k] for k in DEPLOYMENT_CREATE_FIELDS if k in kwargs})
-    response = client.deployments_create(project_name=project_name, data=deployment)
+    existing_deployment = None
+    if overwrite:
+        try:
+            existing_deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)
+        except api.exceptions.ApiException:
+            # Do nothing if deployment doesn't exist
+            pass
+
+    if existing_deployment:
+        deployment = api.DeploymentUpdate(
+            **{k: kwargs[k] for k in DEPLOYMENT_UPDATE_FIELDS if kwargs.get(k, None) is not None}
+        )
+        response = client.deployments_update(
+            project_name=project_name, deployment_name=deployment_name, data=deployment
+        )
+    else:
+        deployment = api.DeploymentCreate(**{k: kwargs[k] for k in DEPLOYMENT_CREATE_FIELDS if k in kwargs})
+        response = client.deployments_create(project_name=project_name, data=deployment)
+
     client.api_client.close()
 
     print_item(

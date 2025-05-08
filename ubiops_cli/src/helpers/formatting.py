@@ -1,6 +1,6 @@
 import json
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 import click
 import dateutil.parser
@@ -152,8 +152,15 @@ def object_to_dict(obj, skip_attributes=None):
             # Do not add values that are class instances except for specific fields
             try:
                 value.__dict__.keys()
+
+                # Compute details
                 if attr in ["node", "node_pool", "cluster", "instance_type"]:
                     dictionary[attr] = value.to_dict()
+
+                # Log metadata
+                elif attr == "metadata":
+                    dictionary[attr] = value.to_dict()
+
             except AttributeError:
                 dictionary[attr] = value
 
@@ -439,29 +446,49 @@ def format_logs_reference(logs, extended=None):
     """
     Format logs to multiple lines
 
-    :param list[object] logs: the logs to format
+    :param list[LogList, Logs] logs: the logs to format
     :param list[str] extended: set of extra attributes to show apart from the log and date
     """
+
+    extended = extended if extended else []
 
     overview = ""
     total = len(logs)
     for i, log in enumerate(logs):
-        overview += f"Log: {click.style(log.id, fg='yellow')}\n"
-        overview += f"Date: {format_datetime(parse_datetime(log.date))}\n"
-        if extended:
+        if hasattr(log, "timestamp"):
+            overview += f"timestamp: {log.timestamp}\n"
+            try:
+                dt = datetime.fromtimestamp(log.timestamp / 1_000_000_000, tz=timezone.utc)
+                overview += f"date: {format_datetime(dt=dt)}\n"
+            except (TypeError, ValueError):
+                pass
+        if hasattr(log, "id"):
+            overview += f"Log: {click.style(log.id, fg='yellow')}\n"
+        if hasattr(log, "date"):
+            overview += f"Date: {format_datetime(parse_datetime(log.date))}\n"
+
+        if hasattr(log, "metadata"):
             for attr in extended:
-                if getattr(log, attr) is not None:
+                if getattr(log.metadata, attr) is not None:
+                    overview += f"{attr}: {getattr(log.metadata, attr)}\n"
+            overview += "log: "
+        else:
+            for attr in extended:
+                if getattr(log, attr, None) is not None:
                     overview += f"{attr}: {getattr(log, attr)}\n"
-        overview += "\n"
+            overview += "\n"
+
+        message = log.log.strip()
 
         # Change the color of the log depending on the log level
-        if log.level == "error":
+        if getattr(log, "level", "") == "error" or (
+            hasattr(log, "metadata") and getattr(log.metadata, "level", "") == "error"
+        ):
             # Change the color of all lines if the log contains multiple lines
-            log_lines = log.log.split("\n")
-            log_line = "\n".join([click.style(item, fg="red") for item in log_lines])
-            overview += log_line
+            log_lines = message.split("\n")
+            overview += "\n".join([click.style(item, fg="red") for item in log_lines])
         else:
-            overview += log.log
+            overview += message
 
         if i + 1 < total:
             overview += "\n\n"
@@ -472,25 +499,42 @@ def format_logs_oneline(logs):
     """
     Format logs to single lines
 
-    :param list[object] logs: the logs to format
+    :param list[LogList, Logs] logs: the logs to format
     """
 
     overview = ""
     total = len(logs)
     for i, log in enumerate(logs):
-        overview += click.style(str(log.id), fg="yellow")
-        overview += " "
-        overview += click.style(format_datetime(parse_datetime(log.date), "%Y-%m-%d %H:%M:%S %Z"), fg="green")
-        overview += " "
+        if hasattr(log, "timestamp"):
+            try:
+                overview += click.style(
+                    format_datetime(
+                        dt=datetime.fromtimestamp(log.timestamp / 1_000_000_000, tz=timezone.utc),
+                        fmt="%Y-%m-%d %H:%M:%S %Z",
+                    ),
+                    fg="green",
+                )
+                overview += " "
+            except (TypeError, ValueError):
+                pass
+        if hasattr(log, "id"):
+            overview += click.style(str(log.id), fg="yellow")
+            overview += " "
+        if hasattr(log, "date"):
+            overview += click.style(format_datetime(parse_datetime(log.date), "%Y-%m-%d %H:%M:%S %Z"), fg="green")
+            overview += " "
+
+        message = log.log.strip()
 
         # Change the color of the log depending on the log level
-        if log.level == "error":
+        if getattr(log, "level", "") == "error" or (
+            hasattr(log, "metadata") and getattr(log.metadata, "level", "") == "error"
+        ):
             # Change the color of all lines if the log contains multiple lines
-            log_lines = log.log.split("\n")
-            log_line = "\n".join([click.style(item, fg="red") for item in log_lines])
-            overview += log_line
+            log_lines = message.split("\n")
+            overview += "\n".join([click.style(item, fg="red") for item in log_lines])
         else:
-            overview += log.log
+            overview += message
         if i + 1 < total:
             overview += "\n"
 

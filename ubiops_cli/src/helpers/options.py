@@ -23,7 +23,7 @@ PROGRESS_BAR = click.option(
     metavar="<bool>",
     default=True,
     type=click.BOOL,
-    help="Whether the show a progress bar while uploading",
+    help="Whether to show a progress bar while uploading",
     show_default=True,
 )
 STREAM_LOGS = click.option(
@@ -472,16 +472,19 @@ DEPLOYMENT_ARCHIVE_OUTPUT = click.option(
     help="Path to file or directory to store the deployment package archive file",
 )
 
-# Deployment version revisions
+# Deployment version revisions/builds/instances/processes
 REVISION_ID = click.argument("revision_id", required=True, metavar="<revision_id>", nargs=1)
 REVISION_ID_OPTIONAL = click.option(
     "-rid", "--revision_id", required=False, default=None, metavar="<id>", help="The deployment version revision ID"
 )
-
-# Deployment version builds
-BUILD_ID = click.argument("build_id", required=True, metavar="<build_id>", nargs=1)
 BUILD_ID_OPTIONAL = click.option(
     "-bid", "--build_id", required=False, default=None, metavar="<id>", help="The deployment version build ID"
+)
+INSTANCE_ID_OPTIONAL = click.option(
+    "-iid", "--instance_id", required=False, default=None, metavar="<id>", help="The deployment version instance ID"
+)
+PROCESS_ID_OPTIONAL = click.option(
+    "--process_id", required=False, default=None, metavar="<int>", help="The ID of the instance process"
 )
 
 # Requests
@@ -511,7 +514,13 @@ REQUEST_ID_MULTI = click.option(
     "-id", "--request_id", required=True, metavar="<id>", multiple=True, help="The ID of the request"
 )
 REQUEST_ID_OPTIONAL = click.option(
-    "-id", "--request_id", required=False, default=None, metavar="<id>", help="The ID of the deployment request"
+    "-id",
+    "--request_id",
+    "deployment_request_id",
+    required=False,
+    default=None,
+    metavar="<id>",
+    help="The ID of the deployment request",
 )
 PIPELINE_REQUEST_ID_OPTIONAL = click.option(
     "-pid", "--pipeline_request_id", required=False, default=None, metavar="<id>", help="The ID of the pipeline request"
@@ -764,10 +773,22 @@ PIPELINE_OBJECT_NAME = click.option(
 ENV_VAR_ID = click.argument("env_var_id", required=True, metavar="<id>", nargs=1)
 ENV_VAR_NAME = click.argument("env_var_name", required=False, default=None, metavar="<name>", nargs=1)
 ENV_VAR_NAME_UPDATE = click.option(
-    "-n", "--new_name", required=False, default=False, help="The new environment variable name"
+    "-n",
+    "--new_name",
+    required=False,
+    default=None,
+    metavar="<string>",
+    type=click.STRING,
+    help="The new environment variable name",
 )
 ENV_VAR_VALUE = click.option(
-    "--value", "env_var_value", required=False, default=None, metavar="<string>", help="Environment variable value"
+    "--value",
+    "env_var_value",
+    required=False,
+    default=None,
+    metavar="<string>",
+    type=click.STRING,
+    help="Environment variable value",
 )
 ENV_VAR_SECRET = click.option("--secret", required=False, default=False, is_flag=True, help="Store value as secret")
 FROM_DEPLOYMENT_NAME = click.option(
@@ -845,14 +866,46 @@ START_LOG = click.option(
     "log having the log ID equal to the ID value in the response, regardless of whether the date_range is "
     "positive or negative.",
 )
+
+LOGS_START = click.option(
+    "--start",
+    required=False,
+    default=None,
+    metavar="<datetime in iso-format | timestamp (seconds) | timestamp (nanoseconds)>",
+    help="Start of the interval for which the logs are retrieved [default = now]",
+)
+LOGS_END = click.option(
+    "--end",
+    required=False,
+    default=None,
+    metavar="<datetime in iso-format | timestamp (seconds) | timestamp (nanoseconds)>",
+    help="End of the interval for which the logs are retrieved [default = yesterday]",
+)
+LOGS_QUERY = click.option(
+    "--query",
+    "-q",
+    required=False,
+    default="",
+    type=click.STRING,
+    metavar="<string>",
+    help="Query to filter logs, see command description for examples",
+)
+LOGS_NO_PAGER = click.option(
+    "--no_pager",
+    required=False,
+    default=False,
+    is_flag=True,
+    help="Return logs directly without pager",
+)
 LOGS_LIMIT = click.option(
     "--limit",
+    "-n",
     required=False,
-    default=500,
-    type=click.IntRange(1, 500),
-    metavar="[1-500]",
+    default=1000,
+    type=click.IntRange(1, 5000),
+    metavar="[1-5000]",
     show_default=True,
-    help="Limit of the logs response. The maximum value is 500.",
+    help="Limit of the logs response. The maximum value is 5000.",
 )
 DATE_RANGE = click.option(
     "--date_range",

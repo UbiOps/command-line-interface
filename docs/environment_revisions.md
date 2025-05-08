@@ -96,7 +96,7 @@ Please, specify the environment package `<archive_path>` that should be uploaded
 
 - [required] `-a`/`-z`/`--archive_path`/`--zip_path`<br/>Path to environment package archive file
 
-- `-pb`/`--progress_bar`<br/>Whether the show a progress bar while uploading
+- `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
 - `-fmt`/`--format`<br/>The output format
 
