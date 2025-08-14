@@ -166,7 +166,6 @@ def environments_create(yaml_file, format_, **kwargs):
         row_attrs=LIST_ITEMS,
         required_front=["id", "name"],
         optional=ENVIRONMENT_DETAILS,
-        required_end=["active_revision", "active_build", "latest_revision", "latest_build"],
         rename=ENVIRONMENT_FIELDS_RENAMED,
         fmt=format_,
     )

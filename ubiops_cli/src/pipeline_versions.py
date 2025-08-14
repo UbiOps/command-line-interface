@@ -121,6 +121,8 @@ def pipeline_versions_get(pipeline_name, version_name, output_path, quiet, forma
     pipeline = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name)
     client.api_client.close()
 
+    # By default these attributes are not present in the version obtained from the API, but we explicitly set them
+    # to ensure that the version is reproducible with the YAML output
     setattr(version, "input_type", pipeline.input_type)
     setattr(version, "input_fields", pipeline.input_fields)
     setattr(version, "output_type", pipeline.output_type)
@@ -210,8 +212,16 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
     kwargs = rename_pipeline_object_reference_version(content=kwargs)
 
     version = api.PipelineVersionCreate(version=version_name, **{k: kwargs[k] for k in PIPELINE_VERSION_FIELDS})
+    pipeline = client.pipelines_get(project_name=project_name, pipeline_name=pipeline_name)
     response = client.pipeline_versions_create(project_name=project_name, pipeline_name=pipeline_name, data=version)
     client.api_client.close()
+
+    # By default these attributes are not present in the response obtained from the API, but we explicitly set them
+    # to ensure that the pipeline version is reproducible with the YAML output
+    setattr(response, "input_type", pipeline.input_type)
+    setattr(response, "input_fields", pipeline.input_fields)
+    setattr(response, "output_type", pipeline.output_type)
+    setattr(response, "output_fields", pipeline.output_fields)
 
     print_item(item=response, row_attrs=LIST_ITEMS, **PIPELINE_VERSION_RESPONSE, fmt=format_)
 

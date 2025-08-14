@@ -1314,3 +1314,7 @@ INSTANCE_LIMIT = click.option(
     help="The maximum number of instances returned, default is 50",
 )
 INSTANCE_ID_ARGUMENT = click.argument("instance_id", required=True, metavar="<instance_id>", nargs=1)
+
+SHELL = click.argument(
+    "shell", nargs=1, required=True, type=click.Choice(["bash", "zsh", "fish"], case_sensitive=False)
+)
