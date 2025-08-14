@@ -43,6 +43,47 @@ Then use the package like this:
 ubiops --version
 ```
 
+### Shell completion
+
+Optionally enable shell completion for your shell of choice.
+
+Run the command below for your shell of choice to enable shell completion for the current shell session. Add the command
+to your `~/.bashrc`, `~/.zshrc` or `~/.config/fish/config.fish` if you want to make it persistent.
+
+- For Bash, add the following line to your `~/.bashrc`:
+	```bash
+	. <(ubiops complete bash)
+	```
+
+- For Zsh, add the following line to your `~/.zshrc`:
+	```zsh
+	. <(ubiops complete zsh)
+	```
+
+- For Fish, add the following line to your `~/.config/fish/config.fish`:
+	```fish
+	ubiops complete fish | .
+	```
+
+Restart your shell for the change to take effect.
+
+Please, be aware that if you run the ubiops-cli in a virtual environment, you should only enable shell completion after
+activating the virtual environment, or write the content to a file on your system such that it can be found without
+the virtual environment being activated. E.g. for Bash:
+
+```bash
+ubiops complete bash > ~/.ubiops-complete.bash
+```
+
+And then add to your `~/.bashrc`:
+
+```bash
+. ~/.ubiops-complete.bash
+```
+
+Restart your shell for the change to take effect.
+
+
 ## Troubleshooting
 
 #### Command not found
@@ -64,15 +105,28 @@ ubiops --version
 
 ### Sign in & sign out
 
-Sign in using your credentials:
-```bash
-ubiops signin
-```
+The default API host url is https://api.ubiops.com/v2.1/ (UbiOps SaaS). For on-premises installations of UbiOps, set
+your API url using the `--api` option in the signin commands below.
 
-Sign in using a service token:
-```bash
-ubiops signin --token
-```
+- Sign in using your credentials (username/password):
+    ```bash
+    ubiops signin --api https://api.ubiops.com/v2.1/
+    ```
+
+    You will be prompted to fill in your credentials (email + password). It's also possible to provide your email and
+    password directly using the `--email` and `--password` options.
+
+    A temporary access token is generated in the background, which provides you access for 3 hours.
+
+
+- Sign in using a service token:
+    ```bash
+    ubiops signin --api https://api.ubiops.com/v2.1/ --token
+    ```
+
+    You will be prompted to fill in your token. It's also possible to provide your token directly using the `--password`
+    option.
+
 
 Show if you are authorized:
 ```bash
@@ -108,6 +162,7 @@ Category | Documentation reference
 ---- | ---- 
 Authentication | [docs/authentication.md](docs/authentication.md)
 Projects | [docs/projects.md](docs/projects.md)
+Complete | [docs/complete.md](docs/complete.md)
 Config | [docs/config.md](docs/config.md)
 Deployments | [docs/deployments.md](docs/deployments.md)
 Deployment Versions | [docs/deployment_versions.md](docs/deployment_versions.md)

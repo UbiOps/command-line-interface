@@ -2,12 +2,12 @@ import json
 import sys
 
 import click
-
 import ubiops as api
 
 from ubiops_cli.src import (
     auth,
     buckets,
+    completions,
     config,
     deployment_revisions,
     deployment_versions,
@@ -49,6 +49,7 @@ cli.add_command(auth.signin)
 cli.add_command(auth.status)
 cli.add_command(auth.user)
 cli.add_command(auth.signout)
+cli.add_command(completions.commands)
 cli.add_command(config.commands)
 cli.add_command(projects.current_project)
 cli.add_command(projects.commands)

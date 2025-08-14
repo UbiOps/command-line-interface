@@ -90,7 +90,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    environment: python3-8
+    environment: python3-13
     instance_type_group_name: 2048 MB + 0.5 vCPU
     scaling_strategy: default
     minimum_instances: 0
@@ -189,7 +189,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    environment: python3-8
+    environment: python3-13
     instance_type_group_name: 2048 MB + 0.5 vCPU
     scaling_strategy: default
     minimum_instances: 0
