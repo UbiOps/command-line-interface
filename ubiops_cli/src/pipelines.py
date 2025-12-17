@@ -1,30 +1,25 @@
 import click
 import ubiops as api
 
-from ubiops_cli.constants import STRUCTURED_TYPE
-from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.src.helpers.pipeline_helpers import (
-    define_pipeline,
-    get_changed_pipeline_structure,
-    PIPELINE_REQUIRED_FIELDS,
-)
-from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.formatting import (
+from .helpers.pipeline_helpers import define_pipeline, get_changed_pipeline_structure, PIPELINE_REQUIRED_FIELDS
+from .helpers.helpers import get_label_filter
+from .helpers.formatting import (
     print_list,
     print_item,
     format_yaml,
     format_pipeline_requests_reference,
     format_pipeline_requests_oneline,
     format_json,
-    format_datetime,
-    parse_datetime,
 )
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import get_current_project, init_client, read_json, read_yaml, write_yaml, parse_json
+from .helpers import options
+from .requests import get_request_input_output, list_requests
+
+from ..constants import STRUCTURED_TYPE
+from ..exceptions import UbiOpsException
+from ..utils import get_current_project, init_client, read_json, read_yaml, write_yaml, parse_json
 
 
 LIST_ITEMS = ["last_updated", "name", "labels"]
-REQUEST_LIST_ITEMS = ["id", "status", "time_created"]
 
 
 @click.group(name=["pipelines", "ppl"], short_help="Manage your pipelines")
@@ -326,7 +321,7 @@ def requests_create(pipeline_name, version_name, batch, timeout, deployment_time
     Use `--batch` to make an asynchronous batch request:
     `ubiops pipelines requests create <my-pipeline> --batch --data <input>`
 
-    Multiple data inputs can be specified at ones and send as batch by using the '--data' options multiple times:
+    Multiple data inputs can be specified at once and send as batch by using the '--data' options multiple times:
     `ubiops pipelines requests create <my-pipeline> --batch --data <input-1> --data <input-2> --data <input-3>`
 
     For structured input, specify each data input as JSON formatted string. For example:
@@ -416,7 +411,7 @@ def requests_get(pipeline_name, version_name, request_id, format_):
     Use the version option to get a request for a specific pipeline version.
     If not specified, the request is retrieved for the default version.
 
-    Multiple request ids can be specified at ones by using the '-id' options multiple times:
+    Multiple request ids can be specified at once by using the '-id' options multiple times:
     `ubiops pipelines requests get <my-pipeline> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
     """
 
@@ -437,17 +432,18 @@ def requests_get(pipeline_name, version_name, request_id, format_):
 
     client.api_client.close()
 
+    # Fields request_data and result are deprecated for requests GET
     if format_ == "reference":
-        click.echo(format_pipeline_requests_reference(response))
+        click.echo(format_pipeline_requests_reference(response, skip_attributes=["request_data", "result"]))
 
     elif format_ == "oneline":
-        click.echo(format_pipeline_requests_oneline(response))
+        click.echo(format_pipeline_requests_oneline(response, skip_attributes=["request_data", "result"]))
 
     elif format_ == "json":
-        click.echo(format_json(response, skip_attributes=["success"]))
+        click.echo(format_json(response, skip_attributes=["success", "request_data", "result"]))
 
     else:
-        click.echo(format_pipeline_requests_reference(response))
+        click.echo(format_pipeline_requests_reference(response, skip_attributes=["request_data", "result"]))
 
 
 @requests.command(name="list", short_help="List pipeline requests")
@@ -455,7 +451,7 @@ def requests_get(pipeline_name, version_name, request_id, format_):
 @options.VERSION_NAME_OPTIONAL
 @options.OFFSET
 @options.REQUEST_LIMIT
-@options.REQUEST_FILTER_PIPELINE_STATUS
+@options.REQUEST_FILTER_STATUS
 @options.REQUEST_FILTER_START_DATE
 @options.REQUEST_FILTER_END_DATE
 @options.REQUEST_FILTER_SEARCH_ID
@@ -469,36 +465,63 @@ def requests_list(pipeline_name, version_name, limit, format_, **kwargs):
     If not specified, the requests are listed for the default version.
     """
 
-    project_name = get_current_project(error=True)
+    list_requests(
+        object_type="pipeline",
+        object_name=pipeline_name,
+        version_name=version_name,
+        limit=limit,
+        format_=format_,
+        **kwargs,
+    )
 
-    if "start_date" in kwargs and kwargs["start_date"]:
-        try:
-            kwargs["start_date"] = format_datetime(parse_datetime(kwargs["start_date"]), fmt="%Y-%m-%dT%H:%M:%SZ")
-        except ValueError:
-            raise UbiOpsException(
-                "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
-            )
 
-    if "end_date" in kwargs and kwargs["end_date"]:
-        try:
-            kwargs["end_date"] = format_datetime(parse_datetime(kwargs["end_date"]), fmt="%Y-%m-%dT%H:%M:%SZ")
-        except ValueError:
-            raise UbiOpsException(
-                "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
-            )
+@requests.command(name="input", short_help="Get pipeline request input")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_ID
+@options.INPUT_OUTPUT_DOWNLOAD_PATH
+@options.ASSUME_YES
+def requests_input(pipeline_name, version_name, request_id, output_path, assume_yes):
+    """
+    Get the input data of a pipeline request.
+    Data is only stored for pipeline versions with `request_retention_mode` 'full'.
 
-    client = init_client()
-    if version_name is not None:
-        response = client.pipeline_version_requests_list(
-            project_name=project_name, pipeline_name=pipeline_name, version=version_name, limit=limit, **kwargs
-        )
+    Use the version option to get the input data for a request of a specific pipeline version.
+    If not specified, the input data is retrieved for the default version.
+    """
 
-    else:
-        response = client.pipeline_requests_list(
-            project_name=project_name, pipeline_name=pipeline_name, limit=limit, **kwargs
-        )
+    get_request_input_output(
+        data_type="input",
+        object_type="pipeline",
+        object_name=pipeline_name,
+        version_name=version_name,
+        request_id=request_id,
+        output_path=output_path,
+        assume_yes=assume_yes,
+    )
 
-    client.api_client.close()
-    print_list(response, REQUEST_LIST_ITEMS, fmt=format_, json_skip=["success"])
-    if len(response) == limit:
-        click.echo("\n(Use the <offset> and <limit> options to load more)")
+
+@requests.command(name="output", short_help="Get pipeline request output")
+@options.PIPELINE_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_ID
+@options.INPUT_OUTPUT_DOWNLOAD_PATH
+@options.ASSUME_YES
+def requests_output(pipeline_name, version_name, request_id, output_path, assume_yes):
+    """
+    Get the output data of a pipeline request.
+    Data is only stored for pipeline versions with `request_retention_mode` 'full'.
+
+    Use the version option to get the output data for a request of a specific pipeline version.
+    If not specified, the output data is retrieved for the default version.
+    """
+
+    get_request_input_output(
+        data_type="output",
+        object_type="pipeline",
+        object_name=pipeline_name,
+        version_name=version_name,
+        request_id=request_id,
+        output_path=output_path,
+        assume_yes=assume_yes,
+    )

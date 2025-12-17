@@ -1,8 +1,9 @@
 import click
 
-from ubiops_cli.utils import default_zip_name, get_current_project, init_client, write_blob
-from ubiops_cli.src.helpers.formatting import print_list, print_item
-from ubiops_cli.src.helpers import options
+from .helpers.formatting import print_list, print_item
+from .helpers import options
+from ..constants import DEPLOYMENT_AGENT_WARNING
+from ..utils import get_current_project, init_client, write_blob
 
 
 LIST_ITEMS = ["creation_date", "id", "created_by"]
@@ -65,8 +66,7 @@ def revisions_download(environment_name, revision_id, output_path, quiet):
     Download a revision of an environment.
 
     The `<output_path>` option will be used as output location of the archive file. If not specified,
-    the current directory will be used. If the `<output_path>` is a directory, the archive will be
-    saved as `[environment_name]_[datetime.now()].zip`.
+    the current directory will be used.
     """
 
     if not output_path:
@@ -78,12 +78,11 @@ def revisions_download(environment_name, revision_id, output_path, quiet):
     with client.environment_revisions_file_download(
         project_name=project_name, environment_name=environment_name, revision_id=revision_id
     ) as response:
-        filename = default_zip_name(prefix=environment_name)
-        output_path = write_blob(response.read(), output_path, filename)
+        output_path = write_blob(response.read(), output_path, response.getfilename())
     client.api_client.close()
 
     if not quiet:
-        click.echo(f"Zip stored in: {output_path}")
+        click.echo(f"Archive stored in: {output_path}")
 
 
 @commands.command(name="upload", short_help="Create a revision of an environment")
@@ -101,6 +100,11 @@ def revisions_upload(environment_name, archive_path, progress_bar, format_):
     project_name = get_current_project(error=True)
 
     client = init_client()
+
+    environment = client.environments_get(project_name=project_name, environment_name=environment_name)
+    if environment.supports_request_format and not environment.base_environment and not environment.system:
+        click.secho(message=DEPLOYMENT_AGENT_WARNING, fg="yellow")
+
     revision = client.environment_revisions_file_upload(
         project_name=project_name, environment_name=environment_name, file=archive_path, _progress_bar=progress_bar
     )

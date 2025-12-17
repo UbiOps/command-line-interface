@@ -1,7 +1,7 @@
 import click
 import ubiops as api
 
-from ubiops_cli.src.helpers.deployment_helpers import (
+from .helpers.deployment_helpers import (
     define_deployment_version,
     set_default_scaling_parameters,
     update_deployment_file,
@@ -11,11 +11,11 @@ from ubiops_cli.src.helpers.deployment_helpers import (
     DEPLOYMENT_VERSION_DETAILS,
     SUPPORTS_REQUEST_FORMAT_DETAILS,
 )
-from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
-from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.wait_for import wait_for
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
+from .helpers.formatting import print_list, print_item, format_yaml
+from .helpers.helpers import get_label_filter
+from .helpers.wait_for import wait_for
+from .helpers import options
+from ..utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
 
 LIST_ITEMS = ["last_updated", "version", "status", "labels"]
 
@@ -99,8 +99,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
-    maximum_queue_size_express: 100
-    maximum_queue_size_batch: 100000
+    maximum_queue_size: 100000
     has_request_method: true
     has_requests_method: false
     static_ip: false
@@ -164,8 +163,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @options.MAX_IDLE_TIME
 @options.RETENTION_MODE
 @options.RETENTION_TIME
-@options.MAX_QUEUE_SIZE_EXPRESS
-@options.MAX_QUEUE_SIZE_BATCH
+@options.MAX_QUEUE_SIZE
 @options.VERSION_STATIC_IP
 @options.VERSION_PUBLIC_PORT
 @options.VERSION_DEPLOYMENT_PORT
@@ -198,8 +196,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
-    maximum_queue_size_express: 100
-    maximum_queue_size_batch: 100000
+    maximum_queue_size: 100000
     static_ip: false
     ports:
     - public_port: 2222
@@ -218,7 +215,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 
     project_name = get_current_project(error=True)
 
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
 
     assert "deployment_name" in yaml_content or deployment_name, (
         "Please, specify the deployment name in either " "the yaml file or as a command argument"
@@ -293,8 +290,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @options.MAX_IDLE_TIME
 @options.RETENTION_MODE
 @options.RETENTION_TIME
-@options.MAX_QUEUE_SIZE_EXPRESS
-@options.MAX_QUEUE_SIZE_BATCH
+@options.MAX_QUEUE_SIZE
 @options.VERSION_STATIC_IP
 @options.VERSION_PUBLIC_PORT
 @options.VERSION_DEPLOYMENT_PORT
@@ -322,8 +318,7 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
-    maximum_queue_size_express: 100
-    maximum_queue_size_batch: 100000
+    maximum_queue_size: 100000
     static_ip: false
     ports:
     - public_port: 2222
@@ -345,7 +340,7 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
 
     project_name = get_current_project(error=True)
 
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
 
     # Convert command options for port forwarding to 'ports' list
     if "ports" in yaml_content and (kwargs.get("public_port", None) or kwargs.get("deployment_port", None)):

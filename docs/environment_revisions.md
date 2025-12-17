@@ -58,8 +58,7 @@ Get a revision of an environment.
 Download a revision of an environment.
 
 The `<output_path>` option will be used as output location of the archive file. If not specified,
-the current directory will be used. If the `<output_path>` is a directory, the archive will be
-saved as `[environment_name]_[datetime.now()].zip`.
+the current directory will be used.
 
 **Arguments:**
 

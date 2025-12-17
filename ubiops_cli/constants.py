@@ -18,6 +18,16 @@ WARNING_STATUSES = [
 ]
 ERROR_STATUSES = ["failed", "cancelled_pending", "cancelled"]
 DEFAULT_IGNORE_FILE = ".ubiops-ignore"
-IMPLICIT_ENVIRONMENT_FILES = ["ubiops.yaml", "requirements.txt", "install_packages.R", "environment.yaml"]
+IMPLICIT_ENVIRONMENT_FILES = [
+    "ubiops.yaml",
+    "requirements.txt",
+    "environment.yaml",
+]
 
 UPDATE_TIME = 30  # seconds to wait between update and new file upload
+
+DEPLOYMENT_AGENT_WARNING = (
+    "WARNING: You are uploading a custom docker image to an environment that supports request format."
+    " Please make sure the image contains a UbiOps deployment agent that handles requests."
+    " If the image doesn't contain a UbiOps deployment agent, please disable request format support."
+)

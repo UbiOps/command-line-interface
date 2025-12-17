@@ -1,10 +1,10 @@
 import click
 import ubiops as api
 
-from ubiops_cli.src.helpers.formatting import print_list, print_item
-from ubiops_cli.src.helpers.wait_for import wait_for
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import init_client, get_current_project, default_zip_name, write_blob
+from .helpers.formatting import print_list, print_item
+from .helpers.wait_for import wait_for
+from .helpers import options
+from ..utils import init_client, get_current_project, write_blob
 
 LIST_ITEMS = ["creation_date", "id", "created_by", "status"]
 
@@ -68,8 +68,7 @@ def revisions_download(deployment_name, version_name, revision_id, output_path, 
     Download a revision of a deployment version.
 
     The `<output_path>` option will be used as output location of the archive file. If not specified,
-    the current directory will be used. If the `<output_path>` is a directory, the archive will be
-    saved as `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
+    the current directory will be used.
     """
 
     if not output_path:
@@ -81,13 +80,11 @@ def revisions_download(deployment_name, version_name, revision_id, output_path, 
     with client.revisions_file_download(
         project_name=project_name, deployment_name=deployment_name, version=version_name, revision_id=revision_id
     ) as response:
-        prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
-        filename = default_zip_name(prefix=prefix)
-        output_path = write_blob(response.read(), output_path, filename)
+        output_path = write_blob(response.read(), output_path, response.getfilename())
     client.api_client.close()
 
     if not quiet:
-        click.echo(f"Zip stored in: {output_path}")
+        click.echo(f"Archive stored in: {output_path}")
 
 
 @commands.command(name="upload", short_help="Create a revision of a deployment version")

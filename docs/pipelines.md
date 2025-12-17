@@ -197,7 +197,7 @@ If not specified, a request is made to the default version:
 Use `--batch` to make an asynchronous batch request:
 `ubiops pipelines requests create <my-pipeline> --batch --data <input>`
 
-Multiple data inputs can be specified at ones and send as batch by using the '--data' options multiple times:
+Multiple data inputs can be specified at once and send as batch by using the '--data' options multiple times:
 `ubiops pipelines requests create <my-pipeline> --batch --data <input-1> --data <input-2> --data <input-3>`
 
 For structured input, specify each data input as JSON formatted string. For example:
@@ -240,7 +240,7 @@ Pipeline requests are only stored for pipeline versions with `request_retention_
 Use the version option to get a request for a specific pipeline version.
 If not specified, the request is retrieved for the default version.
 
-Multiple request ids can be specified at ones by using the '-id' options multiple times:
+Multiple request ids can be specified at once by using the '-id' options multiple times:
 `ubiops pipelines requests get <my-pipeline> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
 
 **Arguments:**
@@ -295,6 +295,68 @@ If not specified, the requests are listed for the default version.
 - `--search_id`<br/>A string to search inside request ids. It will filter all request ids that contain this string.
 
 - `-fmt`/`--format`<br/>The output format
+
+
+<br/>
+
+#### ubiops pipelines requests input
+
+**Command:** `ubiops pipelines requests input`
+
+**Description:**
+
+Get the input data of a pipeline request.
+Data is only stored for pipeline versions with `request_retention_mode` 'full'.
+
+Use the version option to get the input data for a request of a specific pipeline version.
+If not specified, the input data is retrieved for the default version.
+
+**Arguments:**
+
+- [required] `pipeline_name`
+
+
+
+**Options:**
+
+- `-v`/`--version_name`<br/>The version name
+
+- [required] `-id`/`--request_id`<br/>The ID of the request
+
+- `-o`/`--output_path`<br/>Path to file or directory to store the data
+
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
+
+
+<br/>
+
+#### ubiops pipelines requests output
+
+**Command:** `ubiops pipelines requests output`
+
+**Description:**
+
+Get the output data of a pipeline request.
+Data is only stored for pipeline versions with `request_retention_mode` 'full'.
+
+Use the version option to get the output data for a request of a specific pipeline version.
+If not specified, the output data is retrieved for the default version.
+
+**Arguments:**
+
+- [required] `pipeline_name`
+
+
+
+**Options:**
+
+- `-v`/`--version_name`<br/>The version name
+
+- [required] `-id`/`--request_id`<br/>The ID of the request
+
+- `-o`/`--output_path`<br/>Path to file or directory to store the data
+
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
 
 <br/>

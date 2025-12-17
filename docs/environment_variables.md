@@ -53,7 +53,7 @@ deployment level.
 - When no deployment_name nor a version name is provided: the environment variable will be created on project level.
 
 
-It is possible to create multiple environment variables at ones by passing a yaml file.
+It is possible to create multiple environment variables at once by passing a yaml file.
 The structure of this file is assumed to look like:
 ```
 environment_variables:

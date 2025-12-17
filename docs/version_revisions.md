@@ -62,8 +62,7 @@ Get a revision of a deployment version.
 Download a revision of a deployment version.
 
 The `<output_path>` option will be used as output location of the archive file. If not specified,
-the current directory will be used. If the `<output_path>` is a directory, the archive will be
-saved as `[deployment_name]_[deployment_version]_[datetime.now()].zip`.
+the current directory will be used.
 
 **Arguments:**
 

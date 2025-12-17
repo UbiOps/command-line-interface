@@ -1,20 +1,16 @@
 import configparser
 import json
 import os
-import zipfile
 
 from datetime import datetime
 
 import yaml
-import click
 
 import ubiops as api
 
 
-from ubiops_cli.constants import IMPLICIT_ENVIRONMENT_FILES
-from ubiops_cli.exceptions import UnAuthorizedException, UbiOpsException
-from ubiops_cli.gitignorefile.gitignorefile import parse as parse_ignore
-from ubiops_cli.version import VERSION
+from .exceptions import UnAuthorizedException, UbiOpsException
+from .version import VERSION
 
 
 class Config:
@@ -273,70 +269,6 @@ def write_yaml(yaml_file, dictionary, default_file_name):
     with open(yaml_file, "w", encoding="utf-8") as f:
         yaml.dump(dictionary, f, sort_keys=False)
     return yaml_file
-
-
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-locals
-def zip_dir(
-    directory,
-    output_path,
-    ignore_filename=".ubiops-ignore",
-    prefix=None,
-    force=False,
-    package_directory="deployment_package",
-):
-    """
-    Zip a deployment package and take care of the ignore file if given
-
-    :param str directory: the directory that should be zipped
-    :param str output_path: the output location of the zip, either a file or directory
-    :param str ignore_filename: the name of the ignore file
-    :param str|None prefix: the prefix of the default filename, only used when output_path is a directory
-    :param bool force: whether to overwrite when the file already exists
-    :param str package_directory: the root directory of the zip
-    """
-
-    path_dir = abs_path(directory)
-    assert os.path.isdir(path_dir), "Given path is not a directory."
-    has_ignore_file = os.path.isfile(os.path.join(path_dir, ignore_filename)) if ignore_filename else False
-
-    output_path = abs_path(output_path)
-    if os.path.isdir(output_path):
-        output_path = os.path.join(output_path, default_zip_name(prefix=prefix))
-
-    # Normalize the output path to remove intermediate directories like '.' - this is necessary to prevent zip-inception
-    output_path = os.path.normpath(output_path)
-
-    if not force and os.path.isfile(output_path):
-        click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
-
-    # Initialize 'is_ignored' function. It will be overwritten if a .ubiops-ignore file is present.
-    def is_ignored(_):
-        """
-        If no ignore file is present, nothing will be ignored
-        """
-        return False
-
-    if has_ignore_file:
-        # Ignore what we found in the .ubiops-ignore file
-        is_ignored = parse_ignore(os.path.join(path_dir, ignore_filename), path_dir)
-
-    # Whether environment files are present in the deployment package
-    implicit_environment = False
-
-    package_path = str(os.path.join(path_dir, ""))
-    with zipfile.ZipFile(output_path, "w") as f:
-        for root, _, files in os.walk(path_dir):
-            root_subdir = os.path.join("", *root.split(package_path)[1:])
-            package_subdir = os.path.join(package_directory, root_subdir)
-            for filename in files:
-                source_file = os.path.join(root, filename)
-                if source_file != output_path and not is_ignored(source_file):
-                    if len(root_subdir.split()) == 0 and filename in IMPLICIT_ENVIRONMENT_FILES:
-                        implicit_environment = True
-                    f.write(source_file, os.path.join(package_subdir, filename))
-
-    return output_path, implicit_environment
 
 
 def write_blob(blob, output_path, filename=None):

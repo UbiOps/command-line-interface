@@ -4,7 +4,7 @@ import sys
 import click
 import ubiops as api
 
-from ubiops_cli.src import (
+from .src import (
     auth,
     buckets,
     completions,
@@ -29,10 +29,11 @@ from ubiops_cli.src import (
     logs,
     run_local,
     request_schedules,
+    services,
     validation,
 )
-from ubiops_cli.src.helpers.click_helpers import CustomGroup
-from ubiops_cli.version import VERSION
+from .src.helpers.click_helpers import CustomGroup
+from .version import VERSION
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
@@ -65,6 +66,7 @@ cli.add_command(instances.commands)
 cli.add_command(project_instances.commands)
 cli.add_command(pipelines.commands)
 cli.add_command(pipeline_versions.commands)
+cli.add_command(services.commands)
 cli.add_command(buckets.commands)
 cli.add_command(files.commands)
 cli.add_command(environment_variables.commands)

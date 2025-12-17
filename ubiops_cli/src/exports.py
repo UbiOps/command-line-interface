@@ -1,10 +1,10 @@
 import click
 import ubiops as api
 
-from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import default_zip_name, init_client, read_yaml, write_yaml, get_current_project, write_blob
+from .helpers.formatting import print_list, print_item, format_yaml
+from .helpers import options
+from ..exceptions import UbiOpsException
+from ..utils import default_zip_name, init_client, read_yaml, write_yaml, get_current_project, write_blob
 
 
 LIST_ITEMS = ["id", "creation_date", "status", "size"]

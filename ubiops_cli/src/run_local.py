@@ -6,9 +6,9 @@ import click
 
 from ubiops.utils import run_local
 
-from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import read_json, parse_json
+from .helpers import options
+from ..exceptions import UbiOpsException
+from ..utils import read_json, parse_json
 
 
 # pylint: disable=broad-except

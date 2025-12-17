@@ -147,9 +147,9 @@ The version name can either be passed as command argument or specified inside th
 
 - `-desc`/`--version_description`<br/>The version description
 
-- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 
-- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
+- `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
@@ -211,9 +211,9 @@ will be overwritten by the specified command options.
 
 - `-desc`/`--version_description`<br/>The version description
 
-- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 
-- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
+- `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 

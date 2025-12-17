@@ -61,8 +61,7 @@ instance_processes: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
-maximum_queue_size_express: 100
-maximum_queue_size_batch: 100000
+maximum_queue_size: 100000
 has_request_method: true
 has_requests_method: false
 static_ip: false
@@ -114,8 +113,7 @@ instance_processes: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
-maximum_queue_size_express: 100
-maximum_queue_size_batch: 100000
+maximum_queue_size: 100000
 static_ip: false
 ports:
 - public_port: 2222
@@ -159,13 +157,11 @@ and `--port_protocol`. Only one of the options (yaml or command options) can be 
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
-- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 
-- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
+- `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
-- `-qse`/`--maximum_queue_size_express`<br/>Maximum number of queued express requests to the version
-
-- `-qsb`/`--maximum_queue_size_batch`<br/>Maximum number of queued batch requests to the version
+- `-qs`/`--maximum_queue_size`<br/>Maximum number of queued requests to the version
 
 - `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 
@@ -212,8 +208,7 @@ instance_processes: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
-maximum_queue_size_express: 100
-maximum_queue_size_batch: 100000
+maximum_queue_size: 100000
 static_ip: false
 ports:
 - public_port: 2222
@@ -266,13 +261,11 @@ empty `ports` list to remove already existing opened ports.
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
-- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 
-- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
+- `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
-- `-qse`/`--maximum_queue_size_express`<br/>Maximum number of queued express requests to the version
-
-- `-qsb`/`--maximum_queue_size_batch`<br/>Maximum number of queued batch requests to the version
+- `-qs`/`--maximum_queue_size`<br/>Maximum number of queued requests to the version
 
 - `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 

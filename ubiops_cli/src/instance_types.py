@@ -1,8 +1,8 @@
 import click
 
-from ubiops_cli.src.helpers.formatting import print_list
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import init_client, get_current_project
+from .helpers.formatting import print_list
+from .helpers import options
+from ..utils import init_client, get_current_project
 
 
 INSTANCE_TYPE_LIST_FIELDS = [

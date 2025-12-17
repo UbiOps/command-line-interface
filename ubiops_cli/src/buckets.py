@@ -1,11 +1,11 @@
 import click
 import ubiops as api
 
-from ubiops_cli.utils import get_current_project, init_client, read_yaml, write_yaml
-from ubiops_cli.src.helpers.bucket_helpers import define_bucket, BUCKET_OUTPUT_FIELDS, BUCKET_FIELDS_RENAMED
-from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
-from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers import options
+from .helpers.bucket_helpers import define_bucket, BUCKET_OUTPUT_FIELDS, BUCKET_FIELDS_RENAMED
+from .helpers.formatting import print_list, print_item, format_yaml
+from .helpers.helpers import get_label_filter
+from .helpers import options
+from ..utils import get_current_project, init_client, read_yaml, write_yaml
 
 
 LIST_ITEMS = ["name", "provider", "labels"]
@@ -136,7 +136,7 @@ def buckets_create(yaml_file, format_, **kwargs):
     """
 
     project_name = get_current_project(error=True)
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
 
     assert (
         "bucket_name" in yaml_content or "bucket_name" in kwargs
@@ -184,7 +184,7 @@ def buckets_update(yaml_file, quiet, **kwargs):
 
     client = init_client()
     project_name = get_current_project(error=True)
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
 
     bucket_dict = define_bucket(fields=kwargs, yaml_content=yaml_content, update=True)
     bucket = api.BucketUpdate(**bucket_dict)

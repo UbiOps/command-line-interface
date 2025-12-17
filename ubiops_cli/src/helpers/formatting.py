@@ -8,7 +8,7 @@ import yaml
 
 from tabulate import tabulate
 
-from ubiops_cli.constants import SUCCESS_STATUSES, WARNING_STATUSES, ERROR_STATUSES
+from ...constants import SUCCESS_STATUSES, WARNING_STATUSES, ERROR_STATUSES
 
 
 def format_status(status, success_green=False):
@@ -257,7 +257,7 @@ def format_yaml(item, required_front=None, optional=None, required_end=None, ren
                 # Value is a list of floats/strings/booleans
                 results_dict[key_name] = value
 
-        # Value is an ubiops model
+        # Value is a ubiops model
         elif inner_front or inner_optional or inner_end:
             results_dict[key_name] = format_yaml(
                 item=value,
@@ -413,7 +413,7 @@ def print_item(
     item, row_attrs, required_front=None, optional=None, required_end=None, rename=None, json_skip=None, fmt="row"
 ):
     """
-    Print an ubiops model returned from the client library
+    Print a ubiops model returned from the client library
 
     :param object item: the item to print
     :param list[str] row_attrs: the object attributes to print as a row of a table
@@ -542,56 +542,60 @@ def format_logs_oneline(logs):
 
 
 # pylint: disable=too-many-branches
-def format_requests_reference(requests, split_requests="\n\n"):
+def format_requests_reference(requests, skip_attributes=None, split_requests="\n\n"):
     """
     Format object requests in a pipeline request with references
 
     :param list[object] requests: the pipeline object requests to format
+    :param list[str] skip_attributes: the attributes to skip
     :param str split_requests: string with which the requests are separated in the formatted string
     """
+
+    if skip_attributes is None:
+        skip_attributes = []
 
     overview = ""
     total = len(requests)
 
     for i, request in enumerate(requests):
-        if hasattr(request, "pipeline_object"):
+        if "pipeline_object" not in skip_attributes and hasattr(request, "pipeline_object"):
             overview += f"Object: {request.pipeline_object}\n"
 
-        if hasattr(request, "id") and request.id is not None:
+        if "id" not in skip_attributes and hasattr(request, "id") and request.id is not None:
             overview += f"Request id: {click.style(str(request.id), fg='yellow')}\n"
 
-        if hasattr(request, "time_created"):
+        if "time_created" not in skip_attributes and hasattr(request, "time_created"):
             overview += f"Creation date: {format_datetime(request.time_created)}\n"
 
-        if hasattr(request, "time_started"):
+        if "time_started" not in skip_attributes and hasattr(request, "time_started"):
             overview += f"Start date: {format_datetime(request.time_started)}\n"
 
-        if hasattr(request, "time_completed"):
+        if "time_completed" not in skip_attributes and hasattr(request, "time_completed"):
             overview += f"Completion date: {format_datetime(request.time_completed)}\n"
 
-        if hasattr(request, "operator"):
+        if "operator" not in skip_attributes and hasattr(request, "operator"):
             overview += f"Operator: {request.operator}\n"
 
-        if hasattr(request, "deployment"):
+        if "deployment" not in skip_attributes and hasattr(request, "deployment"):
             overview += f"Deployment: {request.deployment}\n"
 
-        if hasattr(request, "pipeline"):
+        if "pipeline" not in skip_attributes and hasattr(request, "pipeline"):
             overview += f"Pipeline: {request.pipeline}\n"
 
-        if hasattr(request, "version"):
+        if "version" not in skip_attributes and hasattr(request, "version"):
             overview += f"Version: {request.version}\n"
 
-        if hasattr(request, "status"):
+        if "status" not in skip_attributes and hasattr(request, "status"):
             overview += f"Status: {format_status(status=request.status, success_green=True)}"
 
-        if hasattr(request, "error_message") and request.error_message:
+        if "error_message" not in skip_attributes and hasattr(request, "error_message") and request.error_message:
             overview += f"\nError message: {click.style(str(request.error_message), fg='red')}"
 
-        if hasattr(request, "request_data"):
+        if "request_data" not in skip_attributes and hasattr(request, "request_data"):
             request_data = "-" if request.request_data is None else json.dumps(request.request_data)
             overview += f"\nRequest data: {request_data}"
 
-        if hasattr(request, "result"):
+        if "result" not in skip_attributes and hasattr(request, "result"):
             request_result = "-" if request.result is None else json.dumps(request.result)
             overview += f"\nResult: {request_result}"
 
@@ -601,41 +605,45 @@ def format_requests_reference(requests, split_requests="\n\n"):
     return overview
 
 
-def format_requests_oneline(requests):
+def format_requests_oneline(requests, skip_attributes=None):
     """
     Format object requests in a pipeline request in one line
 
     :param list[object] requests: the pipeline object requests to format
+    :param list[str] skip_attributes: the attributes to skip
     """
+
+    if skip_attributes is None:
+        skip_attributes = []
 
     overview = ""
     total = len(requests)
 
     for i, request in enumerate(requests):
-        if hasattr(request, "id") and request.id is not None:
+        if "id" not in skip_attributes and hasattr(request, "id") and request.id is not None:
             overview += click.style(str(request.id), fg="yellow")
             overview += " "
 
-        elif hasattr(request, "request_id") and request.request_id is not None:
+        elif "request_id" not in skip_attributes and hasattr(request, "request_id") and request.request_id is not None:
             overview += click.style(str(request.request_id), fg="yellow")
             overview += " "
 
-        if hasattr(request, "pipeline_object"):
+        if "pipeline_object" not in skip_attributes and hasattr(request, "pipeline_object"):
             overview += request.pipeline_object
             overview += " "
 
-        if hasattr(request, "status"):
+        if "status" not in skip_attributes and hasattr(request, "status"):
             overview += format_status(request.status, success_green=True)
             overview += " "
 
-        if hasattr(request, "request_data"):
+        if "request_data" not in skip_attributes and hasattr(request, "request_data"):
             overview += "-" if request.request_data is None else json.dumps(request.request_data)
             overview += " "
 
-        if hasattr(request, "result"):
+        if "result" not in skip_attributes and hasattr(request, "result"):
             overview += "-" if request.result is None else json.dumps(request.result)
 
-        if hasattr(request, "error_message") and request.error_message:
+        if "error_message" not in skip_attributes and hasattr(request, "error_message") and request.error_message:
             overview += " "
             overview += click.style(text=str(request.error_message), fg="red")
 
@@ -646,49 +654,69 @@ def format_requests_oneline(requests):
 
 
 # pylint: disable=too-many-branches
-def format_pipeline_requests_reference(pipeline_requests):
+def format_pipeline_requests_reference(pipeline_requests, skip_attributes=None):
     """
     Format the given pipeline requests with references
 
     :param list[object] pipeline_requests: the pipeline requests to format
+    :param list[str] skip_attributes: the attributes to skip
     """
+
+    if skip_attributes is None:
+        skip_attributes = []
 
     overview = ""
     total = len(pipeline_requests)
 
     for j, pipeline_request in enumerate(pipeline_requests):
-        if hasattr(pipeline_request, "id") and pipeline_request.id is not None:
+        if "id" not in skip_attributes and hasattr(pipeline_request, "id") and pipeline_request.id is not None:
             overview += f"Pipeline request id: {click.style(text=str(pipeline_request.id), fg='yellow')}\n"
 
-        if hasattr(pipeline_request, "pipeline"):
+        if "pipeline" not in skip_attributes and hasattr(pipeline_request, "pipeline"):
             overview += f"Pipeline: {pipeline_request.pipeline}\n"
 
-        if hasattr(pipeline_request, "version"):
+        if "version" not in skip_attributes and hasattr(pipeline_request, "version"):
             overview += f"Version: {pipeline_request.version}\n"
 
-        if hasattr(pipeline_request, "time_created"):
+        if "time_created" not in skip_attributes and hasattr(pipeline_request, "time_created"):
             overview += f"Creation date: {format_datetime(pipeline_request.time_created)}\n"
 
-        if hasattr(pipeline_request, "status"):
+        if "status" not in skip_attributes and hasattr(pipeline_request, "status"):
             overview += f"Status: {format_status(pipeline_request.status, success_green=True)}"
 
-        if hasattr(pipeline_request, "error_message") and pipeline_request.error_message:
+        if (
+            "error_message" not in skip_attributes
+            and hasattr(pipeline_request, "error_message")
+            and pipeline_request.error_message
+        ):
             overview += f"\nError message: {click.style(str(pipeline_request.error_message), fg='red')}"
 
-        if hasattr(pipeline_request, "request_data"):
+        if "request_data" not in skip_attributes and hasattr(pipeline_request, "request_data"):
             request_data = "-" if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
             overview += f"\nRequest data: {request_data}"
 
-        if hasattr(pipeline_request, "result"):
+        if "result" not in skip_attributes and hasattr(pipeline_request, "result"):
             request_result = "-" if pipeline_request.result is None else json.dumps(pipeline_request.result)
             overview += f"\nResult: {request_result}"
 
         object_requests = []
-        if hasattr(pipeline_request, "deployment_requests") and isinstance(pipeline_request.deployment_requests, list):
+        if (
+            "deployment_requests" not in skip_attributes
+            and hasattr(pipeline_request, "deployment_requests")
+            and isinstance(pipeline_request.deployment_requests, list)
+        ):
             object_requests.extend(pipeline_request.deployment_requests)
-        if hasattr(pipeline_request, "operator_requests") and isinstance(pipeline_request.operator_requests, list):
+        if (
+            "operator_requests" not in skip_attributes
+            and hasattr(pipeline_request, "operator_requests")
+            and isinstance(pipeline_request.operator_requests, list)
+        ):
             object_requests.extend(pipeline_request.operator_requests)
-        if hasattr(pipeline_request, "pipeline_requests") and isinstance(pipeline_request.pipeline_requests, list):
+        if (
+            "pipeline_requests" not in skip_attributes
+            and hasattr(pipeline_request, "pipeline_requests")
+            and isinstance(pipeline_request.pipeline_requests, list)
+        ):
             object_requests.extend(pipeline_request.pipeline_requests)
 
         # Sort object requests on sequence_id
@@ -697,7 +725,7 @@ def format_pipeline_requests_reference(pipeline_requests):
         if len(object_requests) > 0:
             overview += "\n"
 
-            requests = format_requests_reference(object_requests, split_requests="\n")
+            requests = format_requests_reference(object_requests, skip_attributes=skip_attributes, split_requests="\n")
             requests = "\n".join(
                 [f"\n - {line}" if line.startswith("Object") else f"   {line}" for line in requests.split("\n")]
             )
@@ -709,29 +737,33 @@ def format_pipeline_requests_reference(pipeline_requests):
     return overview
 
 
-def format_pipeline_requests_oneline(pipeline_requests):
+def format_pipeline_requests_oneline(pipeline_requests, skip_attributes=None):
     """
     Format the given pipeline requests in oneline
 
     :param list[object] pipeline_requests: the pipeline requests to format
+    :param list[str] skip_attributes: the attributes to skip
     """
+
+    if skip_attributes is None:
+        skip_attributes = []
 
     overview = ""
     total = len(pipeline_requests)
     for j, pipeline_request in enumerate(pipeline_requests):
-        if hasattr(pipeline_request, "id") and pipeline_request.id is not None:
+        if "id" not in skip_attributes and hasattr(pipeline_request, "id") and pipeline_request.id is not None:
             overview += click.style(str(pipeline_request.id), fg="yellow")
             overview += " "
 
-        if hasattr(pipeline_request, "status"):
+        if "status" not in skip_attributes and hasattr(pipeline_request, "status"):
             overview += format_status(pipeline_request.status, success_green=True)
             overview += " "
 
-        if hasattr(pipeline_request, "request_data"):
+        if "request_data" not in skip_attributes and hasattr(pipeline_request, "request_data"):
             request_data = "-" if pipeline_request.request_data is None else json.dumps(pipeline_request.request_data)
             overview += request_data
 
-        if hasattr(pipeline_request, "result"):
+        if "result" not in skip_attributes and hasattr(pipeline_request, "result"):
             overview += " "
             result = "-" if pipeline_request.result is None else json.dumps(pipeline_request.result)
             overview += result

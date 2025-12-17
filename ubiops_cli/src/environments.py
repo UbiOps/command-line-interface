@@ -3,19 +3,20 @@ import os
 import click
 import ubiops as api
 
-from ubiops_cli.constants import DEFAULT_IGNORE_FILE
-from ubiops_cli.src.helpers.environment_helpers import (
+
+from .helpers.environment_helpers import (
     define_environment,
     ENVIRONMENT_CREATE_FIELDS,
     ENVIRONMENT_DETAILS,
     ENVIRONMENT_FIELDS_RENAMED,
     ENVIRONMENT_UPDATE_FIELDS,
 )
-from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
-from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.wait_for import wait_for
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import get_current_project, init_client, read_yaml, set_dict_default, write_yaml, zip_dir
+from .helpers.formatting import print_list, print_item, format_yaml
+from .helpers.helpers import get_label_filter
+from .helpers.wait_for import wait_for
+from .helpers import options
+from ..constants import DEFAULT_IGNORE_FILE, DEPLOYMENT_AGENT_WARNING
+from ..utils import get_current_project, init_client, read_yaml, set_dict_default, write_yaml
 
 LIST_ITEMS = ["last_updated", "name", "base_environment", "labels"]
 
@@ -70,12 +71,12 @@ def environments_get(environment_name, output_path, quiet, format_):
     Example of yaml content:
     ```
     environment_name: custom-environment
-    environment_display_name: Custom environment for Python 3.11
+    environment_display_name: Custom environment for Python 3.12
     environment_description: Environment created via command line.
     environment_labels:
         my-key-1: my-label-1
         my-key-2: my-label-2
-    base_environment: python3-11
+    base_environment: python3-12
     ```
     """
 
@@ -129,13 +130,13 @@ def environments_create(yaml_file, format_, **kwargs):
     For example:
     ```
     environment_name: my-environment-name
-    environment_display_name: Custom environment for Python 3.11
+    environment_display_name: Custom environment for Python 3.12
     environment_description: Environment created via command line.
     environment_labels:
         my-key-1: my-label-1
         my-key-2: my-label-2
     environment_supports_request_format: true
-    base_environment: python3-11
+    base_environment: python3-12
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
@@ -146,7 +147,7 @@ def environments_create(yaml_file, format_, **kwargs):
 
     project_name = get_current_project(error=True)
 
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
 
     assert (
         "environment_name" in yaml_content or "environment_name" in kwargs
@@ -187,9 +188,8 @@ def environments_update(environment_name, new_name, yaml_file, quiet, **kwargs):
     It is possible to define the parameters using a yaml file or passing the options as command options.
     For example:
     ```
-
     environment_name: my-environment-name
-    environment_display_name: Custom environment for Python 3.9
+    environment_display_name: Custom environment for Python 3.12
     environment_description: Environment created via command line.
     environment_labels:
         my-key-1: my-label-1
@@ -202,9 +202,7 @@ def environments_update(environment_name, new_name, yaml_file, quiet, **kwargs):
 
     project_name = get_current_project(error=True)
 
-    client = init_client()
-
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
 
     kwargs = define_environment(kwargs, yaml_content, extra_yaml_fields=[])
     kwargs["name"] = new_name
@@ -212,6 +210,7 @@ def environments_update(environment_name, new_name, yaml_file, quiet, **kwargs):
         **{k: kwargs[k] for k in ENVIRONMENT_UPDATE_FIELDS if k in kwargs and kwargs[k] is not None}
     )
 
+    client = init_client()
     client.environments_update(project_name=project_name, environment_name=environment_name, data=environment)
     client.api_client.close()
 
@@ -288,10 +287,17 @@ def environments_package(environment_name, directory, output_path, ignore_file, 
     """
 
     if output_path is None:
-        output_path = "."
+        output_path = os.getcwd()
+
+    output_path = os.path.abspath(output_path)
+    directory = os.path.abspath(directory)
+
+    if not assume_yes and os.path.exists(output_path) and os.path.isfile(output_path):
+        click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
+        assume_yes = True
 
     ignore_file = DEFAULT_IGNORE_FILE if ignore_file is None else ignore_file
-    archive_path, _ = zip_dir(
+    archive_path = api.utils.zip_dir(
         directory=directory,
         output_path=output_path,
         ignore_filename=ignore_file,
@@ -352,13 +358,13 @@ def environments_deploy(
     For example:
     ```
     environment_name: my-environment-name
-    environment_display_name: Custom environment for Python 3.11
+    environment_display_name: Custom environment for Python 3.12
     environment_description: Environment created via command line.
     environment_labels:
         my-key-1: my-label-1
         my-key-2: my-label-2
     environment_supports_request_format: true
-    base_environment: python3-11
+    base_environment: python3-12
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
@@ -368,13 +374,16 @@ def environments_deploy(
 
     if output_path is None:
         store_archive = False
-        output_path = "."
+        output_path = os.getcwd()
     else:
         store_archive = True
 
+    output_path = os.path.abspath(output_path)
+    directory = os.path.abspath(directory) if directory else directory
+
     project_name = get_current_project(error=True)
     client = init_client()
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
 
     assert "environment_name" in yaml_content or environment_name, (
         "Please, specify the environment name in either " "the yaml file or as a command argument"
@@ -401,8 +410,12 @@ def environments_deploy(
     kwargs = define_environment(kwargs, yaml_content, extra_yaml_fields=["ignore_file"])
     kwargs["ignore_file"] = DEFAULT_IGNORE_FILE if kwargs["ignore_file"] is None else kwargs["ignore_file"]
 
+    if not assume_yes and os.path.exists(output_path) and os.path.isfile(output_path):
+        click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
+        assume_yes = True
+
     if directory:
-        archive_path, _ = zip_dir(
+        archive_path = api.utils.zip_dir(
             directory=directory,
             output_path=output_path,
             ignore_filename=kwargs["ignore_file"],
@@ -412,15 +425,27 @@ def environments_deploy(
         )
 
     try:
-        if not (overwrite and existing_environment):
-            environment = api.EnvironmentCreate(**{k: kwargs[k] for k in ENVIRONMENT_CREATE_FIELDS if k in kwargs})
-            client.environments_create(project_name=project_name, data=environment)
-
         if overwrite and existing_environment:
-            environment = api.EnvironmentUpdate(
-                **{k: kwargs[k] for k in ENVIRONMENT_UPDATE_FIELDS if kwargs.get(k, None) is not None}
+            environment = client.environments_update(
+                project_name=project_name,
+                environment_name=environment_name,
+                data=api.EnvironmentUpdate(
+                    **{k: kwargs[k] for k in ENVIRONMENT_UPDATE_FIELDS if kwargs.get(k, None) is not None}
+                ),
             )
-            client.environments_update(project_name=project_name, environment_name=environment_name, data=environment)
+        else:
+            environment = client.environments_create(
+                project_name=project_name,
+                data=api.EnvironmentCreate(**{k: kwargs[k] for k in ENVIRONMENT_CREATE_FIELDS if k in kwargs}),
+            )
+
+        if (
+            not quiet
+            and environment.supports_request_format
+            and not environment.base_environment
+            and not environment.system
+        ):
+            click.secho(message=DEPLOYMENT_AGENT_WARNING, fg="yellow")
 
         client.environment_revisions_file_upload(
             project_name=project_name, environment_name=environment_name, file=archive_path, _progress_bar=progress_bar

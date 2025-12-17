@@ -1,10 +1,10 @@
 import click
 import ubiops as api
 
-from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.utils import get_current_project, init_client, read_yaml, check_required_fields_in_list
-from ubiops_cli.src.helpers.formatting import print_list, print_item
-from ubiops_cli.src.helpers import options
+from .helpers.formatting import print_list, print_item
+from .helpers import options
+from ..exceptions import UbiOpsException
+from ..utils import get_current_project, init_client, read_yaml, check_required_fields_in_list
 
 
 LIST_ITEMS = ["id", "name", "value", "secret", "inheritance_type", "inheritance_name"]
@@ -136,7 +136,7 @@ def env_vars_create(env_var_name, env_var_value, secret, deployment_name, versio
     - When no deployment_name nor a version name is provided: the environment variable will be created on project level.
 
     \b
-    It is possible to create multiple environment variables at ones by passing a yaml file.
+    It is possible to create multiple environment variables at once by passing a yaml file.
     The structure of this file is assumed to look like:
     ```
     environment_variables:

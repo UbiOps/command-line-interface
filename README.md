@@ -9,6 +9,7 @@ Includes:
 - Managing versions
 - Managing environments
 - Managing pipelines
+- Managing services
 - Managing schedules
 - Managing buckets and files
 - Managing environment variables
@@ -29,7 +30,7 @@ An example notebook can be found <a target="_blank" href="https://github.com/Ubi
 
 ## Requirements
 
-Python 3.7+
+Python 3.8+
 
 
 ## Installation & Usage
@@ -176,17 +177,14 @@ Instances | [docs/instances.md](docs/instances.md)
 Project Instances | [docs/project_instances.md](docs/project_instances.md)
 Pipelines | [docs/pipelines.md](docs/pipelines.md)
 Pipeline Versions | [docs/pipeline_versions.md](docs/pipeline_versions.md)
+Services | [docs/services.md](docs/services.md)
 Buckets | [docs/buckets.md](docs/buckets.md)
 Files | [docs/files.md](docs/files.md)
 Environment Variables | [docs/environment_variables.md](docs/environment_variables.md)
 Logs | [docs/logs.md](docs/logs.md)
 Audit Events | [docs/audit_events.md](docs/audit_events.md)
-Schedules | [docs/schedules.md](docs/schedules.md)
+Request Schedules | [docs/request_schedules.md](docs/request_schedules.md)
 Exports | [docs/exports.md](docs/exports.md)
 Imports | [docs/imports.md](docs/imports.md)
 Validate | [docs/validate.md](docs/validate.md)
 Run Local | [docs/run_local.md](docs/run_local.md)
-
-
-### Attribution
-This software uses the library [gitignorefile](https://github.com/excitoon/gitignorefile) by Vladimir Chebotarev - see [license](https://github.com/UbiOps/command-line-interface/blob/master/ubiops_cli/gitignorefile/LICENSE).

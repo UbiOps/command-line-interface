@@ -4,7 +4,7 @@ import click
 
 from ubiops.utils import validate_requirements_file, validate_yaml_file
 
-from ubiops_cli.src.helpers import options
+from .helpers import options
 
 
 @click.group(name="validate", short_help="Validate a file")
@@ -34,7 +34,7 @@ def validate_requirements(requirements_file):
 @options.UBIOPS_YAML_FILE
 def validate_ubiops_yaml(yaml_file):
     """
-    Validate the format of an UbiOps.yaml file.
+    Validate the format of a UbiOps.yaml file.
     """
 
     if validate_yaml_file(file_path=yaml_file):

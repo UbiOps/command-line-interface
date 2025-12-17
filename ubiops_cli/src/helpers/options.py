@@ -1,10 +1,10 @@
 import sys
 
 import click
-from ubiops_cli.utils import Config
-from ubiops_cli.constants import SYS_DEPLOYMENT_FILE_NAME_VALUE
-from ubiops_cli.src.helpers.pipeline_helpers import PIPELINE_REQUIRED_FIELDS
-from ubiops_cli.src.helpers.instance_type_group_helpers import INSTANCE_TYPE_GROUP_REQUIRED_FIELDS
+from .pipeline_helpers import PIPELINE_REQUIRED_FIELDS
+from .instance_type_group_helpers import INSTANCE_TYPE_GROUP_REQUIRED_FIELDS
+from ...constants import SYS_DEPLOYMENT_FILE_NAME_VALUE
+from ...utils import Config
 
 
 # General
@@ -351,6 +351,7 @@ MAX_IDLE_TIME = click.option(
 )
 RETENTION_MODE = click.option(
     "-rtm",
+    "-rrm",
     "--request_retention_mode",
     required=False,
     default=None,
@@ -359,6 +360,7 @@ RETENTION_MODE = click.option(
 )
 RETENTION_TIME = click.option(
     "-rtt",
+    "-rrt",
     "--request_retention_time",
     required=False,
     default=None,
@@ -366,23 +368,14 @@ RETENTION_TIME = click.option(
     metavar="<int>",
     help="Number of seconds to store requests to the version",
 )
-MAX_QUEUE_SIZE_EXPRESS = click.option(
-    "-qse",
-    "--maximum_queue_size_express",
+MAX_QUEUE_SIZE = click.option(
+    "-qs",
+    "--maximum_queue_size",
     required=False,
     default=None,
     type=int,
     metavar="<int>",
-    help="Maximum number of queued express requests to the version",
-)
-MAX_QUEUE_SIZE_BATCH = click.option(
-    "-qsb",
-    "--maximum_queue_size_batch",
-    required=False,
-    default=None,
-    type=int,
-    metavar="<int>",
-    help="Maximum number of queued batch requests to the version",
+    help="Maximum number of queued requests to the version",
 )
 VERSION_STATIC_IP = click.option(
     "--static-ip",
@@ -426,6 +419,14 @@ VERSION_DESCRIPTION = click.option(
 
 # Deployment package variables
 PACKAGE_DIR = click.option(
+    "-dir",
+    "--directory",
+    required=True,
+    type=click.Path(resolve_path=True),
+    metavar="<path>",
+    help=f"Path to a directory that contains at least a '{SYS_DEPLOYMENT_FILE_NAME_VALUE}.py'",
+)
+PACKAGE_DIR_OPTIONAL = click.option(
     "-dir",
     "--directory",
     required=False,
@@ -488,9 +489,16 @@ PROCESS_ID_OPTIONAL = click.option(
 )
 
 # Requests
-REQUEST_DATA = click.option("-d", "--data", required=True, help="The input data of the request", metavar="<string>")
-REQUEST_DATA_UPDATE = click.option(
-    "--data", required=False, help="The new input data of the request", metavar="<string>"
+INPUT_OUTPUT_DOWNLOAD_PATH = click.option(
+    "-o",
+    "--output_path",
+    required=False,
+    default=None,
+    metavar="<path>",
+    help="Path to file or directory to store the data",
+)
+REQUEST_DATA = click.option(
+    "-d", "--data", "request_data", required=False, help="The input data of the request", metavar="<string>"
 )
 REQUEST_DATA_MULTI = click.option(
     "--data", required=False, help="The input data of the request", metavar="<string>", multiple=True
@@ -510,6 +518,7 @@ REQUEST_BATCH = click.option(
     is_flag=True,
     help="Whether you want to perform the request as batch request (async)",
 )
+REQUEST_ID = click.option("-id", "--request_id", required=True, metavar="<id>", help="The ID of the request")
 REQUEST_ID_MULTI = click.option(
     "-id", "--request_id", required=True, metavar="<id>", multiple=True, help="The ID of the request"
 )
@@ -544,20 +553,11 @@ REQUEST_LIMIT = click.option(
     help="Limit of the number of requests. The maximum value is 50.",
     metavar="[1-50]",
 )
-REQUEST_FILTER_DEPLOYMENT_STATUS = click.option(
+REQUEST_FILTER_STATUS = click.option(
     "--status",
     required=False,
     help="Status of the request",
-    type=click.Choice(
-        ["pending", "processing", "failed", "completed", "cancelled_pending", "cancelled"], case_sensitive=False
-    ),
-)
-REQUEST_FILTER_PIPELINE_STATUS = click.option(
-    "--status",
-    required=False,
-    help="Status of the request",
-    default=None,
-    type=click.Choice(["pending", "processing", "failed", "completed"], case_sensitive=False),
+    type=click.Choice(["pending", "processing", "failed", "completed", "cancelled"], case_sensitive=False),
 )
 REQUEST_FILTER_START_DATE = click.option(
     "--start_date",
@@ -941,47 +941,47 @@ AUDIT_ACTION = click.option(
 
 
 # Scheduled requests
-SCHEDULE_NAME = click.argument("schedule_name", required=True, metavar="<name>", nargs=1)
+SCHEDULE_NAME = click.argument("request_schedule_name", required=True, metavar="<name>", nargs=1)
+SCHEDULE_NAME_OVERRULE = click.argument(
+    "request_schedule_name", required=False, default=None, metavar="<name>", nargs=1
+)
 SCHEDULE_NAME_UPDATE = click.option(
     "-n", "--new_name", required=False, default=None, help="The new schedule name", metavar="<name>"
 )
 OBJECT_TYPE = click.option(
     "-ot",
     "--object_type",
-    default="deployment",
-    help="The object type",
-    show_default=True,
-    type=click.Choice(["deployment", "pipeline"], case_sensitive=False),
+    required=False,
+    default=None,
+    help="The type of the object to create a request for, default is 'deployment'",
+    metavar="<deployment|pipeline>",
 )
 OBJECT_NAME = click.option(
-    "-on", "--object_name", required=True, metavar="[<deployment name>|<pipeline name>]", help="The object name"
+    "-on",
+    "--object_name",
+    required=False,
+    default=None,
+    metavar="<name>",
+    help="The name of the object to create a request for",
 )
 OBJECT_VERSION = click.option(
     "-ov",
     "--object_version",
     required=False,
+    default=None,
     metavar="<version name>",
-    help="The version name. Only relevant for object_type='deployment'.",
+    help="The name of the version of the object to create a request for. Don't specify to use the default version.",
 )
 SCHEDULE = click.option(
-    "-s", "--schedule", required=True, metavar="<0 0 1 * *>", help="Schedule in crontab format (in UTC)"
-)
-SCHEDULE_UPDATE = click.option(
-    "-s",
-    "--schedule",
-    required=False,
-    default=None,
-    metavar="<0 0 1 * *>",
-    help="New schedule in crontab format (in UTC)",
+    "-s", "--schedule", required=False, default=None, metavar="<0 0 1 * *>", help="Schedule in crontab format (in UTC)"
 )
 IS_ENABLED = click.option(
     "--enabled",
     required=False,
-    default=True,
+    default=None,
     type=click.BOOL,
-    metavar="[True|False]",
-    show_default=True,
-    help="Boolean value indicating whether the created schedule is enabled or disabled",
+    metavar="<True|False>",
+    help="Boolean value indicating whether the created schedule is enabled or disabled, default is enabled",
 )
 IS_ENABLED_UPDATE = click.option(
     "--enabled",
@@ -990,6 +990,41 @@ IS_ENABLED_UPDATE = click.option(
     type=click.BOOL,
     metavar="[True|False]",
     help="Boolean value indicating whether the created schedule is enabled or disabled",
+)
+SCHEDULE_LABELS = click.option(
+    "-lb",
+    "--labels",
+    "request_schedule_labels",
+    required=False,
+    default=None,
+    multiple=True,
+    type=click.STRING,
+    metavar="<key1:value,key2:value>",
+    help="Labels defined as key/value pairs",
+)
+SCHEDULE_DESCRIPTION = click.option(
+    "-desc",
+    "--request_schedule_description",
+    required=False,
+    metavar="<string>",
+    help="The request schedule description",
+)
+SCHEDULE_YAML_FILE = click.option(
+    "-f",
+    "--yaml_file",
+    required=False,
+    default=None,
+    type=click.Path(),
+    metavar="<path>",
+    help="Path to a yaml file that contains request schedule details",
+)
+SCHEDULE_YAML_OUTPUT = click.option(
+    "-o",
+    "--output_path",
+    required=False,
+    default=None,
+    metavar="<path>",
+    help="Path to file or directory to store request schedule yaml file",
 )
 
 # Imports/exports
@@ -1317,4 +1352,45 @@ INSTANCE_ID_ARGUMENT = click.argument("instance_id", required=True, metavar="<in
 
 SHELL = click.argument(
     "shell", nargs=1, required=True, type=click.Choice(["bash", "zsh", "fish"], case_sensitive=False)
+)
+
+
+# Options for services
+DEPLOYMENT_VERSION_IDS_FILTER = click.option(
+    "--deployment_version_ids",
+    required=False,
+    default=None,
+    type=str,
+    metavar="<version_id_1,version_id_2>",
+    help="Deployment version IDs to filter for. Separate multiple deployment version IDs with a comma (,).",
+)
+SERVICE_NAME_ARGUMENT = click.argument("service_name", required=True, metavar="<service_name>", nargs=1)
+SERVICE_YAML_OUTPUT = click.option(
+    "-o",
+    "--output_path",
+    required=False,
+    default=None,
+    metavar="<path>",
+    help="Path to file or directory to store service yaml file",
+)
+SERVICE_NAME_OVERRULE = click.argument("service_name", required=False, default=None, metavar="<service_name>", nargs=1)
+SERVICE_NAME_UPDATE = click.option(
+    "-n", "--new_name", required=False, default=None, help="The new service name", metavar="<name>"
+)
+SERVICE_YAML_FILE = click.option(
+    "-f",
+    "--yaml_file",
+    required=True,
+    type=click.Path(),
+    metavar="<path>",
+    help="Path to a yaml file that containing service details",
+)
+SERVICE_YAML_FILE_OPTIONAL = click.option(
+    "-f",
+    "--yaml_file",
+    required=False,
+    default=None,
+    type=click.Path(),
+    help="Path to a yaml file containing service details",
+    metavar="<path>",
 )

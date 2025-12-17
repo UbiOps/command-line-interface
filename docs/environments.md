@@ -47,12 +47,12 @@ will be stored in `environment.yaml`.
 Example of yaml content:
 ```
 environment_name: custom-environment
-environment_display_name: Custom environment for Python 3.11
+environment_display_name: Custom environment for Python 3.12
 environment_description: Environment created via command line.
 environment_labels:
     my-key-1: my-label-1
     my-key-2: my-label-2
-base_environment: python3-11
+base_environment: python3-12
 ```
 
 **Arguments:**
@@ -85,13 +85,13 @@ It is possible to define the parameters using a yaml file.
 For example:
 ```
 environment_name: my-environment-name
-environment_display_name: Custom environment for Python 3.11
+environment_display_name: Custom environment for Python 3.12
 environment_description: Environment created via command line.
 environment_labels:
     my-key-1: my-label-1
     my-key-2: my-label-2
 environment_supports_request_format: true
-base_environment: python3-11
+base_environment: python3-12
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
@@ -136,9 +136,8 @@ Update an environment.
 It is possible to define the parameters using a yaml file or passing the options as command options.
 For example:
 ```
-
 environment_name: my-environment-name
-environment_display_name: Custom environment for Python 3.9
+environment_display_name: Custom environment for Python 3.12
 environment_description: Environment created via command line.
 environment_labels:
     my-key-1: my-label-1
@@ -280,13 +279,13 @@ It is possible to define the parameters using a yaml file.
 For example:
 ```
 environment_name: my-environment-name
-environment_display_name: Custom environment for Python 3.11
+environment_display_name: Custom environment for Python 3.12
 environment_description: Environment created via command line.
 environment_labels:
     my-key-1: my-label-1
     my-key-2: my-label-2
 environment_supports_request_format: true
-base_environment: python3-11
+base_environment: python3-12
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,

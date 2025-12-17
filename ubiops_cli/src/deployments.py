@@ -4,15 +4,9 @@ from time import sleep
 import click
 import ubiops as api
 
-from ubiops_cli.constants import (
-    STATUS_UNAVAILABLE,
-    STRUCTURED_TYPE,
-    DEFAULT_IGNORE_FILE,
-    UPDATE_TIME,
-    IMPLICIT_ENVIRONMENT_FILES,
-)
-from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.src.helpers.deployment_helpers import (
+from ubiops.utils import zip_dir, files_present_in_dir
+
+from .helpers.deployment_helpers import (
     define_deployment,
     define_deployment_version,
     set_default_scaling_parameters,
@@ -25,24 +19,31 @@ from ubiops_cli.src.helpers.deployment_helpers import (
     DEPLOYMENT_FIELDS_RENAMED,
     DEPLOYMENT_VERSION_CREATE_FIELDS,
 )
-from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.formatting import (
+from .helpers.helpers import get_label_filter
+from .helpers.formatting import (
     print_list,
     print_item,
     format_yaml,
     format_requests_reference,
     format_requests_oneline,
     format_json,
-    parse_datetime,
-    format_datetime,
 )
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import (
+from .helpers import options
+from .requests import get_request_input_output, list_requests
+
+from ..constants import (
+    STATUS_UNAVAILABLE,
+    STRUCTURED_TYPE,
+    DEFAULT_IGNORE_FILE,
+    UPDATE_TIME,
+    IMPLICIT_ENVIRONMENT_FILES,
+)
+from ..exceptions import UbiOpsException
+from ..utils import (
     init_client,
     read_json,
     read_yaml,
     write_yaml,
-    zip_dir,
     get_current_project,
     set_dict_default,
     write_blob,
@@ -52,7 +53,6 @@ from ubiops_cli.utils import (
 
 
 LIST_ITEMS = ["last_updated", "name", "labels"]
-REQUEST_LIST_ITEMS = ["id", "status", "success", "time_created"]
 
 
 @click.group(name=["deployments", "dpl"], short_help="Manage your deployments")
@@ -168,7 +168,7 @@ def deployments_create(deployment_name, yaml_file, overwrite, format_):
 
     project_name = get_current_project(error=True)
 
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
     client = init_client()
 
     assert "deployment_name" in yaml_content or deployment_name, (
@@ -314,12 +314,24 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
     """
 
     if not output_path:
-        output_path = "."
+        output_path = os.getcwd()
+
+    output_path = os.path.abspath(output_path)
+    directory = os.path.abspath(directory)
 
     ignore_file = DEFAULT_IGNORE_FILE if ignore_file is None else ignore_file
     prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
-    archive_path, _ = zip_dir(
-        directory=directory, output_path=output_path, ignore_filename=ignore_file, prefix=prefix, force=assume_yes
+
+    if not assume_yes and os.path.exists(output_path) and os.path.isfile(output_path):
+        click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
+        assume_yes = True
+
+    archive_path = zip_dir(
+        directory=directory,
+        output_path=output_path,
+        ignore_filename=ignore_file,
+        prefix=prefix,
+        force=assume_yes,
     )
     if not quiet:
         click.echo(f"Created archive: {archive_path}")
@@ -409,7 +421,7 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @commands.command(name="deploy", short_help="Deploy a new version of a deployment")
 @options.DEPLOYMENT_NAME_OVERRULE
 @options.VERSION_NAME_OPTIONAL
-@options.PACKAGE_DIR
+@options.PACKAGE_DIR_OPTIONAL
 @options.DEPLOYMENT_FILE
 @options.IGNORE_FILE
 @options.DEPLOYMENT_ARCHIVE_OUTPUT
@@ -425,8 +437,7 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @options.MAX_IDLE_TIME
 @options.RETENTION_MODE
 @options.RETENTION_TIME
-@options.MAX_QUEUE_SIZE_EXPRESS
-@options.MAX_QUEUE_SIZE_BATCH
+@options.MAX_QUEUE_SIZE
 @options.VERSION_STATIC_IP
 @options.VERSION_PUBLIC_PORT
 @options.VERSION_DEPLOYMENT_PORT
@@ -483,8 +494,7 @@ def deployments_deploy(
     maximum_idle_time: 300
     request_retention_mode: none
     request_retention_time: 604800
-    maximum_queue_size_express: 100
-    maximum_queue_size_batch: 100000
+    maximum_queue_size: 100000
     static_ip: false
     ports:
     - public_port: 2222
@@ -505,13 +515,16 @@ def deployments_deploy(
 
     if not output_path:
         store_archive = False
-        output_path = "."
+        output_path = os.getcwd()
     else:
         store_archive = True
 
+    output_path = os.path.abspath(output_path)
+    directory = os.path.abspath(directory) if directory else directory
+
     project_name = get_current_project(error=True)
 
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
 
     assert "deployment_name" in yaml_content or deployment_name, (
         "Please, specify the deployment name in either the " "yaml file or as a command argument"
@@ -557,10 +570,13 @@ def deployments_deploy(
 
     prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
 
+    if not assume_yes and os.path.exists(output_path) and os.path.isfile(output_path):
+        click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
+        assume_yes = True
+
     archive_path = None
-    implicit_environment = False
     if deployment.supports_request_format and directory:
-        archive_path, implicit_environment = zip_dir(
+        archive_path = zip_dir(
             directory=directory,
             output_path=output_path,
             ignore_filename=kwargs["ignore_file"],
@@ -591,7 +607,13 @@ def deployments_deploy(
             )
             has_uploaded_archives = len(revisions) > 0
 
-        if implicit_environment and not has_uploaded_archives and kwargs.get("environment", None) is not None:
+        if (
+            not quiet
+            and not has_uploaded_archives
+            and kwargs.get("environment", None) is not None
+            and directory
+            and files_present_in_dir(IMPLICIT_ENVIRONMENT_FILES, directory, kwargs["ignore_file"])
+        ):
             # We don't show a warning on re-uploads
             try:
                 environment = client.environments_get(project_name=project_name, environment_name=kwargs["environment"])
@@ -622,7 +644,8 @@ def deployments_deploy(
 
         if has_uploaded_archives and (has_changed_fields or has_changed_env_vars):
             # Wait for changes being applied
-            click.echo(f"Waiting for changes to take effect... This takes {UPDATE_TIME} seconds.")
+            if not quiet:
+                click.echo(f"Waiting for changes to take effect... This takes {UPDATE_TIME} seconds.")
             sleep(UPDATE_TIME)
 
         if deployment.supports_request_format:
@@ -685,7 +708,7 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
     Use `--batch` to make an asynchronous batch request:
     `ubiops deployments requests create <my-deployment> --batch --data <input>`
 
-    Multiple data inputs can be specified at ones and send as batch by using the '--data' options multiple times:
+    Multiple data inputs can be specified at once and send as batch by using the '--data' option multiple times:
     `ubiops deployments requests create <my-deployment> --batch --data <input-1> --data <input-2> --data <input-3>`
 
     For structured input, specify data input as JSON formatted string. For example:
@@ -766,13 +789,13 @@ def requests_create(deployment_name, version_name, batch, data, json_file, timeo
 @options.REQUESTS_FORMATS
 def requests_get(deployment_name, version_name, request_id, format_):
     """
-    Get one or more stored deployment requests.
+    Get one or more deployment requests.
     Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the version option to get a request for a specific deployment version.
     If not specified, the request is retrieved for the default version.
 
-    Multiple request ids can be specified at ones by using the '-id' options multiple times:
+    Multiple request ids can be specified at once by using the '-id' options multiple times:
     `ubiops deployments requests get <my-deployment> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
     """
 
@@ -791,14 +814,15 @@ def requests_get(deployment_name, version_name, request_id, format_):
         )
     client.api_client.close()
 
+    # Fields request_data and result are deprecated for requests GET
     if format_ == "reference":
-        click.echo(format_requests_reference(response))
+        click.echo(format_requests_reference(response, skip_attributes=["request_data", "result"]))
     elif format_ == "oneline":
-        click.echo(format_requests_oneline(response))
+        click.echo(format_requests_oneline(response, skip_attributes=["request_data", "result"]))
     elif format_ == "json":
-        click.echo(format_json(response, skip_attributes=["success"]))
+        click.echo(format_json(response, skip_attributes=["success", "request_data", "result"]))
     else:
-        click.echo(format_requests_reference(response))
+        click.echo(format_requests_reference(response, skip_attributes=["request_data", "result"]))
 
 
 @requests.command(name="list", short_help="List deployment requests")
@@ -806,49 +830,77 @@ def requests_get(deployment_name, version_name, request_id, format_):
 @options.VERSION_NAME_OPTIONAL
 @options.OFFSET
 @options.REQUEST_LIMIT
-@options.REQUEST_FILTER_DEPLOYMENT_STATUS
+@options.REQUEST_FILTER_STATUS
 @options.REQUEST_FILTER_START_DATE
 @options.REQUEST_FILTER_END_DATE
 @options.REQUEST_FILTER_SEARCH_ID
 @options.LIST_FORMATS
 def requests_list(deployment_name, version_name, limit, format_, **kwargs):
     """
-    List stored deployment requests.
+    List deployment requests.
     Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
     Use the version option to list the requests for a specific deployment version.
     If not specified, the requests are listed for the default version.
     """
 
-    project_name = get_current_project(error=True)
+    list_requests(
+        object_type="deployment",
+        object_name=deployment_name,
+        version_name=version_name,
+        limit=limit,
+        format_=format_,
+        **kwargs,
+    )
 
-    if "start_date" in kwargs and kwargs["start_date"]:
-        try:
-            kwargs["start_date"] = format_datetime(parse_datetime(kwargs["start_date"]), fmt="%Y-%m-%dT%H:%M:%SZ")
-        except ValueError:
-            raise UbiOpsException(
-                "Failed to parse start_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
-            )
 
-    if "end_date" in kwargs and kwargs["end_date"]:
-        try:
-            kwargs["end_date"] = format_datetime(parse_datetime(kwargs["end_date"]), fmt="%Y-%m-%dT%H:%M:%SZ")
-        except ValueError:
-            raise UbiOpsException(
-                "Failed to parse end_date. Please use iso-format, for example, '2020-01-01T00:00:00.000000Z'"
-            )
+@requests.command(name="input", short_help="Get deployment request input")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_ID
+@options.INPUT_OUTPUT_DOWNLOAD_PATH
+@options.ASSUME_YES
+def requests_input(deployment_name, version_name, request_id, output_path, assume_yes):
+    """
+    Get the input data of a deployment request.
+    Data is only stored for deployment versions with `request_retention_mode` 'full'.
 
-    client = init_client()
-    if version_name is not None:
-        response = client.deployment_version_requests_list(
-            project_name=project_name, deployment_name=deployment_name, version=version_name, limit=limit, **kwargs
-        )
-    else:
-        response = client.deployment_requests_list(
-            project_name=project_name, deployment_name=deployment_name, limit=limit, **kwargs
-        )
-    client.api_client.close()
+    Use the version option to get the input data for a request of a specific deployment version.
+    If not specified, the input data is retrieved for the default version.
+    """
 
-    print_list(response, REQUEST_LIST_ITEMS, fmt=format_, json_skip=["success"])
-    if len(response) == limit:
-        click.echo("\n(Use the <offset> and <limit> options to load more)")
+    get_request_input_output(
+        data_type="input",
+        object_type="deployment",
+        object_name=deployment_name,
+        version_name=version_name,
+        request_id=request_id,
+        output_path=output_path,
+        assume_yes=assume_yes,
+    )
+
+
+@requests.command(name="output", short_help="Get deployment request output")
+@options.DEPLOYMENT_NAME_ARGUMENT
+@options.VERSION_NAME_OPTIONAL
+@options.REQUEST_ID
+@options.INPUT_OUTPUT_DOWNLOAD_PATH
+@options.ASSUME_YES
+def requests_output(deployment_name, version_name, request_id, output_path, assume_yes):
+    """
+    Get the output data of a deployment request.
+    Data is only stored for deployment versions with `request_retention_mode` 'full'.
+
+    Use the version option to get the output data for a request of a specific deployment version.
+    If not specified, the output data is retrieved for the default version.
+    """
+
+    get_request_input_output(
+        data_type="output",
+        object_type="deployment",
+        object_name=deployment_name,
+        version_name=version_name,
+        request_id=request_id,
+        output_path=output_path,
+        assume_yes=assume_yes,
+    )
