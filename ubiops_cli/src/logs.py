@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 import click
 import ubiops as api
 
-from ubiops_cli.utils import init_client, get_current_project
-from ubiops_cli.src.helpers.formatting import (
+from .helpers.formatting import (
     print_item,
     format_logs_reference,
     format_logs_oneline,
@@ -13,7 +12,8 @@ from ubiops_cli.src.helpers.formatting import (
     format_json,
     format_datetime,
 )
-from ubiops_cli.src.helpers import options
+from .helpers import options
+from ..utils import init_client, get_current_project
 
 
 LOG_FILTERS = [

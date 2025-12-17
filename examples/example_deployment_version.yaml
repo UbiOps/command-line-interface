@@ -1,11 +1,10 @@
 deployment_name: demo-example
 version_name: v1
-environment: python3-11
-instance_type_group_name: "256 MB + 0.0625 vCPU"
+environment: python3-13
+instance_type_group_name: "512 MB + 0.125 vCPU"
 minimum_instances: 0
 maximum_instances: 1
 maximum_idle_time: 1800
 request_retention_mode: full
 request_retention_time: 3600
-maximum_queue_size_express: 100
-maximum_queue_size_batch: 100000
+maximum_queue_size: 100000

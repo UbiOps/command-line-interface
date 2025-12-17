@@ -212,7 +212,7 @@ without confirmation if file specified in `<output_path>` already exists.
 
 - `-v`/`--version_name`<br/>The version name used in the archive filename
 
-- `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
+- [required] `-dir`/`--directory`<br/>Path to a directory that contains at least a 'deployment.py'
 
 - `-o`/`--output_path`<br/>Path to file or directory to store the deployment package archive file
 
@@ -325,8 +325,7 @@ instance_processes: 1
 maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
-maximum_queue_size_express: 100
-maximum_queue_size_batch: 100000
+maximum_queue_size: 100000
 static_ip: false
 ports:
 - public_port: 2222
@@ -382,13 +381,11 @@ ports.
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
-- `-rtm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
 
-- `-rtt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
+- `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
-- `-qse`/`--maximum_queue_size_express`<br/>Maximum number of queued express requests to the version
-
-- `-qsb`/`--maximum_queue_size_batch`<br/>Maximum number of queued batch requests to the version
+- `-qs`/`--maximum_queue_size`<br/>Maximum number of queued requests to the version
 
 - `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 
@@ -444,7 +441,7 @@ If not specified, a request is made to the default version:
 Use `--batch` to make an asynchronous batch request:
 `ubiops deployments requests create <my-deployment> --batch --data <input>`
 
-Multiple data inputs can be specified at ones and send as batch by using the '--data' options multiple times:
+Multiple data inputs can be specified at once and send as batch by using the '--data' option multiple times:
 `ubiops deployments requests create <my-deployment> --batch --data <input-1> --data <input-2> --data <input-3>`
 
 For structured input, specify data input as JSON formatted string. For example:
@@ -479,13 +476,13 @@ For structured input, specify data input as JSON formatted string. For example:
 
 **Description:**
 
-Get one or more stored deployment requests.
+Get one or more deployment requests.
 Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
 Use the version option to get a request for a specific deployment version.
 If not specified, the request is retrieved for the default version.
 
-Multiple request ids can be specified at ones by using the '-id' options multiple times:
+Multiple request ids can be specified at once by using the '-id' options multiple times:
 `ubiops deployments requests get <my-deployment> -v <my-version> -id <id-1> -id <id-2> -id <id-3>`
 
 **Arguments:**
@@ -511,7 +508,7 @@ Multiple request ids can be specified at ones by using the '-id' options multipl
 
 **Description:**
 
-List stored deployment requests.
+List deployment requests.
 Deployment requests are only stored for deployment versions with `request_retention_mode` 'full' or 'metadata'.
 
 Use the version option to list the requests for a specific deployment version.
@@ -540,6 +537,68 @@ If not specified, the requests are listed for the default version.
 - `--search_id`<br/>A string to search inside request ids. It will filter all request ids that contain this string.
 
 - `-fmt`/`--format`<br/>The output format
+
+
+<br/>
+
+#### ubiops deployments requests input
+
+**Command:** `ubiops deployments requests input`
+
+**Description:**
+
+Get the input data of a deployment request.
+Data is only stored for deployment versions with `request_retention_mode` 'full'.
+
+Use the version option to get the input data for a request of a specific deployment version.
+If not specified, the input data is retrieved for the default version.
+
+**Arguments:**
+
+- [required] `deployment_name`
+
+
+
+**Options:**
+
+- `-v`/`--version_name`<br/>The version name
+
+- [required] `-id`/`--request_id`<br/>The ID of the request
+
+- `-o`/`--output_path`<br/>Path to file or directory to store the data
+
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
+
+
+<br/>
+
+#### ubiops deployments requests output
+
+**Command:** `ubiops deployments requests output`
+
+**Description:**
+
+Get the output data of a deployment request.
+Data is only stored for deployment versions with `request_retention_mode` 'full'.
+
+Use the version option to get the output data for a request of a specific deployment version.
+If not specified, the output data is retrieved for the default version.
+
+**Arguments:**
+
+- [required] `deployment_name`
+
+
+
+**Options:**
+
+- `-v`/`--version_name`<br/>The version name
+
+- [required] `-id`/`--request_id`<br/>The ID of the request
+
+- `-o`/`--output_path`<br/>Path to file or directory to store the data
+
+- `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
 
 <br/>

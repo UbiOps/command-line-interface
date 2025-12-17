@@ -5,8 +5,8 @@ except ImportError:  # <= Python 3.8
 
 import click
 
-from ubiops_cli import complete
-from ubiops_cli.src.helpers import options
+from .helpers import options
+from .. import complete
 
 
 @click.command(name="complete", short_help="Enable shell completion")

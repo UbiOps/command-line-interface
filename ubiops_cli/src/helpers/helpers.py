@@ -1,6 +1,6 @@
 import json
 
-from ubiops_cli.utils import set_dict_default
+from ...utils import set_dict_default
 
 
 def define_object(fields, yaml_content, field_names, rename_field_names, field_types):

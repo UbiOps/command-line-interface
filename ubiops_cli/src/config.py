@@ -1,7 +1,7 @@
 import click
 
-from ubiops_cli.utils import Config
-from ubiops_cli.src.helpers import options
+from .helpers import options
+from ..utils import Config
 
 
 @click.group(name="config", short_help="Manage your CLI configurations")

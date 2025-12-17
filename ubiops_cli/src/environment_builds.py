@@ -1,8 +1,8 @@
 import click
 
-from ubiops_cli.utils import init_client, get_current_project
-from ubiops_cli.src.helpers.formatting import print_item, print_list
-from ubiops_cli.src.helpers import options
+from .helpers.formatting import print_item, print_list
+from .helpers import options
+from ..utils import init_client, get_current_project
 
 
 LIST_ITEMS = ["creation_date", "id", "revision", "status"]

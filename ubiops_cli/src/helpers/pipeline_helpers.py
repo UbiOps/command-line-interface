@@ -1,7 +1,7 @@
 import ubiops as api
 
-from ubiops_cli.utils import set_dict_default, set_object_default
-from ubiops_cli.src.helpers.helpers import strings_to_dict
+from .helpers import strings_to_dict
+from ...utils import set_dict_default, set_object_default
 
 PIPELINE_REQUIRED_FIELDS = ["input_type"]
 PIPELINE_FIELDS = ["description", "labels", "input_type", "input_fields", "output_type", "output_fields"]

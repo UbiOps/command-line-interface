@@ -9,6 +9,7 @@ Includes:
 - Managing versions
 - Managing environments
 - Managing pipelines
+- Managing services
 - Managing schedules
 - Managing buckets and files
 - Managing environment variables

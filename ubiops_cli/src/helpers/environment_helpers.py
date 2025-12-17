@@ -1,4 +1,4 @@
-from ubiops_cli.src.helpers.helpers import define_object
+from .helpers import define_object
 
 
 ENVIRONMENT_CREATE_FIELDS = [

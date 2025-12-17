@@ -1,14 +1,14 @@
 import click
 import ubiops as api
 
-from ubiops_cli.src.helpers.instance_type_group_helpers import (
+from .helpers.instance_type_group_helpers import (
     INSTANCE_TYPE_GROUP_LIST_FIELDS,
     INSTANCE_TYPE_GROUP_RESPONSE_FILE,
     INSTANCE_TYPE_GROUP_RESPONSE,
 )
-from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
+from .helpers.formatting import print_list, print_item, format_yaml
+from .helpers import options
+from ..utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
 
 
 @click.group(name="instance_type_groups", short_help="Manage your instance type groups")

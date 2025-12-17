@@ -28,7 +28,7 @@ Validate the format of a requirements.txt file and check if the PyPi versions ar
 
 **Description:**
 
-Validate the format of an UbiOps.yaml file.
+Validate the format of a UbiOps.yaml file.
 
 **Arguments:**
 

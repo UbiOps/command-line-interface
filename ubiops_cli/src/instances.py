@@ -1,14 +1,14 @@
 import click
 
-from ubiops_cli.src.helpers.instance_helpers import (
+from .helpers.instance_helpers import (
     INSTANCE_LIST_FIELDS_TABLE,
     INSTANCE_LIST_FIELDS_JSON,
     INSTANCE_RESPONSE,
     INSTANCE_EVENT_LIST_FIELDS,
 )
-from ubiops_cli.src.helpers.formatting import print_list, print_item
-from ubiops_cli.src.helpers import options
-from ubiops_cli.utils import init_client, get_current_project
+from .helpers.formatting import print_list, print_item
+from .helpers import options
+from ..utils import init_client, get_current_project
 
 
 @click.group(name="instances", short_help="Manage your instances for deployments")

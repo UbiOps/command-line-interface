@@ -1,11 +1,11 @@
 import ubiops as api
-from ubiops_cli.constants import (
+from .helpers import define_object
+from ...constants import (
     ML_MODEL_FILE_NAME_KEY,
     ML_MODEL_FILE_NAME_VALUE,
     SYS_DEPLOYMENT_FILE_NAME_KEY,
     SYS_DEPLOYMENT_FILE_NAME_VALUE,
 )
-from ubiops_cli.src.helpers.helpers import define_object
 
 
 DEPLOYMENT_DETAILS = ["name", "project", "description", "labels", "supports_request_format"]
@@ -68,8 +68,7 @@ DEPLOYMENT_VERSION_CREATE_FIELDS = [
     "maximum_idle_time",
     "request_retention_mode",
     "request_retention_time",
-    "maximum_queue_size_express",
-    "maximum_queue_size_batch",
+    "maximum_queue_size",
     "static_ip",
     "ports",
 ]
@@ -91,8 +90,7 @@ SUPPORTS_REQUEST_FORMAT_DETAILS = [
     "scaling_strategy",
     "request_retention_mode",
     "request_retention_time",
-    "maximum_queue_size_express",
-    "maximum_queue_size_batch",
+    "maximum_queue_size",
     "has_request_method",
     "has_requests_method",
 ]
@@ -119,8 +117,7 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     "labels": dict,
     "request_retention_mode": str,
     "request_retention_time": int,
-    "maximum_queue_size_express": int,
-    "maximum_queue_size_batch": int,
+    "maximum_queue_size": int,
     "has_request_method": bool,
     "has_requests_method": bool,
     "static_ip": bool,

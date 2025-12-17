@@ -1,9 +1,9 @@
 import click
 import ubiops as api
 
-from ubiops_cli.utils import init_client, get_current_project, Config
-from ubiops_cli.src.helpers.formatting import print_item, print_projects_list
-from ubiops_cli.src.helpers import options
+from .helpers.formatting import print_item, print_projects_list
+from .helpers import options
+from ..utils import init_client, get_current_project, Config
 
 
 LIST_ITEMS = ["creation_date", "name", "organization_name"]

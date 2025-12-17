@@ -3,9 +3,9 @@ import requests
 
 import ubiops as api
 
-from ubiops_cli.exceptions import UbiOpsException
-from ubiops_cli.version import VERSION
-from ubiops_cli.utils import Config
+from ...exceptions import UbiOpsException
+from ...version import VERSION
+from ...utils import Config
 
 
 def do_call(method, host, path, data=None, headers=None):

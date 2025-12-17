@@ -4,9 +4,9 @@ import click
 
 from ubiops.utils.file_operations import upload_file, download_file
 
-from ubiops_cli.utils import get_current_project, init_client
-from ubiops_cli.src.helpers.formatting import print_list, print_item
-from ubiops_cli.src.helpers import options
+from .helpers.formatting import print_list, print_item
+from .helpers import options
+from ..utils import get_current_project, init_client
 
 
 LIST_ITEMS = ["file", "size", "time_created"]

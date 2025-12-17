@@ -1,4 +1,5 @@
-from ubiops_cli.src.helpers.helpers import strings_to_dict, json_to_dict
+from .helpers import strings_to_dict, json_to_dict
+
 
 BUCKET_INPUT_FIELDS = ["name", "description", "labels", "provider", "credentials", "configuration", "ttl"]
 BUCKET_INPUT_FIELDS_TYPE = {

@@ -1,8 +1,7 @@
 import click
 import ubiops as api
 
-from ubiops_cli.utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
-from ubiops_cli.src.helpers.pipeline_helpers import (
+from .helpers.pipeline_helpers import (
     rename_pipeline_object_reference_version,
     set_pipeline_version_defaults,
     PIPELINE_VERSION_FIELDS,
@@ -10,9 +9,10 @@ from ubiops_cli.src.helpers.pipeline_helpers import (
     PIPELINE_VERSION_RESPONSE_FILE,
     PIPELINE_VERSION_RESPONSE,
 )
-from ubiops_cli.src.helpers.helpers import get_label_filter
-from ubiops_cli.src.helpers.formatting import print_list, print_item, format_yaml
-from ubiops_cli.src.helpers import options
+from .helpers.helpers import get_label_filter
+from .helpers.formatting import print_list, print_item, format_yaml
+from .helpers import options
+from ..utils import init_client, read_yaml, write_yaml, get_current_project, set_dict_default
 
 
 LIST_ITEMS = ["last_updated", "version", "labels"]
@@ -191,7 +191,7 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
 
     project_name = get_current_project(error=True)
 
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
     client = init_client()
 
     assert (
@@ -274,7 +274,7 @@ def pipeline_versions_update(pipeline_name, version_name, yaml_file, new_name, q
 
     client = init_client()
 
-    yaml_content = read_yaml(yaml_file, required_fields=[])
+    yaml_content = read_yaml(yaml_file)
     existing_version = client.pipeline_versions_get(
         project_name=project_name, pipeline_name=pipeline_name, version=version_name
     )

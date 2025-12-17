@@ -1,10 +1,9 @@
 import click
 
-from ubiops_cli.exceptions import UnAuthorizedException
-from ubiops_cli.utils import get_current_project
-from ubiops_cli.src.config import Config
-from ubiops_cli.src.helpers.requests import sign_in, authorize, authorize2fa, sign_out, raise_for_status
-from ubiops_cli.src.helpers import options
+from .helpers import options
+from .helpers.requests import sign_in, authorize, authorize2fa, sign_out, raise_for_status
+from ..exceptions import UnAuthorizedException
+from ..utils import Config, get_current_project
 
 
 @click.command(name="signin", short_help="Sign in using your credentials")
