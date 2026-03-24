@@ -21,7 +21,7 @@ The `<status>` option can be used to filter on specific statuses.
 
 - `--status`<br/>Status of the export
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -51,7 +51,7 @@ stored in `export.yaml`.
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -97,7 +97,7 @@ environment_variables:
 
 - [required] `-f`/`--yaml_file`<br/>Path to a yaml file that contains the export details
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

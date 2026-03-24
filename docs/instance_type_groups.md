@@ -19,7 +19,7 @@ List the instance type groups in your project.
 
 - `--limit`<br/>The maximum number of instance type groups returned, default is 50
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -67,7 +67,7 @@ instance_types:
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -106,7 +106,7 @@ The instance type group name can either be passed as command argument or specifi
 
 - [required] `-f`/`--yaml_file`<br/>Path to a yaml file that contains at least the following fields: [name, instance_types]
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

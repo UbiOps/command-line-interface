@@ -23,7 +23,7 @@ The `<labels>` option can be used to filter on specific labels.
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -53,7 +53,7 @@ stored in `deployment.yaml`.
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -106,7 +106,7 @@ string, double, bool, dict, file, array_string, array_int, array_double, array_f
 
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -327,21 +327,17 @@ request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size: 100000
 static_ip: false
-ports:
-- public_port: 2222
-  deployment_port: 2222
-  protocol: tcp
+health_check:
+  port: 8080
+  path: "/status"
+  timeout: 3
+  interval: 5
+  failure_threshold: 3
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
 the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
 either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
-
-The `ports` to open up for the deployment version can be provided as list of fields `public_port`, `deployment_port`
-and `protocol` inside the yaml file, or one port can be given via command options `--public_port`,
-`--deployment_port` and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both.
-Use a yaml file with empty `ports` list and provide `--overwrite` command option to remove already existing opened
-ports.
 
 **Arguments:**
 
@@ -381,7 +377,7 @@ ports.
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
-- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version<br/>Allowed values: `none`, `metadata`, `full`
 
 - `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
@@ -389,11 +385,15 @@ ports.
 
 - `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 
-- `--public_port`<br/>Public port to open up to
+- `--hc_port`<br/>Port for the health check
 
-- `--deployment_port`<br/>Deployment port to open up
+- `--hc_path`<br/>Path for the health check, it should start with a /
 
-- `--port_protocol`<br/>Protocol to use for port forwarding
+- `--hc_timeout`<br/>The number of seconds after which the health check times out
+
+- `--hc_interval`<br/>How often to check the service in seconds
+
+- `--hc_failure_threshold`<br/>The number of times that the health check can fail before the service is considered failed
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
@@ -465,7 +465,7 @@ For structured input, specify data input as JSON formatted string. For example:
 
 - `-t`/`--timeout`<br/>Timeout in seconds
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `oneline`, `reference`, `json`
 
 
 <br/>
@@ -497,7 +497,7 @@ Multiple request ids can be specified at once by using the '-id' options multipl
 
 - [required] `-id`/`--request_id`<br/>The ID of the request<br/>This option can be provided multiple times in a single command
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `oneline`, `reference`, `json`
 
 
 <br/>
@@ -528,7 +528,7 @@ If not specified, the requests are listed for the default version.
 
 - `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 
-- `--status`<br/>Status of the request
+- `--status`<br/>Status of the request<br/>Allowed values: `pending`, `processing`, `failed`, `completed`, `cancelled`
 
 - `--start_date`<br/>Start date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
 
@@ -536,7 +536,7 @@ If not specified, the requests are listed for the default version.
 
 - `--search_id`<br/>A string to search inside request ids. It will filter all request ids that contain this string.
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>

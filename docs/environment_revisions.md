@@ -21,7 +21,7 @@ List the revisions of an environment.
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -44,7 +44,7 @@ Get a revision of an environment.
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -97,7 +97,7 @@ Please, specify the environment package `<archive_path>` that should be uploaded
 
 - `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

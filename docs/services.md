@@ -24,7 +24,7 @@ filter on specific deployment versions.
 
 - `--deployment_version_ids`<br/>Deployment version IDs to filter for. Separate multiple deployment version IDs with a comma (,).
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -52,6 +52,12 @@ service_labels:
     my-key-2: my-label-2
 ```
 
+
+To extract the endpoint of the service, you can use:
+```
+ubiops services get my-service --format json | jq -R -r "fromjson? | .endpoint"
+```
+
 **Arguments:**
 
 - [required] `service_name`
@@ -64,7 +70,28 @@ service_labels:
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
+
+
+<br/>
+
+### ubiops services status
+
+**Command:** `ubiops services status`
+
+**Description:**
+
+Get the service status.
+
+**Arguments:**
+
+- [required] `service_name`
+
+
+
+**Options:**
+
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -96,13 +123,20 @@ request_logging_excluded_paths: "(health|status)$"
 request_logging_excluded_extensions:
   - svg
   - tar
-health_check:
-  path: "/status"
-rate_limit_token: 300
+concurrency_limit: 100
+concurrency_limit_user_default: 20
+rate_limit: 3000
+rate_limit_user_default: 300
 ```
 
 The service name can either be passed as command argument or specified inside the yaml file using
 `<service_name>`.
+
+
+To extract the endpoint of the created service, you can use:
+```
+ubiops services create -f service.yaml --overwrite --format json | jq -R -r "fromjson? | .endpoint"
+```
 
 **Arguments:**
 
@@ -116,7 +150,7 @@ The service name can either be passed as command argument or specified inside th
 
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -150,9 +184,10 @@ request_logging_excluded_paths: "(health|status)$"
 request_logging_excluded_extensions:
   - svg
   - tar
-health_check:
-  path: "/status"
-rate_limit_token: 300
+concurrency_limit: 100
+concurrency_limit_user_default: 20
+rate_limit: 3000
+rate_limit_user_default: 300
 ```
 
 **Arguments:**

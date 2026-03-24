@@ -70,7 +70,7 @@ DEPLOYMENT_VERSION_CREATE_FIELDS = [
     "request_retention_time",
     "maximum_queue_size",
     "static_ip",
-    "ports",
+    "health_check",
 ]
 DEPLOYMENT_VERSION_DETAILS = [
     "description",
@@ -80,9 +80,15 @@ DEPLOYMENT_VERSION_DETAILS = [
     "instance_type_group_id",
     "instance_type_group_name",
     "static_ip",
-    "ports",
     "minimum_instances",
     "maximum_instances",
+]
+DEPLOYMENT_VERSION_DETAILS_OPTIONAL = [
+    "health_check port",
+    "health_check path",
+    "health_check interval",
+    "health_check timeout",
+    "health_check failure_threshold",
 ]
 SUPPORTS_REQUEST_FORMAT_DETAILS = [
     "instance_processes",
@@ -121,7 +127,7 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     "has_request_method": bool,
     "has_requests_method": bool,
     "static_ip": bool,
-    "ports": None,
+    "health_check": dict,
 }
 DEPLOYMENT_VERSION_FIELDS_RENAMED = {
     "version": "version_name",
@@ -300,3 +306,24 @@ def set_default_scaling_parameters(details, supports_request_format, update=Fals
             details["maximum_instances"] = details["minimum_instances"]
 
     return details
+
+
+def handle_health_check_input(yaml_content, command_options):
+    """
+    Handle health check command options by updating the yaml content
+    """
+
+    if command_options.get("hc_port", None) or command_options.get("hc_path", None):
+        if not (command_options.get("hc_port", None) and command_options.get("hc_path", None)):
+            raise AssertionError("hc_port and hc_path should be provided together")
+        yaml_content["health_check"] = {"port": command_options.pop("hc_port"), "path": command_options.pop("hc_path")}
+
+        # Optional health check fields:
+        if command_options.get("hc_timeout", None) is not None:
+            yaml_content["health_check"]["timeout"] = command_options.pop("hc_timeout")
+        if command_options.get("hc_interval", None) is not None:
+            yaml_content["health_check"]["interval"] = command_options.pop("hc_interval")
+        if command_options.get("hc_failure_threshold", None) is not None:
+            yaml_content["health_check"]["failure_threshold"] = command_options.pop("hc_failure_threshold")
+
+    return yaml_content

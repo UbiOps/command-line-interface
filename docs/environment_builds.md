@@ -23,7 +23,7 @@ List the builds of an environment.
 
 - [required] `-rid`/`--revision_id`<br/>The environment revision id
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -48,7 +48,7 @@ Get the build of an environment.
 
 - [required] `-rid`/`--revision_id`<br/>The environment revision id
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

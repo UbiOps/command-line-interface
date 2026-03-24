@@ -21,7 +21,7 @@ The `<status>` option can be used to filter on specific statuses.
 
 - `--status`<br/>Status of the import
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -51,7 +51,7 @@ stored in `import.yaml`.
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -76,7 +76,7 @@ Please, specify the import file `<zip_path>` that should be uploaded.
 
 - `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -179,7 +179,7 @@ pipelines:
 
 - [required] `-f`/`--yaml_file`<br/>Path to a yaml file that contains the object selection for the import confirmation
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

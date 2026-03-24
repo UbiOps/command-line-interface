@@ -19,7 +19,7 @@ List the instance types in your project.
 
 - `--limit`<br/>The maximum number of instance type groups returned, default is 50
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>

@@ -14,6 +14,7 @@ from .src import (
     deployments,
     environment_builds,
     environment_revisions,
+    environment_secrets,
     environment_variables,
     environments,
     exports,
@@ -70,7 +71,8 @@ cli.add_command(services.commands)
 cli.add_command(buckets.commands)
 cli.add_command(files.commands)
 cli.add_command(environment_variables.commands)
-cli.add_command(logs.commands)
+cli.add_command(environment_secrets.commands)
+cli.add_command(logs.logs_list)
 cli.add_command(logs.audit_events)
 cli.add_command(request_schedules.commands)
 cli.add_command(exports.commands)

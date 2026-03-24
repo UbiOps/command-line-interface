@@ -25,7 +25,7 @@ The `<labels>` option can be used to filter on specific labels.
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -65,6 +65,12 @@ maximum_queue_size: 100000
 has_request_method: true
 has_requests_method: false
 static_ip: false
+health_check:
+  port: 8080
+  path: "/status"
+  timeout: 3
+  interval: 5
+  failure_threshold: 3
 ```
 
 **Arguments:**
@@ -81,7 +87,7 @@ static_ip: false
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -115,19 +121,17 @@ request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size: 100000
 static_ip: false
-ports:
-- public_port: 2222
-  deployment_port: 2222
-  protocol: tcp
+health_check:
+  port: 8080
+  path: "/status"
+  timeout: 3
+  interval: 5
+  failure_threshold: 3
 ```
 
 Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
 options are given, the options defined by `<yaml_file>` will be overwritten by the specified command options.
 The version name can either be passed as command argument or specified inside the yaml file using `<version_name>`.
-
-The `ports` to open up for the version can be provided as list of fields `public_port`, `deployment_port` and
-`protocol` inside the yaml file, or one port can be given via command options `--public_port`, `--deployment_port`
-and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both.
 
 **Arguments:**
 
@@ -157,7 +161,7 @@ and `--port_protocol`. Only one of the options (yaml or command options) can be 
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
-- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version<br/>Allowed values: `none`, `metadata`, `full`
 
 - `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
@@ -165,11 +169,15 @@ and `--port_protocol`. Only one of the options (yaml or command options) can be 
 
 - `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 
-- `--public_port`<br/>Public port to open up to
+- `--hc_port`<br/>Port for the health check
 
-- `--deployment_port`<br/>Deployment port to open up
+- `--hc_path`<br/>Path for the health check, it should start with a /
 
-- `--port_protocol`<br/>Protocol to use for port forwarding
+- `--hc_timeout`<br/>The number of seconds after which the health check times out
+
+- `--hc_interval`<br/>How often to check the service in seconds
+
+- `--hc_failure_threshold`<br/>The number of times that the health check can fail before the service is considered failed
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
@@ -179,7 +187,7 @@ and `--port_protocol`. Only one of the options (yaml or command options) can be 
 
 - `-deployment_py`/`--deployment_file`<br/>Name of deployment file which contains class Deployment. Must be located in the root of the deployment package directory
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -210,10 +218,12 @@ request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size: 100000
 static_ip: false
-ports:
-- public_port: 2222
-  deployment_port: 2222
-  protocol: tcp
+health_check:
+  port: 8080
+  path: "/status"
+  timeout: 3
+  interval: 5
+  failure_threshold: 3
 ```
 
 You may want to change some deployment options, like, `<maximum_instances>` and
@@ -221,11 +231,6 @@ You may want to change some deployment options, like, `<maximum_instances>` and
 and passing the file path as `<yaml_file>`, or passing the options as command options.
 If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
 will be overwritten by the specified command options.
-
-The `ports` to open up for the version can be provided as list of fields `public_port`, `deployment_port` and
-`protocol` inside the yaml file, or one port can be given via command options `--public_port`, `--deployment_port`
-and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both. Use a yaml file with
-empty `ports` list to remove already existing opened ports.
 
 **Arguments:**
 
@@ -261,7 +266,7 @@ empty `ports` list to remove already existing opened ports.
 
 - `-t`/`--maximum_idle_time`<br/>Maximum idle time before shutting down instance (seconds)
 
-- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version<br/>Allowed values: `none`, `metadata`, `full`
 
 - `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
@@ -269,11 +274,15 @@ empty `ports` list to remove already existing opened ports.
 
 - `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 
-- `--public_port`<br/>Public port to open up to
+- `--hc_port`<br/>Port for the health check
 
-- `--deployment_port`<br/>Deployment port to open up
+- `--hc_path`<br/>Path for the health check, it should start with a /
 
-- `--port_protocol`<br/>Protocol to use for port forwarding
+- `--hc_timeout`<br/>The number of seconds after which the health check times out
+
+- `--hc_interval`<br/>How often to check the service in seconds
+
+- `--hc_failure_threshold`<br/>The number of times that the health check can fail before the service is considered failed
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 

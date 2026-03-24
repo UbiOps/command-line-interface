@@ -25,7 +25,7 @@ The `<labels>` option can be used to filter on specific labels.
 
 - `-env-type`/`--environment_type`<br/>Environment type. It can be either base or custom.
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -67,7 +67,7 @@ base_environment: python3-12
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -119,7 +119,7 @@ The environment name can either be passed as command argument or specified insid
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

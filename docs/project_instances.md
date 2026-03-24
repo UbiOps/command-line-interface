@@ -19,7 +19,7 @@ List all the instances running in your project.
 
 - `--limit`<br/>The maximum number of instances returned, default is 10
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -40,7 +40,7 @@ Get the details of a single instance running in your project.
 
 **Options:**
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

@@ -29,9 +29,9 @@ Use the command options as filters.
 
 - `--offset`<br/>The starting point: if offset equals 2, then the first 2 records will be omitted
 
-- `--action`<br/>Type of action
+- `--action`<br/>Type of action<br/>Allowed values: `create`, `update`, `delete`, `info`
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
