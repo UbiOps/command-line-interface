@@ -29,7 +29,7 @@ Generate a signed url to upload a file.
 
 - `-b`/`--bucket_name`<br/>The bucket name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -52,7 +52,7 @@ Generate a signed url to download a file.
 
 - `-b`/`--bucket_name`<br/>The bucket name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -83,7 +83,7 @@ If formatted as json the response will show the continuation_token and prefixes 
 
 - `--continuation-token`<br/>A token that indicates the start point of the returned the files
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -106,7 +106,7 @@ Get the details of a file in the bucket.
 
 - `-b`/`--bucket_name`<br/>The bucket name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

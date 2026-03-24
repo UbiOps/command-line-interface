@@ -12,19 +12,15 @@ SERVICE_COMMON_FIELDS = [
     "authentication_method_token_enabled",
     "request_logging_excluded_paths",
     "request_logging_excluded_extensions",
-    "rate_limit_token",
+    "concurrency_limit",
+    "concurrency_limit_user_default",
+    "rate_limit",
+    "rate_limit_user_default",
 ]
-SERVICE_CREATE_FIELDS = [
-    *SERVICE_COMMON_FIELDS,
-    "health_check",
-]
+SERVICE_CREATE_FIELDS = SERVICE_COMMON_FIELDS
 SERVICE_UPDATE_FIELDS = SERVICE_CREATE_FIELDS
 SERVICE_DETAILS = [
     *SERVICE_COMMON_FIELDS,
-    "health_check path",
-    "health_check interval",
-    "health_check timeout",
-    "health_check threshold",
     "time_created",
     "time_updated",
     "endpoint",
@@ -40,8 +36,10 @@ SERVICE_FIELD_TYPES = {
     "authentication_method_token_enabled": bool,
     "request_logging_excluded_paths": str,
     "request_logging_excluded_extensions": list,
-    "health_check": dict,
-    "rate_limit_token": int,
+    "concurrency_limit": int,
+    "concurrency_limit_user_default": int,
+    "rate_limit": int,
+    "rate_limit_user_default": int,
 }
 SERVICE_FIELDS_RENAMED = {
     "name": "service_name",

@@ -23,7 +23,7 @@ The <labels> option can be used to filter on specific labels.
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -53,7 +53,7 @@ stored in `pipeline.yaml`.
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -98,7 +98,7 @@ Possible data_types: [int, string, double, bool, dict, file, array_string, array
 
 - [required] `-f`/`--yaml_file`<br/>Path to a yaml file that contains at least the following fields: [input_type]
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -223,7 +223,7 @@ For structured input, specify each data input as JSON formatted string. For exam
 
 - `-f`/`--json_file`<br/>Path to json file containing the input data of the request
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `oneline`, `reference`, `json`
 
 
 <br/>
@@ -255,7 +255,7 @@ Multiple request ids can be specified at once by using the '-id' options multipl
 
 - [required] `-id`/`--request_id`<br/>The ID of the request<br/>This option can be provided multiple times in a single command
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `oneline`, `reference`, `json`
 
 
 <br/>
@@ -286,7 +286,7 @@ If not specified, the requests are listed for the default version.
 
 - `--limit`<br/>Limit of the number of requests. The maximum value is 50.
 
-- `--status`<br/>Status of the request
+- `--status`<br/>Status of the request<br/>Allowed values: `pending`, `processing`, `failed`, `completed`, `cancelled`
 
 - `--start_date`<br/>Start date of the interval for which the requests are retrieved, looking at the creation date of the request. Formatted like '2020-01-01T00:00:00.000000Z'.
 
@@ -294,7 +294,7 @@ If not specified, the requests are listed for the default version.
 
 - `--search_id`<br/>A string to search inside request ids. It will filter all request ids that contain this string.
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>

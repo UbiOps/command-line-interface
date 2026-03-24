@@ -25,7 +25,7 @@ The `<labels>` option can be used to filter on specific labels.
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -90,7 +90,7 @@ attachments:
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -147,13 +147,13 @@ The version name can either be passed as command argument or specified inside th
 
 - `-desc`/`--version_description`<br/>The version description
 
-- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version<br/>Allowed values: `none`, `metadata`, `full`
 
 - `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -211,7 +211,7 @@ will be overwritten by the specified command options.
 
 - `-desc`/`--version_description`<br/>The version description
 
-- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version
+- `-rtm`/`-rrm`/`--request_retention_mode`<br/>Mode of request retention for requests to the version<br/>Allowed values: `none`, `metadata`, `full`
 
 - `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 

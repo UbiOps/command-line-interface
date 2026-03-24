@@ -23,7 +23,7 @@ List the instances running for a deployment version.
 
 - `--limit`<br/>The maximum number of instances returned, default is 50
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -48,7 +48,7 @@ Get the details of a single instance running for a deployment version.
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -75,7 +75,7 @@ List the events of an instance running for a deployment version.
 
 - `--limit`<br/>The maximum number of instances returned, default is 50
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>

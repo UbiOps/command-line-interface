@@ -9,6 +9,7 @@ from ubiops.utils import zip_dir, files_present_in_dir
 from .helpers.deployment_helpers import (
     define_deployment,
     define_deployment_version,
+    handle_health_check_input,
     set_default_scaling_parameters,
     update_deployment_file,
     update_existing_deployment_version,
@@ -439,9 +440,11 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @options.RETENTION_TIME
 @options.MAX_QUEUE_SIZE
 @options.VERSION_STATIC_IP
-@options.VERSION_PUBLIC_PORT
-@options.VERSION_DEPLOYMENT_PORT
-@options.VERSION_PORT_PROTOCOL
+@options.HEALTH_CHECK_PORT
+@options.HEALTH_CHECK_PATH
+@options.HEALTH_CHECK_TIMEOUT
+@options.HEALTH_CHECK_INTERVAL
+@options.HEALTH_CHECK_FAILURE_THRESHOLD
 @options.VERSION_LABELS
 @options.VERSION_DESCRIPTION
 @options.OVERWRITE
@@ -496,21 +499,17 @@ def deployments_deploy(
     request_retention_time: 604800
     maximum_queue_size: 100000
     static_ip: false
-    ports:
-    - public_port: 2222
-      deployment_port: 2222
-      protocol: tcp
+    health_check:
+      port: 8080
+      path: "/status"
+      timeout: 3
+      interval: 5
+      failure_threshold: 3
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and options are given,
     the options defined by `<yaml_file>` will be overwritten by the specified command options. The deployment name can
     either be passed as command argument or specified inside the yaml file using `<deployment_name>`.
-
-    The `ports` to open up for the deployment version can be provided as list of fields `public_port`, `deployment_port`
-    and `protocol` inside the yaml file, or one port can be given via command options `--public_port`,
-    `--deployment_port` and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both.
-    Use a yaml file with empty `ports` list and provide `--overwrite` command option to remove already existing opened
-    ports.
     """
 
     if not output_path:
@@ -536,21 +535,8 @@ def deployments_deploy(
     deployment_name = set_dict_default(deployment_name, yaml_content, "deployment_name")
     version_name = set_dict_default(version_name, yaml_content, "version_name")
 
-    # Convert command options for port forwarding to 'ports' list
-    if "ports" in yaml_content and (kwargs.get("public_port", None) or kwargs.get("deployment_port", None)):
-        raise AssertionError(
-            "Please, specify the ports to open up either in the yaml file or as command options, not both"
-        )
-    if kwargs.get("public_port", None) or kwargs.get("deployment_port", None):
-        if not (kwargs.get("public_port", None) and kwargs.get("deployment_port", None)):
-            raise AssertionError("public_port and deployment_port should be provided together")
-        yaml_content["ports"] = [
-            {
-                "public_port": kwargs.pop("public_port"),
-                "deployment_port": kwargs.pop("deployment_port"),
-                "protocol": kwargs.pop("port_protocol"),
-            }
-        ]
+    # Handle health check command options
+    yaml_content = handle_health_check_input(yaml_content=yaml_content, command_options=kwargs)
 
     client = init_client()
     deployment = client.deployments_get(project_name=project_name, deployment_name=deployment_name)

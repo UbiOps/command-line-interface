@@ -386,22 +386,6 @@ VERSION_STATIC_IP = click.option(
     type=click.BOOL,
     help="Whether the deployment version should get a static IP",
 )
-VERSION_PUBLIC_PORT = click.option(
-    "--public_port", required=False, metavar="<int>", default=None, type=int, help="Public port to open up to"
-)
-VERSION_DEPLOYMENT_PORT = click.option(
-    "--deployment_port", required=False, metavar="<int>", default=None, type=int, help="Deployment port to open up"
-)
-VERSION_PORT_PROTOCOL = click.option(
-    "--port_protocol",
-    required=False,
-    metavar="<string>",
-    default="tcp",
-    type=str,
-    help="Protocol to use for port forwarding",
-    show_default=True,
-)
-
 VERSION_LABELS = click.option(
     "-lb",
     "--labels",
@@ -415,6 +399,48 @@ VERSION_LABELS = click.option(
 )
 VERSION_DESCRIPTION = click.option(
     "-desc", "--version_description", required=False, metavar="<string>", help="The version description"
+)
+
+# Version health check options
+HEALTH_CHECK_PORT = click.option(
+    "--hc_port",
+    required=False,
+    metavar="<int>",
+    default=None,
+    type=int,
+    help="Port for the health check",
+)
+HEALTH_CHECK_PATH = click.option(
+    "--hc_path",
+    required=False,
+    metavar="<string>",
+    default=None,
+    type=str,
+    help="Path for the health check, it should start with a /",
+)
+HEALTH_CHECK_TIMEOUT = click.option(
+    "--hc_timeout",
+    required=False,
+    metavar="<int>",
+    default=None,
+    type=int,
+    help="The number of seconds after which the health check times out",
+)
+HEALTH_CHECK_INTERVAL = click.option(
+    "--hc_interval",
+    required=False,
+    metavar="<int>",
+    default=None,
+    type=int,
+    help="How often to check the service in seconds",
+)
+HEALTH_CHECK_FAILURE_THRESHOLD = click.option(
+    "--hc_failure_threshold",
+    required=False,
+    metavar="<int>",
+    default=None,
+    type=int,
+    help="The number of times that the health check can fail before the service is considered failed",
 )
 
 # Deployment package variables
@@ -829,6 +855,43 @@ ENV_VAR_YAML_FILE = click.option(
     type=click.Path(),
     metavar="<path>",
     help="Path to a yaml file that contains environment variables",
+)
+
+# Environment Secrets
+ENV_SECRET_NAME = click.option(
+    "-n", "--env_secret_name", required=False, metavar="<name>", help="The name of the environment secret"
+)
+ENV_SECRET_VALUE = click.option(
+    "-v", "--env_secret_value", required=False, metavar="<value>", help="The value of the environment secret"
+)
+ENV_SECRET_ID = click.option(
+    "-id", "--env_secret_id", required=False, metavar="<id>", help="The ID of the environment secret"
+)
+ENV_SECRET_ID_REQUIRED = click.option(
+    "-id", "--env_secret_id", required=True, metavar="<id>", help="The ID of the environment secret"
+)
+ENV_SECRET_YAML_FILE = click.option(
+    "-f",
+    "--yaml_file",
+    required=False,
+    default=None,
+    type=click.Path(),
+    metavar="<path>",
+    help="Path to a yaml file that contains environment secrets",
+)
+ENV_SECRETS_COPY_SOURCE_NAME = click.option(
+    "-s",
+    "--source_name",
+    required=True,
+    metavar="<name>",
+    help="The name of the environment to copy environment secrets from",
+)
+ENV_SECRETS_COPY_TARGET_NAME = click.option(
+    "-t",
+    "--target_name",
+    required=True,
+    metavar="<name>",
+    help="The name of the environment to copy environment secrets to",
 )
 
 # Logs

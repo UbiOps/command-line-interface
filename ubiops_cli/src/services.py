@@ -70,6 +70,12 @@ def services_get(service_name, output_path, quiet, format_):
         my-key-1: my-label-1
         my-key-2: my-label-2
     ```
+
+    \b
+    To extract the endpoint of the service, you can use:
+    ```
+    ubiops services get my-service --format json | jq -R -r "fromjson? | .endpoint"
+    ```
     """
 
     project_name = get_current_project(error=True)
@@ -103,6 +109,22 @@ def services_get(service_name, output_path, quiet, format_):
         )
 
 
+@commands.command(name="status", short_help="Get the status of a service")
+@options.SERVICE_NAME_ARGUMENT
+@options.GET_FORMATS
+def services_status_get(service_name, format_):
+    """Get the service status."""
+
+    project_name = get_current_project(error=True)
+
+    # Show service details
+    client = init_client()
+    service_status = client.services_status_get(project_name=project_name, service_name=service_name)
+    client.api_client.close()
+
+    print_item(item=service_status, row_attrs=["id", "ready", "instances_ready"], fmt=format_)
+
+
 @commands.command(name="create", short_help="Create a service")
 @options.SERVICE_NAME_OVERRULE
 @options.SERVICE_YAML_FILE
@@ -131,13 +153,20 @@ def services_create(yaml_file, overwrite, format_, **kwargs):
     request_logging_excluded_extensions:
       - svg
       - tar
-    health_check:
-      path: "/status"
-    rate_limit_token: 300
+    concurrency_limit: 100
+    concurrency_limit_user_default: 20
+    rate_limit: 3000
+    rate_limit_user_default: 300
     ```
 
     The service name can either be passed as command argument or specified inside the yaml file using
     `<service_name>`.
+
+    \b
+    To extract the endpoint of the created service, you can use:
+    ```
+    ubiops services create -f service.yaml --overwrite --format json | jq -R -r "fromjson? | .endpoint"
+    ```
     """
 
     project_name = get_current_project(error=True)
@@ -210,9 +239,10 @@ def services_update(service_name, new_name, yaml_file, quiet):
     request_logging_excluded_extensions:
       - svg
       - tar
-    health_check:
-      path: "/status"
-    rate_limit_token: 300
+    concurrency_limit: 100
+    concurrency_limit_user_default: 20
+    rate_limit: 3000
+    rate_limit_user_default: 300
     ```
     """
 

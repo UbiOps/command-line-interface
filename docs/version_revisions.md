@@ -23,7 +23,7 @@ List the revisions of a deployment version.
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -48,7 +48,7 @@ Get a revision of a deployment version.
 
 - [required] `-v`/`--version_name`<br/>The version name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -105,7 +105,7 @@ Please, specify the deployment package `<archive_path>` that should be uploaded.
 
 - `-pb`/`--progress_bar`<br/>Whether to show a progress bar while uploading
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

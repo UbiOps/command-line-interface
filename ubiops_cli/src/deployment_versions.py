@@ -3,12 +3,14 @@ import ubiops as api
 
 from .helpers.deployment_helpers import (
     define_deployment_version,
+    handle_health_check_input,
     set_default_scaling_parameters,
     update_deployment_file,
     DEPLOYMENT_VERSION_CREATE_FIELDS,
     DEPLOYMENT_VERSION_FIELDS_UPDATE,
     DEPLOYMENT_VERSION_FIELDS_RENAMED,
     DEPLOYMENT_VERSION_DETAILS,
+    DEPLOYMENT_VERSION_DETAILS_OPTIONAL,
     SUPPORTS_REQUEST_FORMAT_DETAILS,
 )
 from .helpers.formatting import print_list, print_item, format_yaml
@@ -103,6 +105,12 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     has_request_method: true
     has_requests_method: false
     static_ip: false
+    health_check:
+      port: 8080
+      path: "/status"
+      timeout: 3
+      interval: 5
+      failure_threshold: 3
     ```
     """
 
@@ -133,6 +141,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
         dictionary = format_yaml(
             item=version,
             required_front=["version", "deployment", *reusable_fields],
+            optional=DEPLOYMENT_VERSION_DETAILS_OPTIONAL,
             rename={"deployment": "deployment_name", "version": "version_name", **DEPLOYMENT_VERSION_FIELDS_RENAMED},
             as_str=False,
         )
@@ -144,6 +153,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
             item=version,
             required_front=["version", "deployment", *details],
             row_attrs=LIST_ITEMS,
+            optional=DEPLOYMENT_VERSION_DETAILS_OPTIONAL,
             rename={"deployment": "deployment_name", "version": "version_name", **DEPLOYMENT_VERSION_FIELDS_RENAMED},
             fmt=format_,
         )
@@ -165,9 +175,11 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @options.RETENTION_TIME
 @options.MAX_QUEUE_SIZE
 @options.VERSION_STATIC_IP
-@options.VERSION_PUBLIC_PORT
-@options.VERSION_DEPLOYMENT_PORT
-@options.VERSION_PORT_PROTOCOL
+@options.HEALTH_CHECK_PORT
+@options.HEALTH_CHECK_PATH
+@options.HEALTH_CHECK_TIMEOUT
+@options.HEALTH_CHECK_INTERVAL
+@options.HEALTH_CHECK_FAILURE_THRESHOLD
 @options.VERSION_LABELS
 @options.VERSION_DESCRIPTION
 @options.VERSION_YAML_FILE
@@ -198,19 +210,17 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     request_retention_time: 604800
     maximum_queue_size: 100000
     static_ip: false
-    ports:
-    - public_port: 2222
-      deployment_port: 2222
-      protocol: tcp
+    health_check:
+      port: 8080
+      path: "/status"
+      timeout: 3
+      interval: 5
+      failure_threshold: 3
     ```
 
     Those parameters can also be provided as command options. If both a `<yaml_file>` is set and
     options are given, the options defined by `<yaml_file>` will be overwritten by the specified command options.
     The version name can either be passed as command argument or specified inside the yaml file using `<version_name>`.
-
-    The `ports` to open up for the version can be provided as list of fields `public_port`, `deployment_port` and
-    `protocol` inside the yaml file, or one port can be given via command options `--public_port`, `--deployment_port`
-    and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both.
     """
 
     project_name = get_current_project(error=True)
@@ -224,21 +234,8 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
         "Please, specify the version name in either " "the yaml file or as a command argument"
     )
 
-    # Convert command options for port forwarding to 'ports' list
-    if "ports" in yaml_content and (kwargs.get("public_port", None) or kwargs.get("deployment_port", None)):
-        raise AssertionError(
-            "Please, specify the ports to open up either in the yaml file or as command options, not both"
-        )
-    if kwargs.get("public_port", None) or kwargs.get("deployment_port", None):
-        if not (kwargs.get("public_port", None) and kwargs.get("deployment_port", None)):
-            raise AssertionError("public_port and deployment_port should be provided together")
-        yaml_content["ports"] = [
-            {
-                "public_port": kwargs.pop("public_port"),
-                "deployment_port": kwargs.pop("deployment_port"),
-                "protocol": kwargs.pop("port_protocol"),
-            }
-        ]
+    # Handle health check command options
+    yaml_content = handle_health_check_input(yaml_content=yaml_content, command_options=kwargs)
 
     client = init_client()
 
@@ -268,6 +265,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
         item=response,
         row_attrs=LIST_ITEMS,
         required_front=["version", "deployment", *details],
+        optional=DEPLOYMENT_VERSION_DETAILS_OPTIONAL,
         rename={"deployment": "deployment_name", "version": "version_name", **DEPLOYMENT_VERSION_FIELDS_RENAMED},
         fmt=format_,
     )
@@ -292,9 +290,11 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @options.RETENTION_TIME
 @options.MAX_QUEUE_SIZE
 @options.VERSION_STATIC_IP
-@options.VERSION_PUBLIC_PORT
-@options.VERSION_DEPLOYMENT_PORT
-@options.VERSION_PORT_PROTOCOL
+@options.HEALTH_CHECK_PORT
+@options.HEALTH_CHECK_PATH
+@options.HEALTH_CHECK_TIMEOUT
+@options.HEALTH_CHECK_INTERVAL
+@options.HEALTH_CHECK_FAILURE_THRESHOLD
 @options.VERSION_LABELS
 @options.VERSION_DESCRIPTION
 @options.QUIET
@@ -320,10 +320,12 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     request_retention_time: 604800
     maximum_queue_size: 100000
     static_ip: false
-    ports:
-    - public_port: 2222
-      deployment_port: 2222
-      protocol: tcp
+    health_check:
+      port: 8080
+      path: "/status"
+      timeout: 3
+      interval: 5
+      failure_threshold: 3
     ```
 
     You may want to change some deployment options, like, `<maximum_instances>` and
@@ -331,32 +333,14 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     and passing the file path as `<yaml_file>`, or passing the options as command options.
     If both a `<yaml_file>` is set and options are given, the options defined by `<yaml_file>`
     will be overwritten by the specified command options.
-
-    The `ports` to open up for the version can be provided as list of fields `public_port`, `deployment_port` and
-    `protocol` inside the yaml file, or one port can be given via command options `--public_port`, `--deployment_port`
-    and `--port_protocol`. Only one of the options (yaml or command options) can be used, not both. Use a yaml file with
-    empty `ports` list to remove already existing opened ports.
     """
 
     project_name = get_current_project(error=True)
 
     yaml_content = read_yaml(yaml_file)
 
-    # Convert command options for port forwarding to 'ports' list
-    if "ports" in yaml_content and (kwargs.get("public_port", None) or kwargs.get("deployment_port", None)):
-        raise AssertionError(
-            "Please, specify the ports to open up either in the yaml file or as command options, not both"
-        )
-    if kwargs.get("public_port", None) or kwargs.get("deployment_port", None):
-        if not (kwargs.get("public_port", None) and kwargs.get("deployment_port", None)):
-            raise AssertionError("public_port and deployment_port should be provided together")
-        yaml_content["ports"] = [
-            {
-                "public_port": kwargs.pop("public_port"),
-                "deployment_port": kwargs.pop("deployment_port"),
-                "protocol": kwargs.pop("port_protocol"),
-            }
-        ]
+    # Handle health check command options
+    yaml_content = handle_health_check_input(yaml_content=yaml_content, command_options=kwargs)
 
     kwargs["version_name"] = new_name
     kwargs = define_deployment_version(kwargs, yaml_content, extra_yaml_fields=["deployment_file"])

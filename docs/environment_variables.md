@@ -30,7 +30,7 @@ deployment level.
 
 - `-v`/`--version_name`<br/>The version name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -88,7 +88,7 @@ The 'secret' parameter is optional, and is `false` by default.
 
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -121,7 +121,7 @@ project level.
 
 - `-v`/`--version_name`<br/>The version name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>

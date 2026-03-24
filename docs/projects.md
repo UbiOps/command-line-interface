@@ -23,7 +23,7 @@ To select a project, use: `ubiops current_project set <project_name>`
 
 - `-o`/`--organization_name`<br/>The organization name
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `simple`, `table`, `json`
 
 
 <br/>
@@ -44,7 +44,7 @@ Get the details of a project.
 
 **Options:**
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -80,7 +80,7 @@ the current project.
 
 - `--overwrite`<br/>Whether you want to overwrite if exists
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -133,7 +133,7 @@ Get your current CLI project.
 
 **Options:**
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `simple`, `table`, `json`
 
 
 <br/>
@@ -154,7 +154,7 @@ Set your current CLI project.
 
 **Options:**
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `simple`, `table`, `json`
 
 
 <br/>

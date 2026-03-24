@@ -19,7 +19,7 @@ List buckets in project.
 
 - `-lb`/`--labels`<br/>Labels defined as key/value pairs<br/>This option can be provided multiple times in a single command
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
 <br/>
@@ -66,7 +66,7 @@ ttl: 3600
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -126,7 +126,7 @@ Possible providers: [ubiops, google_cloud_storage, amazon_s3, azure_blob_storage
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 
 <br/>
@@ -168,7 +168,7 @@ ttl: 3600
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file
 
-- `-fmt`/`--format`<br/>The output format
+- `-fmt`/`--format`<br/>The output format<br/>Allowed values: `row`, `yaml`, `json`
 
 - `-q`/`--quiet`<br/>Suppress informational messages
 
