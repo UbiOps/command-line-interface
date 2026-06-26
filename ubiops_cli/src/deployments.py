@@ -439,7 +439,6 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @options.RETENTION_MODE
 @options.RETENTION_TIME
 @options.MAX_QUEUE_SIZE
-@options.VERSION_STATIC_IP
 @options.HEALTH_CHECK_PORT
 @options.HEALTH_CHECK_PATH
 @options.HEALTH_CHECK_TIMEOUT
@@ -498,7 +497,6 @@ def deployments_deploy(
     request_retention_mode: none
     request_retention_time: 604800
     maximum_queue_size: 100000
-    static_ip: false
     health_check:
       port: 8080
       path: "/status"

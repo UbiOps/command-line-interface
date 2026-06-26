@@ -104,7 +104,6 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     maximum_queue_size: 100000
     has_request_method: true
     has_requests_method: false
-    static_ip: false
     health_check:
       port: 8080
       path: "/status"
@@ -174,7 +173,6 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @options.RETENTION_MODE
 @options.RETENTION_TIME
 @options.MAX_QUEUE_SIZE
-@options.VERSION_STATIC_IP
 @options.HEALTH_CHECK_PORT
 @options.HEALTH_CHECK_PATH
 @options.HEALTH_CHECK_TIMEOUT
@@ -209,7 +207,6 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     request_retention_mode: none
     request_retention_time: 604800
     maximum_queue_size: 100000
-    static_ip: false
     health_check:
       port: 8080
       path: "/status"
@@ -289,7 +286,6 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @options.RETENTION_MODE
 @options.RETENTION_TIME
 @options.MAX_QUEUE_SIZE
-@options.VERSION_STATIC_IP
 @options.HEALTH_CHECK_PORT
 @options.HEALTH_CHECK_PATH
 @options.HEALTH_CHECK_TIMEOUT
@@ -319,7 +315,6 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     request_retention_mode: none
     request_retention_time: 604800
     maximum_queue_size: 100000
-    static_ip: false
     health_check:
       port: 8080
       path: "/status"

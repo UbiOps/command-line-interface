@@ -377,15 +377,6 @@ MAX_QUEUE_SIZE = click.option(
     metavar="<int>",
     help="Maximum number of queued requests to the version",
 )
-VERSION_STATIC_IP = click.option(
-    "--static-ip",
-    "--static_ip",
-    required=False,
-    metavar="<bool>",
-    default=False,
-    type=click.BOOL,
-    help="Whether the deployment version should get a static IP",
-)
 VERSION_LABELS = click.option(
     "-lb",
     "--labels",

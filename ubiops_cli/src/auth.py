@@ -54,8 +54,8 @@ def signin(method, host, email, password):
 
         try:
             raise_for_status(host=host, token=password)
-        except Exception:
-            raise UnAuthorizedException("Could not authorize")
+        except Exception as e:
+            raise UnAuthorizedException(f"Could not authorize: {e}")
 
     click.echo(message="\nWelcome to UbiOps!")
 

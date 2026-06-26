@@ -12,13 +12,14 @@ INSTANCE_RESPONSE = {
         "status",
         "time_created",
         "time_updated",
-        "node ipv4_address",
-        "node ipv6_address",
+        "node",
     ],
     "optional": [
         "instance_type id",
         "instance_type name",
         "instance_type display_name",
         "node_pool cluster type",
+        "node ipv4_address",
+        "node ipv6_address",
     ],
 }
