@@ -69,7 +69,6 @@ DEPLOYMENT_VERSION_CREATE_FIELDS = [
     "request_retention_mode",
     "request_retention_time",
     "maximum_queue_size",
-    "static_ip",
     "health_check",
 ]
 DEPLOYMENT_VERSION_DETAILS = [
@@ -79,7 +78,6 @@ DEPLOYMENT_VERSION_DETAILS = [
     "instance_type",
     "instance_type_group_id",
     "instance_type_group_name",
-    "static_ip",
     "minimum_instances",
     "maximum_instances",
 ]
@@ -126,7 +124,6 @@ DEPLOYMENT_VERSION_FIELD_TYPES = {
     "maximum_queue_size": int,
     "has_request_method": bool,
     "has_requests_method": bool,
-    "static_ip": bool,
     "health_check": dict,
 }
 DEPLOYMENT_VERSION_FIELDS_RENAMED = {

@@ -64,7 +64,6 @@ request_retention_time: 604800
 maximum_queue_size: 100000
 has_request_method: true
 has_requests_method: false
-static_ip: false
 health_check:
   port: 8080
   path: "/status"
@@ -120,7 +119,6 @@ maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size: 100000
-static_ip: false
 health_check:
   port: 8080
   path: "/status"
@@ -166,8 +164,6 @@ The version name can either be passed as command argument or specified inside th
 - `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-qs`/`--maximum_queue_size`<br/>Maximum number of queued requests to the version
-
-- `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 
 - `--hc_port`<br/>Port for the health check
 
@@ -217,7 +213,6 @@ maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size: 100000
-static_ip: false
 health_check:
   port: 8080
   path: "/status"
@@ -271,8 +266,6 @@ will be overwritten by the specified command options.
 - `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-qs`/`--maximum_queue_size`<br/>Maximum number of queued requests to the version
-
-- `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 
 - `--hc_port`<br/>Port for the health check
 

@@ -326,7 +326,6 @@ maximum_idle_time: 300
 request_retention_mode: none
 request_retention_time: 604800
 maximum_queue_size: 100000
-static_ip: false
 health_check:
   port: 8080
   path: "/status"
@@ -382,8 +381,6 @@ either be passed as command argument or specified inside the yaml file using `<d
 - `-rtt`/`-rrt`/`--request_retention_time`<br/>Number of seconds to store requests to the version
 
 - `-qs`/`--maximum_queue_size`<br/>Maximum number of queued requests to the version
-
-- `--static-ip`/`--static_ip`<br/>Whether the deployment version should get a static IP
 
 - `--hc_port`<br/>Port for the health check
 
