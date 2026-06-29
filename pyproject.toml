@@ -10,7 +10,7 @@ license = {text = "Apache 2.0"}
 authors = [
     {name = "UbiOps"}
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = ["UbiOps Command Line Interface"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -20,11 +20,11 @@ classifiers = [
 ]
 dependencies = [
     "requests>=2.17.3",
-    "tabulate==0.8.10",
+    "tabulate>=0.8.10",
     "python-dateutil",
     "click>=7.0,<8.2",
     "ConfigParser==4.0.2",
-    "colorama==0.4.3",
+    "colorama>=0.4.3",
     "pyyaml",
     "ubiops==4.14.0"
 ]
@@ -53,3 +53,9 @@ exclude = ["tests", "tests.*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "ubiops_cli.version.VERSION" }
+
+[dependency-groups]
+dev = [
+    "deptry>=0.20.0",
+    "pytest>=8.4.2",
+]

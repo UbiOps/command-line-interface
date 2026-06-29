@@ -1,7 +1,4 @@
-try:  # >= Python 3.9
-    from importlib import resources as impresources
-except ImportError:  # <= Python 3.8
-    import importlib_resources as impresources
+from importlib import resources as impresources
 
 import click
 
