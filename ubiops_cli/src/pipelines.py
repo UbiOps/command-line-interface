@@ -146,9 +146,9 @@ def pipelines_create(pipeline_name, yaml_file, format_):
     project_name = get_current_project(error=True)
 
     yaml_content = read_yaml(yaml_file, required_fields=PIPELINE_REQUIRED_FIELDS)
-    assert (
-        "pipeline_name" in yaml_content or pipeline_name
-    ), "Please, specify the pipeline name in either the yaml file or as a command argument"
+    assert "pipeline_name" in yaml_content or pipeline_name, (
+        "Please, specify the pipeline name in either the yaml file or as a command argument"
+    )
 
     pipeline_fields, input_fields, output_fields = define_pipeline(yaml_content, pipeline_name)
     pipeline_data = api.PipelineCreate(**pipeline_fields, **input_fields, **output_fields)

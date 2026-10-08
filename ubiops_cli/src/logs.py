@@ -18,7 +18,7 @@ LOG_FILTERS = [
     "deployment_version",
     "deployment_version_revision_id",
     "environment_name",
-    "environment_build_id",
+    "environment_tag",
     "instance_id",
     "process_id",
     "pipeline_request_id",

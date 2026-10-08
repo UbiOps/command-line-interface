@@ -15,7 +15,7 @@ from .version import VERSION
 
 class Config:
     REQUIRED_SECTIONS = ["auth", "default"]
-    DEFAULT_API_VERSION = "v2.1"
+    DEFAULT_API_VERSION = "v2"
     DEFAULT_API = f"https://api.ubiops.com/{DEFAULT_API_VERSION}/"
 
     def __init__(self):
@@ -342,9 +342,9 @@ def check_required_fields_in_list(input_dict, list_name, required_fields):
     assert list_name in input_dict, f"No list '{list_name}' found in {str(input_dict)}"
     for list_item in input_dict[list_name]:
         for requirement in required_fields:
-            assert (
-                requirement in list_item
-            ), f"No key '{requirement}' found for one of the {list_name}.\nFound: {list_item}"
+            assert requirement in list_item, (
+                f"No key '{requirement}' found for one of the {list_name}.\nFound: {list_item}"
+            )
 
 
 def read_json(json_file):

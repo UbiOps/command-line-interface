@@ -1,6 +1,6 @@
 # ubiops-cli
 
-Command Line Interface to interact with the UbiOps API (v2.1).
+Command Line Interface to interact with the UbiOps API (v2).
 
 Includes:
 

@@ -173,7 +173,7 @@ def deployments_create(deployment_name, yaml_file, overwrite, format_):
     client = init_client()
 
     assert "deployment_name" in yaml_content or deployment_name, (
-        "Please, specify the deployment name in either the " "yaml file or as a command argument"
+        "Please, specify the deployment name in either the yaml file or as a command argument"
     )
 
     kwargs = define_deployment(fields={"deployment_name": deployment_name}, yaml_content=yaml_content)
@@ -298,11 +298,14 @@ def deployments_delete(deployment_name, assume_yes, quiet):
 @options.PACKAGE_DIR
 @options.DEPLOYMENT_ARCHIVE_OUTPUT
 @options.IGNORE_FILE
+@options.PATHS_ONLY
 @options.ASSUME_YES
 @options.QUIET
-def deployments_package(deployment_name, version_name, directory, output_path, ignore_file, assume_yes, quiet):
+def deployments_package(
+    deployment_name, version_name, directory, output_path, ignore_file, paths_only, assume_yes, quiet
+):
     """
-    Package code to archive file which is ready to be deployed.
+    Package code to a ZIP archive which is ready to be deployed.
 
     Please, specify the code `<directory>` that should be deployed. The files in this directory will be zipped.
     Subdirectories and files that shouldn't be contained in the archive can be specified in an ignore file, which is by
@@ -312,13 +315,16 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
     the current directory will be used. If the `<output_path>` is a directory, the archive will be saved as
     `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use the `<assume_yes>` option to overwrite
     without confirmation if file specified in `<output_path>` already exists.
+
+    Use `<paths_only>` option to retrieve a list of file paths that would be contained in the ZIP instead of actually
+    zipping. This is especially useful in combination with `git diff`. That way you can easily check for code changes to
+    any of the files that would be part of the deployment package, respecting the given ignore file.
     """
 
     if not output_path:
         output_path = os.getcwd()
 
     output_path = os.path.abspath(output_path)
-    directory = os.path.abspath(directory)
 
     ignore_file = DEFAULT_IGNORE_FILE if ignore_file is None else ignore_file
     prefix = f"{deployment_name}_{version_name}" if deployment_name and version_name else deployment_name
@@ -326,6 +332,11 @@ def deployments_package(deployment_name, version_name, directory, output_path, i
     if not assume_yes and os.path.exists(output_path) and os.path.isfile(output_path):
         click.confirm(f"File {output_path} already exists. Do you want to overwrite it?", abort=True)
         assume_yes = True
+
+    if paths_only:
+        paths = api.utils.list_files(directory=directory, ignore_filename=ignore_file)
+        click.echo(" ".join(paths))
+        return
 
     archive_path = zip_dir(
         directory=directory,
@@ -418,7 +429,7 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
         click.echo(f"Archive stored in: {output_path}")
 
 
-# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-statements
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-locals,too-many-statements
 @commands.command(name="deploy", short_help="Deploy a new version of a deployment")
 @options.DEPLOYMENT_NAME_OVERRULE
 @options.VERSION_NAME_OPTIONAL
@@ -428,6 +439,7 @@ def deployments_download(deployment_name, version_name, output_path, quiet):
 @options.DEPLOYMENT_ARCHIVE_OUTPUT
 @options.VERSION_YAML_FILE
 @options.ENVIRONMENT
+@options.ENVIRONMENT_TAG
 @options.INSTANCE_TYPE
 @options.INSTANCE_TYPE_GROUP_ID
 @options.INSTANCE_TYPE_GROUP_NAME
@@ -487,7 +499,8 @@ def deployments_deploy(
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    environment: python3-13
+    environment_name: ubiops-ubuntu24-04-python3-13
+    environment_tag: v1
     instance_type_group_name: 2048 MB + 0.5 vCPU
     scaling_strategy: default
     minimum_instances: 0
@@ -524,14 +537,18 @@ def deployments_deploy(
     yaml_content = read_yaml(yaml_file)
 
     assert "deployment_name" in yaml_content or deployment_name, (
-        "Please, specify the deployment name in either the " "yaml file or as a command argument"
+        "Please, specify the deployment name in either the yaml file or as a command argument"
     )
     assert "version_name" in yaml_content or version_name, (
-        "Please, specify the version name in either the yaml " "file or as a command option"
+        "Please, specify the version name in either the yaml file or as a command option"
     )
 
     deployment_name = set_dict_default(deployment_name, yaml_content, "deployment_name")
     version_name = set_dict_default(version_name, yaml_content, "version_name")
+
+    # Make yaml backwards compatible for environments
+    if "environment" in yaml_content:
+        yaml_content["environment_name"] = yaml_content.pop("environment")
 
     # Handle health check command options
     yaml_content = handle_health_check_input(yaml_content=yaml_content, command_options=kwargs)
@@ -593,26 +610,10 @@ def deployments_deploy(
 
         if (
             not quiet
-            and not has_uploaded_archives
-            and kwargs.get("environment", None) is not None
             and directory
             and files_present_in_dir(IMPLICIT_ENVIRONMENT_FILES, directory, kwargs["ignore_file"])
         ):
-            # We don't show a warning on re-uploads
-            try:
-                environment = client.environments_get(project_name=project_name, environment_name=kwargs["environment"])
-                if environment.base_environment is not None:
-                    # A custom environment is used
-                    click.secho(
-                        message="Warning: You are trying to upload a deployment file containing at least one"
-                        f" environment file (e.g. {IMPLICIT_ENVIRONMENT_FILES[0]}). It's not possible to use"
-                        " a custom environment in combination with an implicitly created environment.\nConsider"
-                        f" adding the environment files to {kwargs['ignore_file']} so no implicit environment"
-                        f" is created on revision file upload.",
-                        fg="yellow",
-                    )
-            except api.exceptions.ApiException:
-                pass
+            click.secho(message="Warning: Implicit environment building is deprecated", fg="yellow")
 
         if overwrite and existing_version:
             kwargs = set_default_scaling_parameters(

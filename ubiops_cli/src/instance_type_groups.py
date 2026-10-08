@@ -124,9 +124,9 @@ def instance_type_groups_create(name, yaml_file, format_):
     yaml_content = read_yaml(yaml_file=yaml_file)
     client = init_client()
 
-    assert (
-        "name" in yaml_content or name
-    ), "Please, specify the instance type group name in either the yaml file or as a command argument"
+    assert "name" in yaml_content or name, (
+        "Please, specify the instance type group name in either the yaml file or as a command argument"
+    )
 
     name = set_dict_default(name, yaml_content, "name")
 

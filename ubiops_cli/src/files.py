@@ -30,7 +30,7 @@ def signedurl_commands():
     return
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 @commands.command(name="list", short_help="List files in bucket")
 @options.BUCKET_NAME_OPTION
 @options.FILE_PREFIX

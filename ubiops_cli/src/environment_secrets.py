@@ -10,13 +10,14 @@ from ubiops_cli.src.helpers import options
 LIST_ITEMS = ["id", "name", "value"]
 
 
-def create_env_secret(project_name, environment_name, env_secret_name, env_secret_value, overwrite=False):
+def create_env_secret(project_name, environment_name, tag_name, env_secret_name, env_secret_value, overwrite=False):
     """
     Create an environment variable either on project level, deployment level or deployment version level
 
     :param str project_name: name of the project
     :param str environment_name: name of the environment
     :param str env_secret_name: name of the environment secret
+    :param str tag_name: name of the environment tag
     :param str env_secret_value: value of the environment secret
     :param bool overwrite: whether to allow overwriting an existing environment secret
     """
@@ -25,8 +26,8 @@ def create_env_secret(project_name, environment_name, env_secret_name, env_secre
     existing_env_secret = None
     if overwrite:
         try:
-            existing_env_secret = client.environment_secrets_get(
-                project_name=project_name, environment_name=environment_name, id=env_secret_name
+            existing_env_secret = client.environment_tag_secrets_get(
+                project_name=project_name, environment_name=environment_name, tag_name=tag_name, id=env_secret_name
             )
         except api.exceptions.ApiException:
             # Do nothing if env secret doesn't exist
@@ -34,12 +35,12 @@ def create_env_secret(project_name, environment_name, env_secret_name, env_secre
 
     data = api.EnvironmentVariableCreate(name=env_secret_name, value=env_secret_value, secret=True)
     if existing_env_secret:
-        item = client.environment_secrets_update(
-            project_name=project_name, environment_name=environment_name, id=data.name, data=data
+        item = client.environment_tag_secrets_update(
+            project_name=project_name, environment_name=environment_name, tag_name=tag_name, id=data.name, data=data
         )
     else:
-        item = client.environment_secrets_create(
-            project_name=project_name, environment_name=environment_name, data=data
+        item = client.environment_tag_secrets_create(
+            project_name=project_name, environment_name=environment_name, tag_name=tag_name, data=data
         )
 
     client.api_client.close()
@@ -58,12 +59,13 @@ def commands():
 # pylint: disable=too-many-arguments
 @commands.command(name="create", short_help="Create an environment secret")
 @options.ENVIRONMENT_NAME_OPTION
+@options.TAG_NAME_OPTION
 @options.ENV_SECRET_NAME
 @options.ENV_SECRET_VALUE
 @options.ENV_SECRET_YAML_FILE
 @options.OVERWRITE
 @options.CREATE_FORMATS
-def env_secrets_create(environment_name, env_secret_name, env_secret_value, yaml_file, overwrite, format_):
+def env_secrets_create(environment_name, tag_name, env_secret_name, env_secret_value, yaml_file, overwrite, format_):
     """
     Create an environment secret.
 
@@ -101,6 +103,7 @@ def env_secrets_create(environment_name, env_secret_name, env_secret_value, yaml
             item = create_env_secret(
                 project_name=project_name,
                 environment_name=environment_name,
+                tag_name=tag_name,
                 env_secret_name=env_secret["name"],
                 env_secret_value=env_secret["value"],
                 overwrite=overwrite,
@@ -111,6 +114,7 @@ def env_secrets_create(environment_name, env_secret_name, env_secret_value, yaml
         item = create_env_secret(
             project_name=project_name,
             environment_name=environment_name,
+            tag_name=tag_name,
             env_secret_name=env_secret_name,
             env_secret_value=env_secret_value,
             overwrite=overwrite,
@@ -120,15 +124,18 @@ def env_secrets_create(environment_name, env_secret_name, env_secret_value, yaml
 
 @commands.command(name="list", short_help="List environment secrets")
 @options.ENVIRONMENT_NAME_OPTION
+@options.TAG_NAME_OPTION
 @options.LIST_FORMATS
-def env_secrets_list(environment_name, format_):
+def env_secrets_list(environment_name, tag_name, format_):
     """
     List environment secrets.
     """
 
     client = init_client()
-    response = client.environment_secrets_list(
-        project_name=get_current_project(error=True), environment_name=environment_name
+    response = client.environment_tag_secrets_list(
+        project_name=get_current_project(error=True),
+        environment_name=environment_name,
+        tag_name=tag_name,
     )
     client.api_client.close()
 
@@ -137,10 +144,11 @@ def env_secrets_list(environment_name, format_):
 
 @commands.command(name="get", short_help="Get an environment secret")
 @options.ENVIRONMENT_NAME_OPTION
+@options.TAG_NAME_OPTION
 @options.ENV_SECRET_ID
 @options.ENV_SECRET_NAME
 @options.GET_FORMATS
-def env_secrets_get(environment_name, env_secret_id, env_secret_name, format_):
+def env_secrets_get(environment_name, tag_name, env_secret_id, env_secret_name, format_):
     """
     Get an environment secret.
     """
@@ -154,9 +162,10 @@ def env_secrets_get(environment_name, env_secret_id, env_secret_name, format_):
     project_name = get_current_project(error=True)
 
     client = init_client()
-    item = client.environment_secrets_get(
+    item = client.environment_tag_secrets_get(
         project_name=project_name,
         environment_name=environment_name,
+        tag_name=tag_name,
         id=env_secret_id if env_secret_id else env_secret_name,
     )
     client.api_client.close()
@@ -165,11 +174,12 @@ def env_secrets_get(environment_name, env_secret_id, env_secret_name, format_):
 
 @commands.command(name="update", short_help="Update an environment secret")
 @options.ENVIRONMENT_NAME_OPTION
+@options.TAG_NAME_OPTION
 @options.ENV_SECRET_ID_REQUIRED
 @options.ENV_SECRET_NAME
 @options.ENV_SECRET_VALUE
 @options.QUIET
-def env_secrets_update(environment_name, env_secret_id, env_secret_name, env_secret_value, quiet):
+def env_secrets_update(environment_name, tag_name, env_secret_id, env_secret_name, env_secret_value, quiet):
     """
     Update an environment secret.
     """
@@ -178,14 +188,14 @@ def env_secrets_update(environment_name, env_secret_id, env_secret_name, env_sec
 
     client = init_client()
 
-    current = client.environment_secrets_get(
-        project_name=project_name, environment_name=environment_name, id=env_secret_id
+    current = client.environment_tag_secrets_get(
+        project_name=project_name, environment_name=environment_name, tag_name=tag_name, id=env_secret_id
     )
     data = api.EnvironmentVariableCreate(
         name=env_secret_name if env_secret_name else current.name, value=env_secret_value, secret=True
     )
-    client.environment_secrets_update(
-        project_name=project_name, environment_name=environment_name, id=env_secret_id, data=data
+    client.environment_tag_secrets_update(
+        project_name=project_name, environment_name=environment_name, tag_name=tag_name, id=env_secret_id, data=data
     )
     client.api_client.close()
 
@@ -195,10 +205,11 @@ def env_secrets_update(environment_name, env_secret_id, env_secret_name, env_sec
 
 @commands.command(name="delete", short_help="Delete an environment secret")
 @options.ENVIRONMENT_NAME_OPTION
+@options.TAG_NAME_OPTION
 @options.ENV_SECRET_ID_REQUIRED
 @options.ASSUME_YES
 @options.QUIET
-def env_secrets_delete(environment_name, env_secret_id, assume_yes, quiet):
+def env_secrets_delete(environment_name, tag_name, env_secret_id, assume_yes, quiet):
     """
     Delete an environment secret.
     """
@@ -206,8 +217,11 @@ def env_secrets_delete(environment_name, env_secret_id, assume_yes, quiet):
     client = init_client()
     confirm_message = "Are you sure you want to delete the environment secret "
     if assume_yes or click.confirm(confirm_message):
-        client.environment_secrets_delete(
-            project_name=get_current_project(error=True), environment_name=environment_name, id=env_secret_id
+        client.environment_tag_secrets_delete(
+            project_name=get_current_project(error=True),
+            environment_name=environment_name,
+            tag_name=tag_name,
+            id=env_secret_id,
         )
 
     client.api_client.close()
@@ -216,20 +230,22 @@ def env_secrets_delete(environment_name, env_secret_id, assume_yes, quiet):
         click.echo("Environment secret was successfully deleted")
 
 
-@commands.command(name="copy", short_help="Copy environment secrets from one environment to another")
+@commands.command(name="copy", short_help="Copy environment secrets from one environment tag to another")
 @options.ENV_SECRETS_COPY_SOURCE_NAME
+@options.ENV_SECRETS_COPY_SOURCE_TAG
 @options.ENV_SECRETS_COPY_TARGET_NAME
+@options.ENV_SECRETS_COPY_TARGET_TAG
 @options.LIST_FORMATS
-def env_secrets_copy(source_name, target_name, format_):
+def env_secrets_copy(source_name, source_tag, target_name, target_tag, format_):
     """
-    Copy all environment secrets from one environment to another.
+    Copy all environment secrets from one environment tag to another.
     """
 
     client = init_client()
 
-    source = api.EnvironmentSecretCopy(source_environment=source_name)
-    items = client.environment_secrets_copy(
-        project_name=get_current_project(error=True), environment_name=target_name, data=source
+    source = api.EnvironmentSecretCopy(source_environment=source_name, source_tag=source_tag)
+    items = client.environment_tag_secrets_copy(
+        project_name=get_current_project(error=True), environment_name=target_name, tag_name=target_tag, data=source
     )
 
     client.api_client.close()

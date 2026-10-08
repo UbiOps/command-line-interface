@@ -193,7 +193,7 @@ Delete a deployment.
 
 **Description:**
 
-Package code to archive file which is ready to be deployed.
+Package code to a ZIP archive which is ready to be deployed.
 
 Please, specify the code `<directory>` that should be deployed. The files in this directory will be zipped.
 Subdirectories and files that shouldn't be contained in the archive can be specified in an ignore file, which is by
@@ -203,6 +203,10 @@ Use the `<output_path>` option to specify the output location of the archive fil
 the current directory will be used. If the `<output_path>` is a directory, the archive will be saved as
 `[deployment_name]_[deployment_version]_[datetime.now()].zip`. Use the `<assume_yes>` option to overwrite
 without confirmation if file specified in `<output_path>` already exists.
+
+Use `<paths_only>` option to retrieve a list of file paths that would be contained in the ZIP instead of actually
+zipping. This is especially useful in combination with `git diff`. That way you can easily check for code changes to
+any of the files that would be part of the deployment package, respecting the given ignore file.
 
 **Arguments:** - 
 
@@ -217,6 +221,8 @@ without confirmation if file specified in `<output_path>` already exists.
 - `-o`/`--output_path`<br/>Path to file or directory to store the deployment package archive file
 
 - `-i`/`--ignore_file`<br/>File name of ubiops-ignore file located in the root of the specified directory [default = .ubiops-ignore]
+
+- `--paths_only`<br/>Whether to only return the file paths that would be part of the ZIP, instead of actually zipping
 
 - `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
 
@@ -316,7 +322,8 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-environment: python3-13
+environment_name: ubiops-ubuntu24-04-python3-13
+environment_tag: v1
 instance_type_group_name: 2048 MB + 0.5 vCPU
 scaling_strategy: default
 minimum_instances: 0
@@ -358,7 +365,9 @@ either be passed as command argument or specified inside the yaml file using `<d
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
-- `-e`/`--environment`<br/>Environment for the version
+- `-e`/`--environment`<br/>Name of the environment for the version
+
+- `-t`/`--tag`<br/>Tag of the environment for the version
 
 - `-inst`/`--instance_type`<br/>[DEPRECATED] Reserved instance type for the version
 

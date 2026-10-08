@@ -92,7 +92,8 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    environment: python3-13
+    environment_name: ubiops-ubuntu24-04-python3-13
+    environment_tag: v1
     instance_type_group_name: 2048 MB + 0.5 vCPU
     scaling_strategy: default
     minimum_instances: 0
@@ -162,6 +163,7 @@ def versions_get(deployment_name, version_name, output_path, quiet, format_):
 @options.DEPLOYMENT_NAME_OPTIONAL
 @options.VERSION_NAME_OVERRULE
 @options.ENVIRONMENT
+@options.ENVIRONMENT_TAG
 @options.INSTANCE_TYPE
 @options.INSTANCE_TYPE_GROUP_ID
 @options.INSTANCE_TYPE_GROUP_NAME
@@ -197,7 +199,8 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
-    environment: python3-13
+    environment_name: ubiops-ubuntu24-04-python3-13
+    environment_tag: v1
     instance_type_group_name: 2048 MB + 0.5 vCPU
     scaling_strategy: default
     minimum_instances: 0
@@ -225,11 +228,15 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
     yaml_content = read_yaml(yaml_file)
 
     assert "deployment_name" in yaml_content or deployment_name, (
-        "Please, specify the deployment name in either " "the yaml file or as a command argument"
+        "Please, specify the deployment name in either the yaml file or as a command argument"
     )
     assert "version_name" in yaml_content or version_name, (
-        "Please, specify the version name in either " "the yaml file or as a command argument"
+        "Please, specify the version name in either the yaml file or as a command argument"
     )
+
+    # Make yaml backwards compatible for environments
+    if "environment" in yaml_content:
+        yaml_content["environment_name"] = yaml_content.pop("environment")
 
     # Handle health check command options
     yaml_content = handle_health_check_input(yaml_content=yaml_content, command_options=kwargs)
@@ -275,6 +282,7 @@ def versions_create(deployment_name, version_name, yaml_file, format_, **kwargs)
 @options.DEPLOYMENT_FILE
 @options.VERSION_YAML_FILE
 @options.ENVIRONMENT
+@options.ENVIRONMENT_TAG
 @options.INSTANCE_TYPE
 @options.INSTANCE_TYPE_GROUP_ID
 @options.INSTANCE_TYPE_GROUP_NAME
@@ -306,6 +314,8 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     version_labels:
       my-key-1: my-label-1
       my-key-2: my-label-2
+    environment_name: ubiops-ubuntu24-04-python3-13
+    environment_tag: v1
     instance_type_group_name: 2048 MB + 0.5 vCPU
     scaling_strategy: default
     minimum_instances: 0
@@ -333,6 +343,10 @@ def versions_update(deployment_name, version_name, yaml_file, new_name, quiet, *
     project_name = get_current_project(error=True)
 
     yaml_content = read_yaml(yaml_file)
+
+    # Make yaml backwards compatible for environments
+    if "environment" in yaml_content:
+        yaml_content["environment_name"] = yaml_content.pop("environment")
 
     # Handle health check command options
     yaml_content = handle_health_check_input(yaml_content=yaml_content, command_options=kwargs)

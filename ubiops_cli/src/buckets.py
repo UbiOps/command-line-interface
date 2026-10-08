@@ -103,7 +103,7 @@ def buckets_get(bucket_name, output_path, quiet, format_):
 @options.BUCKET_DESCRIPTION
 @options.BUCKET_LABELS
 @options.BUCKET_TTL
-@options.BUCKET_YAML_FILE
+@options.YAML_FILE
 @options.CREATE_FORMATS
 def buckets_create(yaml_file, format_, **kwargs):
     """
@@ -138,9 +138,9 @@ def buckets_create(yaml_file, format_, **kwargs):
     project_name = get_current_project(error=True)
     yaml_content = read_yaml(yaml_file)
 
-    assert (
-        "bucket_name" in yaml_content or "bucket_name" in kwargs
-    ), "Please, specify the bucket name in either the yaml file or as a command argument"
+    assert "bucket_name" in yaml_content or "bucket_name" in kwargs, (
+        "Please, specify the bucket name in either the yaml file or as a command argument"
+    )
 
     bucket = define_bucket(fields=kwargs, yaml_content=yaml_content, update=False)
 
@@ -164,7 +164,7 @@ def buckets_create(yaml_file, format_, **kwargs):
 @options.BUCKET_DESCRIPTION
 @options.BUCKET_LABELS
 @options.BUCKET_TTL
-@options.BUCKET_YAML_FILE
+@options.YAML_FILE
 @options.CREATE_FORMATS
 @options.QUIET
 def buckets_update(yaml_file, quiet, **kwargs):
