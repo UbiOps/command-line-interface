@@ -347,7 +347,7 @@ def env_vars_delete(env_var_id, deployment_name, version_name, assume_yes, quiet
             )
         elif deployment_name:
             confirm_message = (
-                f"{confirm_message}<{response.name}> of deployment <{deployment_name}>" f" in project <{project_name}>?"
+                f"{confirm_message}<{response.name}> of deployment <{deployment_name}> in project <{project_name}>?"
             )
         else:
             confirm_message = f"{confirm_message}<{response.name}> in project <{project_name}>?"

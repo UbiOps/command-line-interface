@@ -1,6 +1,6 @@
 # ubiops-cli
 
-Command Line Interface to interact with the [UbiOps](https://ubiops.com) API (v2.1).
+Command Line Interface to interact with the [UbiOps](https://ubiops.com) API (v2).
 
 Includes:
 
@@ -106,12 +106,12 @@ ubiops --version
 
 ### Sign in & sign out
 
-The default API host url is https://api.ubiops.com/v2.1/ (UbiOps SaaS). For on-premises installations of UbiOps, set
+The default API host url is https://api.ubiops.com/v2/ (UbiOps SaaS). For on-premises installations of UbiOps, set
 your API url using the `--api` option in the signin commands below.
 
 - Sign in using your credentials (username/password):
     ```bash
-    ubiops signin --api https://api.ubiops.com/v2.1/
+    ubiops signin --api https://api.ubiops.com/v2/
     ```
 
     You will be prompted to fill in your credentials (email + password). It's also possible to provide your email and
@@ -122,7 +122,7 @@ your API url using the `--api` option in the signin commands below.
 
 - Sign in using a service token:
     ```bash
-    ubiops signin --api https://api.ubiops.com/v2.1/ --token
+    ubiops signin --api https://api.ubiops.com/v2/ --token
     ```
 
     You will be prompted to fill in your token. It's also possible to provide your token directly using the `--password`
@@ -169,8 +169,7 @@ Deployments | [docs/deployments.md](docs/deployments.md)
 Deployment Versions | [docs/deployment_versions.md](docs/deployment_versions.md)
 Version Revisions | [docs/version_revisions.md](docs/version_revisions.md)
 Environments | [docs/environments.md](docs/environments.md)
-Environment Revisions | [docs/environment_revisions.md](docs/environment_revisions.md)
-Environment Builds | [docs/environment_builds.md](docs/environment_builds.md)
+Environment Tags | [docs/environment_tags.md](docs/environment_tags.md)
 Instance Type Groups | [docs/instance_type_groups.md](docs/instance_type_groups.md)
 Instance Types | [docs/instance_types.md](docs/instance_types.md)
 Instances | [docs/instances.md](docs/instances.md)

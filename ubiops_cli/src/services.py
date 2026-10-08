@@ -173,9 +173,9 @@ def services_create(yaml_file, overwrite, format_, **kwargs):
 
     yaml_content = read_yaml(yaml_file)
 
-    assert (
-        "service_name" in yaml_content or "service_name" in kwargs
-    ), "Please, specify the service name in either the yaml file or as a command argument"
+    assert "service_name" in yaml_content or "service_name" in kwargs, (
+        "Please, specify the service name in either the yaml file or as a command argument"
+    )
 
     kwargs = define_service(kwargs, yaml_content)
     service_name = kwargs["name"]

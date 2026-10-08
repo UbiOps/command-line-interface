@@ -12,8 +12,7 @@ from .src import (
     deployment_revisions,
     deployment_versions,
     deployments,
-    environment_builds,
-    environment_revisions,
+    environment_tags,
     environment_secrets,
     environment_variables,
     environments,
@@ -59,8 +58,7 @@ cli.add_command(deployments.commands)
 cli.add_command(deployment_versions.commands)
 cli.add_command(deployment_revisions.commands)
 cli.add_command(environments.commands)
-cli.add_command(environment_revisions.commands)
-cli.add_command(environment_builds.commands)
+cli.add_command(environment_tags.commands)
 cli.add_command(instance_type_groups.commands)
 cli.add_command(instance_types.commands)
 cli.add_command(instances.commands)

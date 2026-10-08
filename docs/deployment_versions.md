@@ -52,7 +52,8 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-environment: python3-13
+environment_name: ubiops-ubuntu24-04-python3-13
+environment_tag: v1
 instance_type_group_name: 2048 MB + 0.5 vCPU
 scaling_strategy: default
 minimum_instances: 0
@@ -109,7 +110,8 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
-environment: python3-13
+environment_name: ubiops-ubuntu24-04-python3-13
+environment_tag: v1
 instance_type_group_name: 2048 MB + 0.5 vCPU
 scaling_strategy: default
 minimum_instances: 0
@@ -141,7 +143,9 @@ The version name can either be passed as command argument or specified inside th
 
 - `-d`/`--deployment_name`<br/>The deployment name
 
-- `-e`/`--environment`<br/>Environment for the version
+- `-e`/`--environment`<br/>Name of the environment for the version
+
+- `-t`/`--tag`<br/>Tag of the environment for the version
 
 - `-inst`/`--instance_type`<br/>[DEPRECATED] Reserved instance type for the version
 
@@ -204,6 +208,8 @@ version_description: Version created via command line.
 version_labels:
   my-key-1: my-label-1
   my-key-2: my-label-2
+environment_name: ubiops-ubuntu24-04-python3-13
+environment_tag: v1
 instance_type_group_name: 2048 MB + 0.5 vCPU
 scaling_strategy: default
 minimum_instances: 0
@@ -243,7 +249,9 @@ will be overwritten by the specified command options.
 
 - `-f`/`--yaml_file`<br/>Path to a yaml file that contains version options
 
-- `-e`/`--environment`<br/>Environment for the version
+- `-e`/`--environment`<br/>Name of the environment for the version
+
+- `-t`/`--tag`<br/>Tag of the environment for the version
 
 - `-inst`/`--instance_type`<br/>[DEPRECATED] Reserved instance type for the version
 

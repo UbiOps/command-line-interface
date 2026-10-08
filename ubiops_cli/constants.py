@@ -10,6 +10,7 @@ SUCCESS_STATUSES = ["completed", "available", "success", "running"]
 WARNING_STATUSES = [
     "queued",
     "pending",
+    "scanning",
     "initialising",
     "processing",
     "building",
@@ -25,9 +26,3 @@ IMPLICIT_ENVIRONMENT_FILES = [
 ]
 
 UPDATE_TIME = 30  # seconds to wait between update and new file upload
-
-DEPLOYMENT_AGENT_WARNING = (
-    "WARNING: You are uploading a custom docker image to an environment that supports request format."
-    " Please make sure the image contains a UbiOps deployment agent that handles requests."
-    " If the image doesn't contain a UbiOps deployment agent, please disable request format support."
-)

@@ -57,7 +57,8 @@ DEPLOYMENT_FIELD_TYPES = {
 DEPLOYMENT_VERSION_CREATE_FIELDS = [
     "description",
     "labels",
-    "environment",
+    "environment_name",
+    "environment_tag",
     "instance_type",
     "instance_type_group_id",
     "instance_type_group_name",
@@ -74,7 +75,8 @@ DEPLOYMENT_VERSION_CREATE_FIELDS = [
 DEPLOYMENT_VERSION_DETAILS = [
     "description",
     "labels",
-    "environment",
+    "environment_name",
+    "environment_tag",
     "instance_type",
     "instance_type_group_id",
     "instance_type_group_name",
@@ -108,7 +110,8 @@ DEPLOYMENT_VERSION_FIELDS_WAIT = [
     "maximum_idle_time",
 ]
 DEPLOYMENT_VERSION_FIELD_TYPES = {
-    "environment": str,
+    "environment_name": str,
+    "environment_tag": str,
     "instance_type": str,
     "instance_type_group_id": str,
     "instance_type_group_name": str,

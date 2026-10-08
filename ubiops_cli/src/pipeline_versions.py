@@ -194,13 +194,13 @@ def pipeline_versions_create(pipeline_name, version_name, yaml_file, format_, **
     yaml_content = read_yaml(yaml_file)
     client = init_client()
 
-    assert (
-        "pipeline_name" in yaml_content or pipeline_name
-    ), "Please, specify the pipeline name in either the yaml file or as a command argument"
+    assert "pipeline_name" in yaml_content or pipeline_name, (
+        "Please, specify the pipeline name in either the yaml file or as a command argument"
+    )
 
-    assert (
-        "version_name" in yaml_content or version_name
-    ), "Please, specify the version name in either the yaml file or as a command argument"
+    assert "version_name" in yaml_content or version_name, (
+        "Please, specify the version name in either the yaml file or as a command argument"
+    )
 
     pipeline_name = set_dict_default(pipeline_name, yaml_content, "pipeline_name")
     version_name = set_dict_default(version_name, yaml_content, "version_name")

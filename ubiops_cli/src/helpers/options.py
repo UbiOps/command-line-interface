@@ -43,6 +43,9 @@ OFFSET = click.option(
     metavar="<int>",
     help="The starting point: if offset equals 2, then the first 2 records will be omitted",
 )
+YAML_FILE = click.option(
+    "-f", "--yaml_file", required=False, type=click.Path(), metavar="<path>", help="Path to a yaml file"
+)
 
 # Formatting output
 LOGS_FORMATS = click.option(
@@ -274,11 +277,22 @@ VERSION_YAML_OUTPUT = click.option(
 ENVIRONMENT = click.option(
     "-e",
     "--environment",
+    "environment_name",
     required=False,
     default=None,
     type=click.STRING,
     metavar="<string>",
-    help="Environment for the version",
+    help="Name of the environment for the version",
+)
+ENVIRONMENT_TAG = click.option(
+    "-t",
+    "--tag",
+    "environment_tag",
+    required=False,
+    default=None,
+    type=click.STRING,
+    metavar="<string>",
+    help="Tag of the environment for the version",
 )
 INSTANCE_TYPE = click.option(
     "-inst",
@@ -439,7 +453,7 @@ PACKAGE_DIR = click.option(
     "-dir",
     "--directory",
     required=True,
-    type=click.Path(resolve_path=True),
+    type=click.Path(exists=True),
     metavar="<path>",
     help=f"Path to a directory that contains at least a '{SYS_DEPLOYMENT_FILE_NAME_VALUE}.py'",
 )
@@ -447,7 +461,7 @@ PACKAGE_DIR_OPTIONAL = click.option(
     "-dir",
     "--directory",
     required=False,
-    type=click.Path(resolve_path=True),
+    type=click.Path(exists=True),
     metavar="<path>",
     help=f"Path to a directory that contains at least a '{SYS_DEPLOYMENT_FILE_NAME_VALUE}.py'",
 )
@@ -459,6 +473,13 @@ IGNORE_FILE = click.option(
     default=None,
     metavar="<filename>",
     help="File name of ubiops-ignore file located in the root of the specified directory [default = .ubiops-ignore]",
+)
+PATHS_ONLY = click.option(
+    "--paths_only",
+    required=False,
+    default=False,
+    is_flag=True,
+    help="Whether to only return the file paths that would be part of the ZIP, instead of actually zipping",
 )
 DEPLOYMENT_FILE = click.option(
     "-deployment_py",
@@ -613,9 +634,6 @@ BUCKET_NAME_OPTION = click.option(
     metavar="<string>",
     help="The bucket name",
     show_default=True,
-)
-BUCKET_YAML_FILE = click.option(
-    "-f", "--yaml_file", required=False, type=click.Path(), metavar="<path>", help="Path to a yaml file"
 )
 BUCKET_YAML_OUTPUT = click.option(
     "-o",
@@ -877,12 +895,27 @@ ENV_SECRETS_COPY_SOURCE_NAME = click.option(
     metavar="<name>",
     help="The name of the environment to copy environment secrets from",
 )
+ENV_SECRETS_COPY_SOURCE_TAG = click.option(
+    "-st",
+    "--source_tag",
+    required=False,
+    default=None,
+    metavar="<name>",
+    help="The tag of the environment to copy environment secrets from",
+)
 ENV_SECRETS_COPY_TARGET_NAME = click.option(
     "-t",
     "--target_name",
     required=True,
     metavar="<name>",
     help="The name of the environment to copy environment secrets to",
+)
+ENV_SECRETS_COPY_TARGET_TAG = click.option(
+    "-tt",
+    "--target_tag",
+    required=True,
+    metavar="<name>",
+    help="The tag of the environment to copy environment secrets to",
 )
 
 # Logs
@@ -1161,18 +1194,20 @@ IMPORT_STATUS_FILTER = click.option(
 )
 
 # Environments
-ENVIRONMENT_TYPE_FILTER = click.option(
-    "-env-type",
-    "--environment_type",
+ENVIRONMENT_SYSTEM_FILTER = click.option(
+    "--system",
     required=False,
     default=None,
-    type=str,
-    metavar="<environment-type>",
-    help="Environment type. It can be either base or custom.",
+    metavar="<bool>",
+    type=click.BOOL,
+    help="Filter on system or non-system environments",
 )
-ENVIRONMENT_NAME_ARGUMENT = click.argument("environment_name", required=True, metavar="<environment_name>", nargs=1)
+ENVIRONMENT_NAME_ARGUMENT = click.argument("environment_name", required=True, metavar="<name>", nargs=1)
 ENVIRONMENT_NAME_OPTION = click.option(
     "-e", "--environment_name", required=True, metavar="<name>", help="The environment name"
+)
+ENVIRONMENT_NAME_OPTIONAL = click.option(
+    "-e", "--environment_name", required=False, metavar="<name>", help="The environment name"
 )
 ENVIRONMENT_NAME_ZIP = click.option(
     "-e",
@@ -1193,36 +1228,6 @@ ENVIRONMENT_YAML_OUTPUT = click.option(
 ENVIRONMENT_NAME_OVERRULE = click.argument(
     "environment_name", required=False, default=None, metavar="<environment_name>", nargs=1
 )
-ENVIRONMENT_YAML_FILE = click.option(
-    "-f", "--yaml_file", required=False, type=click.Path(), metavar="<path>", help="Path to a yaml file"
-)
-BASE_ENVIRONMENT = click.option(
-    "-base-env",
-    "--base_environment",
-    required=False,
-    default=None,
-    type=click.STRING,
-    metavar="<string>",
-    help="Base environment to use for the environment",
-)
-ENVIRONMENT_SUPPORTS_REQUEST_FORMAT = click.option(
-    "-requests",
-    "--supports_request_format",
-    "environment_supports_request_format",
-    required=False,
-    default=None,
-    type=click.BOOL,
-    metavar="[True|False]",
-    help="A boolean indicating whether the environment supports the request format",
-)
-ENVIRONMENT_DISPLAY_NAME = click.option(
-    "--display_name",
-    "--environment_display_name",
-    "environment_display_name",
-    required=False,
-    metavar="<string>",
-    help="Human readable name for the environment",
-)
 ENVIRONMENT_LABELS = click.option(
     "-lb",
     "--labels",
@@ -1241,32 +1246,80 @@ ENVIRONMENT_DESCRIPTION = click.option(
     metavar="<string>",
     help="The environment description",
 )
-ENVIRONMENT_NAME_UPDATE = click.option(
-    "-n", "--new_name", required=False, default=None, help="The new environment name", metavar="<name>"
+TAG_NAME = click.argument("tag_name", required=True, metavar="<tag_name>", nargs=1)
+TAG_NAME_OPTIONAL_ARGUMENT = click.argument("tag_name", required=False, metavar="<tag_name>", nargs=1)
+TAG_NAME_OPTION = click.option("-tag", "--tag_name", required=True, metavar="<tag_name>", help="The environment tag")
+TAG_NAME_OPTIONAL = click.option("-tag", "--tag_name", required=False, metavar="<tag_name>", help="The environment tag")
+BASE_ENVIRONMENT_NAME = click.option(
+    "-base_env",
+    "--base_environment_name",
+    required=False,
+    default=None,
+    type=click.STRING,
+    metavar="<string>",
+    help="Base environment to use to build the tag",
 )
-ENVIRONMENT_REVISION_ID = click.argument("revision_id", required=True, metavar="<revision_id>", nargs=1)
-ENVIRONMENT_REVISION_ID_OPTION = click.option(
-    "-rid", "--revision_id", required=True, metavar="<revision_id>", help="The environment revision id"
+BASE_ENVIRONMENT_TAG = click.option(
+    "-base_tag",
+    "--base_environment_tag",
+    required=False,
+    default=None,
+    type=click.STRING,
+    metavar="<string>",
+    help="Tag of the base environment to use to build the tag",
 )
-ENVIRONMENT_BUILD_ID = click.argument("build_id", required=True, metavar="<build_id>", nargs=1)
-ENVIRONMENT_PACKAGE_DIR = click.option(
+TAG_SUPPORTS_REQUEST_FORMAT = click.option(
+    "-requests",
+    "--supports_request_format",
+    "tag_supports_request_format",
+    required=False,
+    default=None,
+    type=click.BOOL,
+    metavar="[True|False]",
+    help="A boolean indicating whether the environment tag supports the request format",
+)
+TAG_STATUS = click.option(
+    "--status",
+    required=False,
+    default=None,
+    type=str,
+    metavar="[cancelled]",
+    help="Update tag status to cancelled to cancel building a tag",
+)
+TAG_NAME_ZIP = click.option(
+    "-t",
+    "--tag_name",
+    required=False,
+    default=None,
+    metavar="<name>",
+    help="The tag name used in the archive filename",
+)
+TAG_YAML_OUTPUT = click.option(
+    "-o",
+    "--output_path",
+    required=False,
+    default=None,
+    metavar="<path>",
+    help="Path to file or directory to store environment yaml file",
+)
+TAG_PACKAGE_DIR = click.option(
     "-dir",
     "--directory",
     required=True,
-    type=click.Path(resolve_path=True),
+    type=click.Path(exists=True),
     metavar="<path>",
     help="Path to a directory that contains the environment files",
 )
-ENVIRONMENT_PACKAGE_DIR_OPTIONAL = click.option(
+TAG_PACKAGE_DIR_OPTIONAL = click.option(
     "-dir",
     "--directory",
     required=False,
     default=None,
-    type=click.Path(resolve_path=True),
+    type=click.Path(exists=True),
     metavar="<path>",
     help="Path to a directory that contains the environment files",
 )
-ENVIRONMENT_ARCHIVE_INPUT = click.option(
+TAG_ARCHIVE_INPUT = click.option(
     "-a",
     "-z",
     "--archive_path",
@@ -1275,24 +1328,24 @@ ENVIRONMENT_ARCHIVE_INPUT = click.option(
     required=True,
     type=click.Path(),
     metavar="<path>",
-    help="Path to environment package archive file",
+    help="Path to environment archive file",
 )
-ENVIRONMENT_ARCHIVE_INPUT_OPTIONAL = click.option(
+TAG_ARCHIVE_INPUT_OPTIONAL = click.option(
     "-a",
     "--archive_path",
     required=False,
     default=None,
     type=click.Path(),
     metavar="<path>",
-    help="Path to environment package archive file",
+    help="Path to environment archive file",
 )
-ENVIRONMENT_ARCHIVE_OUTPUT = click.option(
+TAG_ARCHIVE_OUTPUT = click.option(
     "-o",
     "--output_path",
     required=False,
     default=None,
     metavar="<path>",
-    help="Path to file or directory to store the environment package archive file",
+    help="Path to file or directory to store the environment archive file",
 )
 
 REQUIREMENTS_FILE = click.argument(

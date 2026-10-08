@@ -36,6 +36,8 @@ environment_secrets:
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
+- [required] `-tag`/`--tag_name`<br/>The environment tag
+
 - `-n`/`--env_secret_name`<br/>The name of the environment secret
 
 - `-v`/`--env_secret_value`<br/>The value of the environment secret
@@ -63,6 +65,8 @@ List environment secrets.
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
+- [required] `-tag`/`--tag_name`<br/>The environment tag
+
 - `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 
 
@@ -81,6 +85,8 @@ Get an environment secret.
 **Options:**
 
 - [required] `-e`/`--environment_name`<br/>The environment name
+
+- [required] `-tag`/`--tag_name`<br/>The environment tag
 
 - `-id`/`--env_secret_id`<br/>The ID of the environment secret
 
@@ -104,6 +110,8 @@ Update an environment secret.
 **Options:**
 
 - [required] `-e`/`--environment_name`<br/>The environment name
+
+- [required] `-tag`/`--tag_name`<br/>The environment tag
 
 - [required] `-id`/`--env_secret_id`<br/>The ID of the environment secret
 
@@ -130,6 +138,8 @@ Delete an environment secret.
 
 - [required] `-e`/`--environment_name`<br/>The environment name
 
+- [required] `-tag`/`--tag_name`<br/>The environment tag
+
 - [required] `-id`/`--env_secret_id`<br/>The ID of the environment secret
 
 - `-y`/`--assume_yes`<br/>Assume yes instead of asking for confirmation
@@ -145,7 +155,7 @@ Delete an environment secret.
 
 **Description:**
 
-Copy all environment secrets from one environment to another.
+Copy all environment secrets from one environment tag to another.
 
 **Arguments:** - 
 
@@ -153,7 +163,11 @@ Copy all environment secrets from one environment to another.
 
 - [required] `-s`/`--source_name`<br/>The name of the environment to copy environment secrets from
 
+- `-st`/`--source_tag`<br/>The tag of the environment to copy environment secrets from
+
 - [required] `-t`/`--target_name`<br/>The name of the environment to copy environment secrets to
+
+- [required] `-tt`/`--target_tag`<br/>The tag of the environment to copy environment secrets to
 
 - `-fmt`/`--format`<br/>The output format<br/>Allowed values: `table`, `json`
 

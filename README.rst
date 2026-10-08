@@ -1,4 +1,4 @@
-Command Line Interface to interact with the UbiOps API (v2.1).
+Command Line Interface to interact with the UbiOps API (v2).
 
 Read the documentation at: https://github.com/UbiOps/command-line-interface
 
